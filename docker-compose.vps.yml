@@ -7,8 +7,6 @@
 # Usage:
 #   docker compose -f docker-compose.vps.yml up -d
 
-version: "3.8"
-
 services:
   api:
     build: .
@@ -26,7 +24,7 @@ services:
     restart: unless-stopped
     mem_limit: 1g
     networks:
-      - caddy_net
+      - proxy_net
 
 volumes:
   phi_data:
