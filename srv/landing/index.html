@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phi AI Gateway — One API for All Your AI Agents</title>
+    <meta name="description" content="LLM proxy, tool registry, knowledge base, and agent memory — all in one lightweight API. Built for Indonesian developers. docker compose up.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        phi: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',950:'#1e1b4b' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .gradient-text { background: linear-gradient(135deg, #818cf8, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-gradient { background: radial-gradient(ellipse at 50% 0%, #312e81 0%, transparent 60%); }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100">
+
+    <!-- Nav -->
+    <nav class="border-b border-gray-800/50 sticky top-0 bg-gray-950/90 backdrop-blur z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <span class="text-xl font-bold text-white">φ Gateway</span>
+            <div class="flex gap-6 items-center">
+                <a href="#features" class="text-gray-400 hover:text-white transition-colors text-sm font-medium">Features</a>
+                <a href="#how" class="text-gray-400 hover:text-white transition-colors text-sm font-medium">How It Works</a>
+                <a href="#pricing" class="text-gray-400 hover:text-white transition-colors text-sm font-medium">Pricing</a>
+                <a href="#docs" class="text-gray-400 hover:text-white transition-colors text-sm font-medium">Docs</a>
+                <a href="/dashboard" class="bg-phi-600 hover:bg-phi-500 px-4 py-2 rounded-lg font-medium transition-colors text-sm">Dashboard →</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-gradient pt-28 pb-36 text-center px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="inline-block mb-6 bg-phi-900/40 border border-phi-800 rounded-full px-4 py-1.5 text-sm text-phi-300">
+                Now with OpenRouter — access 300+ models
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+                Your AI Agents<br>
+                <span class="gradient-text">Deserve Better Infra</span>
+            </h1>
+            <p class="text-xl text-gray-400 mb-4 max-w-2xl mx-auto">
+                Stop stitching together 5 services just to build one agent.
+            </p>
+            <p class="text-lg text-gray-500 mb-10 max-w-xl mx-auto">
+                LLM Proxy + Tool Registry + Knowledge Base + Agent Memory —
+                one API, one <code class="bg-gray-800 px-2 py-0.5 rounded text-phi-300 text-sm">docker compose up</code>, runs on a 4GB VPS.
+            </p>
+            <div class="flex gap-4 justify-center">
+                <a href="/dashboard" class="bg-phi-600 hover:bg-phi-500 text-white px-8 py-3.5 rounded-xl font-semibold text-lg transition-all shadow-lg shadow-phi-600/25 hover:shadow-phi-500/40">Start Building — Free</a>
+                <a href="#how" class="border border-gray-600 hover:border-gray-400 text-gray-300 px-8 py-3.5 rounded-xl font-semibold text-lg transition-colors">See How →</a>
+            </div>
+            <p class="text-gray-600 text-sm mt-6">No credit card. 10K free calls/month. Open source under MIT.</p>
+        </div>
+    </section>
+
+    <!-- Code snippet -->
+    <section class="py-16 px-6 -mt-20 relative z-10">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
+                <div class="flex items-center gap-2 px-4 py-3 bg-gray-950 border-b border-gray-800">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="text-gray-500 text-xs ml-2">terminal — api.phiconsulting.biz.id</span>
+                </div>
+                <pre class="p-6 text-sm font-mono text-green-400 overflow-x-auto leading-relaxed"><code><span class="text-gray-500"># 1. Get an API key (free, instant)</span>
+curl -X POST https://api.phiconsulting.biz.id/v1/keys \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-agent", "tier": "free"}'
+
+<span class="text-gray-500"># 2. Chat with Mistral, GPT-5, Claude, Llama — any model</span>
+curl https://api.phiconsulting.biz.id/v1/chat/completions \
+  -H "Authorization: Bearer phi-sk-..." \
+  -H "Content-Type: application/json" \
+  -d '{"model": "openrouter/mistralai/mistral-medium-3-5",
+       "messages": [{"role": "user", "content": "Hello!"}]}'
+
+<span class="text-gray-500"># 3. Register a tool — agents auto-discover it via MCP</span>
+curl -X POST https://api.phiconsulting.biz.id/v1/tools \
+  -H "Authorization: Bearer phi-sk-..." \
+  -H "Content-Type: application/json" \
+  -d '{"name": "web_search", "description": "Search the web",
+       "json_schema": {"type":"object","properties":{"q":{"type":"string"}}},
+       "endpoint": "https://your-search-api.com"}'</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-24 px-6 bg-gray-950/50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Four Primitives, One API</h2>
+            <p class="text-gray-400 text-center mb-16 max-w-2xl mx-auto">Everything an AI agent needs. No stitching together LangChain + ChromaDB + Redis + OpenAI. Just one endpoint.</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- LLM Proxy -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors">
+                    <div class="w-12 h-12 bg-phi-900/50 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">LLM Proxy</h3>
+                    <p class="text-gray-400 text-sm">16+ models across OpenAI, Anthropic, Groq, and OpenRouter. One endpoint, OpenAI-compatible format. Auto-failover between providers.</p>
+                    <p class="text-phi-400 text-xs mt-3 font-mono">/v1/chat/completions</p>
+                </div>
+                <!-- Tool Registry -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors">
+                    <div class="w-12 h-12 bg-phi-900/50 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Tool Registry</h3>
+                    <p class="text-gray-400 text-sm">Register tools once — agents discover them automatically via MCP (JSON-RPC 2.0). Every tool gets a JSON Schema contract.</p>
+                    <p class="text-phi-400 text-xs mt-3 font-mono">/v1/tools &nbsp; /mcp</p>
+                </div>
+                <!-- Knowledge Base -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors">
+                    <div class="w-12 h-12 bg-phi-900/50 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Knowledge Base</h3>
+                    <p class="text-gray-400 text-sm">Ingest documents → auto-chunk → embed → semantic search. Powered by sqlite-vec. Falls back to keyword search when embeddings unavailable.</p>
+                    <p class="text-phi-400 text-xs mt-3 font-mono">/v1/kb</p>
+                </div>
+                <!-- Agent Memory -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors">
+                    <div class="w-12 h-12 bg-phi-900/50 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Agent Memory</h3>
+                    <p class="text-gray-400 text-sm">Persistent conversation storage with automatic context window trimming. Get warned before truncation via <code class="text-gray-500 text-xs">X-Context-Truncated</code> header.</p>
+                    <p class="text-phi-400 text-xs mt-3 font-mono">/v1/memory</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how" class="py-24 px-6">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">From Zero to Agent in 3 Commands</h2>
+            <p class="text-gray-400 text-center mb-16">No YAML config. No 5-service docker compose. Just API calls.</p>
+            <div class="space-y-8">
+                <div class="flex gap-6 items-start">
+                    <div class="w-10 h-10 bg-phi-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">1</div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Get an API key</h3>
+                        <p class="text-gray-400">One POST request. Free tier gives you 10,000 calls/month. Instant.</p>
+                    </div>
+                </div>
+                <div class="flex gap-6 items-start">
+                    <div class="w-10 h-10 bg-phi-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">2</div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Point your agent at the API</h3>
+                        <p class="text-gray-400">Use any OpenAI SDK — just change the base URL. Python, JavaScript, Go, whatever. Every response includes cost_usd so your agent knows what it's spending.</p>
+                    </div>
+                </div>
+                <div class="flex gap-6 items-start">
+                    <div class="w-10 h-10 bg-phi-600 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">3</div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Register tools, store knowledge, keep memory</h3>
+                        <p class="text-gray-400">All through the same API. Your agent discovers tools via MCP, searches your knowledge base, and remembers conversations — zero extra infrastructure.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Who's This For -->
+    <section class="py-24 px-6 bg-gray-950/50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Built For</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🇮🇩</div>
+                    <h3 class="text-lg font-semibold mb-2">Indonesian AI Developers</h3>
+                    <p class="text-gray-400 text-sm">Priced in Rupiah. Docs in Bahasa + English. No dollar volatility eating your margin.</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h3 class="text-lg font-semibold mb-2">Indie Hackers & Startups</h3>
+                    <p class="text-gray-400 text-sm">Free tier is generous. Self-host option means zero platform cost. Pay only for LLM tokens you actually use.</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🏢</div>
+                    <h3 class="text-lg font-semibold mb-2">Dev Agencies</h3>
+                    <p class="text-gray-400 text-sm">One API key per client project. Unified usage dashboard. Bill your clients transparently from one place.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-24 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Simple Pricing. Rupiah.</h2>
+            <p class="text-gray-400 text-center mb-4">No per-token markup. You bring your own LLM keys — we provide the infrastructure.</p>
+            <p class="text-gray-600 text-center text-sm mb-12">All prices in IDR. USD equivalents shown for reference.</p>
+            <div class="grid md:grid-cols-4 gap-4">
+                <!-- Free -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold mb-1">Free</h3>
+                    <p class="text-3xl font-bold mb-1">Rp 0</p>
+                    <p class="text-xs text-gray-600 mb-4">$0/month</p>
+                    <ul class="text-sm text-gray-400 space-y-2 mb-6 flex-1">
+                        <li>✓ 10K API calls/month</li>
+                        <li>✓ 1 project</li>
+                        <li>✓ 16+ models via proxy</li>
+                        <li>✓ Community support</li>
+                    </ul>
+                    <a href="/dashboard" class="block text-center border border-gray-700 hover:border-gray-500 rounded-lg py-2.5 font-medium transition-colors">Start Free</a>
+                </div>
+                <!-- Pro -->
+                <div class="bg-gray-900 border-2 border-phi-700 rounded-xl p-6 flex flex-col relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-phi-600 text-xs font-semibold px-3 py-1 rounded-full">Most Popular</div>
+                    <h3 class="text-lg font-semibold mb-1">Pro</h3>
+                    <p class="text-3xl font-bold mb-1">Rp 150K</p>
+                    <p class="text-xs text-gray-500 mb-4">~$9/month</p>
+                    <ul class="text-sm text-gray-400 space-y-2 mb-6 flex-1">
+                        <li>✓ 100K API calls/month</li>
+                        <li>✓ 5 projects</li>
+                        <li>✓ Priority email support</li>
+                        <li>✓ Usage analytics</li>
+                    </ul>
+                    <a href="/dashboard" class="block text-center bg-phi-600 hover:bg-phi-500 rounded-lg py-2.5 font-medium transition-colors">Go Pro</a>
+                </div>
+                <!-- Team -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold mb-1">Team</h3>
+                    <p class="text-3xl font-bold mb-1">Rp 500K</p>
+                    <p class="text-xs text-gray-500 mb-4">~$30/month</p>
+                    <ul class="text-sm text-gray-400 space-y-2 mb-6 flex-1">
+                        <li>✓ 500K API calls/month</li>
+                        <li>✓ Unlimited projects</li>
+                        <li>✓ Slack/Discord support</li>
+                        <li>✓ Team management</li>
+                    </ul>
+                    <a href="/dashboard" class="block text-center border border-gray-700 hover:border-gray-500 rounded-lg py-2.5 font-medium transition-colors">Go Team</a>
+                </div>
+                <!-- Self-Host -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col">
+                    <h3 class="text-lg font-semibold mb-1">Self-Host</h3>
+                    <p class="text-3xl font-bold mb-1">Rp 0</p>
+                    <p class="text-xs text-gray-500 mb-4">Bring your own keys</p>
+                    <ul class="text-sm text-gray-400 space-y-2 mb-6 flex-1">
+                        <li>✓ Unlimited calls</li>
+                        <li>✓ MIT licensed</li>
+                        <li>✓ Full data privacy</li>
+                        <li>✓ Runs on 4GB VPS</li>
+                    </ul>
+                    <a href="/dashboard" class="block text-center border border-gray-700 hover:border-gray-500 rounded-lg py-2.5 font-medium transition-colors">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 px-6 bg-gray-950/50">
+        <div class="max-w-3xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4">Ready to build your AI agent?</h2>
+            <p class="text-gray-400 mb-8">Free tier gives you 10,000 calls/month. No credit card. Just an API key.</p>
+            <a href="/dashboard" class="inline-block bg-phi-600 hover:bg-phi-500 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg shadow-phi-600/25 hover:shadow-phi-500/40">Get Started — It's Free</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 py-12 px-6">
+        <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-white font-bold mb-3">φ Gateway</h3>
+                <p class="text-gray-500 text-sm">Agent-First API Platform. Built for Indonesian developers.</p>
+                <p class="text-gray-600 text-xs mt-2">© 2026 Phi Consulting</p>
+            </div>
+            <div>
+                <h4 class="text-white font-medium mb-3">Product</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a></li>
+                    <li><a href="https://api.phiconsulting.biz.id/docs" class="hover:text-white transition-colors">API Docs</a></li>
+                    <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-medium mb-3">Open Source</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><span class="text-gray-600">GitHub</span></li>
+                    <li><span class="text-gray-600">MIT License</span></li>
+                    <li><a href="/dashboard/docs" class="hover:text-white transition-colors">Documentation</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

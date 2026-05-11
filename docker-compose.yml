@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    restart: unless-stopped
+
+  api:
+    build: .
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///data/phi.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+    volumes:
+      - phi_data:/app/data
+    restart: unless-stopped
+    mem_limit: 1g
+
+volumes:
+  caddy_data:
+  phi_data:

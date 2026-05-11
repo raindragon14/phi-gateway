@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Usage{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-white mb-2">Usage</h1>
+    <p class="text-gray-400 mb-8">Track your API usage and costs.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="stat-card">
+            <div class="stat-value" id="usage-requests">—</div>
+            <div class="stat-label">Total Requests</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="usage-tokens">—</div>
+            <div class="stat-label">Tokens Processed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="usage-cost">—</div>
+            <div class="stat-label">Total Cost (USD)</div>
+        </div>
+    </div>
+
+    <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">By Provider</h2>
+        <div id="provider-breakdown" class="text-gray-400">Loading...</div>
+    </div>
+
+    <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">By Model</h2>
+        <div id="model-breakdown" class="text-gray-400">Loading...</div>
+    </div>
+</div>
+
+<script>
+async function loadUsage() {
+    const key = sessionStorage.getItem('phi_api_key');
+    if (!key) { return; }
+    try {
+        const resp = await fetch('/v1/usage', { headers: { 'Authorization': `Bearer ${key}` }});
+        const data = await resp.json();
+
+        document.getElementById('usage-requests').textContent = data.total_requests || 0;
+        document.getElementById('usage-tokens').textContent = ((data.total_input_tokens || 0) + (data.total_output_tokens || 0)).toLocaleString();
+        document.getElementById('usage-cost').textContent = `$${(data.total_cost_usd || 0).toFixed(6)}`;
+
+        if (data.by_provider && data.by_provider.length) {
+            document.getElementById('provider-breakdown').innerHTML = data.by_provider.map(p =>
+                `<div class="flex justify-between py-2 border-b border-gray-800 last:border-0">
+                    <span class="text-white">${p.provider}</span>
+                    <span class="text-gray-400">${p.requests} req · $${p.cost_usd.toFixed(6)}</span>
+                </div>`
+            ).join('');
+        } else {
+            document.getElementById('provider-breakdown').innerHTML = '<p class="text-gray-500">No usage data yet.</p>';
+        }
+
+        if (data.by_model && data.by_model.length) {
+            document.getElementById('model-breakdown').innerHTML = data.by_model.map(m =>
+                `<div class="flex justify-between py-2 border-b border-gray-800 last:border-0">
+                    <span class="text-white font-mono text-sm">${m.model}</span>
+                    <span class="text-gray-400">${m.requests} req · $${m.cost_usd.toFixed(6)}</span>
+                </div>`
+            ).join('');
+        } else {
+            document.getElementById('model-breakdown').innerHTML = '<p class="text-gray-500">No usage data yet.</p>';
+        }
+    } catch(e) { console.error(e); }
+}
+loadUsage();
+</script>
+{% endblock %}

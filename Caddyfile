@@ -1,0 +1,13 @@
+api.phiconsulting.biz.id {
+    reverse_proxy api:8000
+}
+
+phiconsulting.biz.id {
+    root * /srv/landing
+    file_server
+}
+
+# Local development
+localhost {
+    reverse_proxy api:8000
+}

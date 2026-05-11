@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Docs{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-white mb-2">Documentation</h1>
+    <p class="text-gray-400 mb-8">Quick-start guide and API reference.</p>
+
+    <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">Quick Start</h2>
+        <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+            <p>Phi AI Gateway provides all primitives AI agents need in one API.</p>
+
+            <h3 class="text-white font-semibold mt-6">1. Get an API key</h3>
+            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
+                curl -X POST https://api.phiconsulting.biz.id/v1/keys \<br>
+                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                &nbsp;&nbsp;-d '{"name": "dev", "tier": "free"}'
+            </div>
+
+            <h3 class="text-white font-semibold mt-6">2. Chat with any LLM</h3>
+            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
+                curl https://api.phiconsulting.biz.id/v1/chat/completions \<br>
+                &nbsp;&nbsp;-H "Authorization: Bearer &lt;key&gt;" \<br>
+                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                &nbsp;&nbsp;-d '{"model": "groq/llama-3.3-70b", "messages": [{"role": "user", "content": "Hello!"}]}'
+            </div>
+
+            <h3 class="text-white font-semibold mt-6">3. Register a tool</h3>
+            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
+                curl -X POST https://api.phiconsulting.biz.id/v1/tools \<br>
+                &nbsp;&nbsp;-H "Authorization: Bearer &lt;key&gt;" \<br>
+                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                &nbsp;&nbsp;-d '{"name": "search", "description": "Web search", "json_schema": {"type": "object", "properties": {}}, "endpoint": "https://..."}'
+            </div>
+
+            <h3 class="text-white font-semibold mt-6">4. Use MCP</h3>
+            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
+                curl -X POST https://api.phiconsulting.biz.id/mcp \<br>
+                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+                &nbsp;&nbsp;-d '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": "1"}'
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">API Reference</h2>
+        <p class="text-gray-400 mb-4">Full OpenAPI 3.1 specification available at:</p>
+        <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm">
+            <a href="/docs" class="text-phi-400 hover:text-phi-300 underline">/docs</a> (Swagger UI)<br>
+            <a href="/openapi.json" class="text-phi-400 hover:text-phi-300 underline">/openapi.json</a> (JSON)
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="text-xl font-semibold mb-4">Available Models</h2>
+        <div id="models-list" class="text-gray-400">Loading...</div>
+    </div>
+</div>
+
+<script>
+async function loadModels() {
+    try {
+        const resp = await fetch('/v1/models');
+        const models = await resp.json();
+        document.getElementById('models-list').innerHTML = models.map(m =>
+            `<div class="flex justify-between py-2 border-b border-gray-800 last:border-0">
+                <span class="text-white font-mono text-sm">${m.id}</span>
+                <span class="text-gray-400">${m.provider} · ${m.pricing || '—'}</span>
+            </div>`
+        ).join('');
+    } catch(e) {
+        document.getElementById('models-list').innerHTML = '<p>Failed to load models.</p>';
+    }
+}
+loadModels();
+</script>
+{% endblock %}

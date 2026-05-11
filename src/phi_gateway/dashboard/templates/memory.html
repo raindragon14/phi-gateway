@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Memory{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-white mb-2">Conversations</h1>
+    <p class="text-gray-400 mb-8">Browse and manage agent conversation memory.</p>
+
+    <!-- Create Conversation Form -->
+    <div class="card mb-8">
+        <h2 class="text-xl font-semibold mb-4">Create New Conversation</h2>
+        <div class="flex gap-4 items-end">
+            <div class="flex-1">
+                <label class="block text-sm text-gray-400 mb-1">Session ID</label>
+                <input type="text" id="conv-session-id" class="input" placeholder="e.g., my-agent-session-1">
+            </div>
+            <div class="flex-1">
+                <label class="block text-sm text-gray-400 mb-1">Title (optional)</label>
+                <input type="text" id="conv-title" class="input" placeholder="e.g., Support Chat">
+            </div>
+            <button onclick="createConversation()" class="btn-primary">Create</button>
+        </div>
+        <div id="conv-result" class="mt-4 hidden">
+            <div class="bg-gray-950 border border-phi-800 rounded-lg p-4">
+                <p class="text-sm text-phi-400">Conversation created!</p>
+                <code id="conv-id-display" class="text-sm font-mono text-green-400 break-all"></code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversations List -->
+    <div class="card">
+        <h2 class="text-xl font-semibold mb-4">Your Conversations</h2>
+        <div id="conversations-list">
+            <p class="text-gray-500">Loading...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+async function createConversation() {
+    const sessionId = document.getElementById('conv-session-id').value;
+    const title = document.getElementById('conv-title').value;
+    const key = sessionStorage.getItem('phi_api_key');
+    if (!sessionId) { alert('Please enter a session ID'); return; }
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (key) { headers['Authorization'] = `Bearer ${key}`; }
+
+    try {
+        const resp = await fetch('/v1/memory/conversations', {
+            method: 'POST', headers,
+            body: JSON.stringify({ session_id: sessionId, title: title || undefined })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+            document.getElementById('conv-id-display').textContent = data.id;
+            document.getElementById('conv-result').classList.remove('hidden');
+            document.getElementById('conv-session-id').value = '';
+            document.getElementById('conv-title').value = '';
+            loadConversations();
+        } else {
+            alert('Error: ' + (data.detail || 'Unknown error'));
+        }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function loadConversations() {
+    const key = sessionStorage.getItem('phi_api_key');
+    if (!key) {
+        document.getElementById('conversations-list').innerHTML =
+            '<p class="text-gray-500 text-center py-4">Enter your API key in the sidebar to view conversations</p>';
+        return;
+    }
+    try {
+        const resp = await fetch('/v1/memory/conversations', {
+            headers: { 'Authorization': `Bearer ${key}` }
+        });
+        if (!resp.ok) throw new Error('Unauthorized');
+        const convs = await resp.json();
+        let html = '';
+        if (convs.length === 0) {
+            html = '<p class="text-gray-500 text-center py-4">No conversations yet</p>';
+        } else {
+            html = '<table class="w-full"><thead><tr class="text-left text-gray-400 text-sm border-b border-gray-800">'
+                + '<th class="pb-3 font-medium">Session ID</th>'
+                + '<th class="pb-3 font-medium">Title</th>'
+                + '<th class="pb-3 font-medium">Updated</th>'
+                + '<th class="pb-3 font-medium">Messages</th>'
+                + '<th class="pb-3 font-medium"></th>'
+                + '</tr></thead><tbody>';
+            for (const c of convs) {
+                html += `<tr class="border-b border-gray-800/50">
+                    <td class="py-3 font-mono text-xs text-gray-400">${c.session_id}</td>
+                    <td class="py-3 text-white">${c.title || '(untitled)'}</td>
+                    <td class="py-3 text-sm text-gray-400">${new Date(c.updated_at).toLocaleString()}</td>
+                    <td class="py-3 text-sm text-gray-400">
+                        <button onclick="viewMessages('${c.id}')" class="text-phi-400 hover:text-phi-300">View →</button>
+                    </td>
+                    <td class="py-3">
+                        <button onclick="deleteConversation('${c.id}')" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                    </td>
+                </tr>`;
+            }
+            html += '</tbody></table>';
+        }
+        document.getElementById('conversations-list').innerHTML = html;
+    } catch(e) {
+        document.getElementById('conversations-list').innerHTML =
+            '<p class="text-gray-500 text-center py-4">Enter your API key in the sidebar to view conversations</p>';
+    }
+}
+
+async function deleteConversation(id) {
+    if (!confirm('Delete this conversation and all its messages? This cannot be undone.')) return;
+    const key = sessionStorage.getItem('phi_api_key');
+    try {
+        const resp = await fetch(`/v1/memory/conversations/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${key}` }
+        });
+        if (resp.ok) {
+            loadConversations();
+        } else {
+            const data = await resp.json();
+            alert('Error: ' + (data.detail || 'Unknown error'));
+        }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function viewMessages(convId) {
+    const key = sessionStorage.getItem('phi_api_key');
+    try {
+        const resp = await fetch(`/v1/memory/conversations/${convId}/messages`, {
+            headers: { 'Authorization': `Bearer ${key}` }
+        });
+        const messages = await resp.json();
+        let msgHtml = '<div class="mt-4 mb-4"><h3 class="text-lg font-semibold mb-2">Messages</h3>';
+        if (messages.length === 0) {
+            msgHtml += '<p class="text-gray-500">No messages in this conversation.</p>';
+        } else {
+            for (const m of messages) {
+                const roleColor = m.role === 'user' ? 'text-blue-400' :
+                    m.role === 'assistant' ? 'text-green-400' :
+                    m.role === 'system' ? 'text-yellow-400' : 'text-gray-400';
+                msgHtml += `<div class="bg-gray-800 rounded-lg p-3 mb-2">
+                    <span class="text-xs ${roleColor} font-semibold uppercase">${m.role}</span>
+                    <span class="text-xs text-gray-500 ml-2">${m.token_count} tokens</span>
+                    <p class="text-sm text-gray-200 mt-1">${m.content}</p>
+                </div>`;
+            }
+        }
+        msgHtml += '</div>';
+        // Find the row for this conversation and show messages below it
+        const existing = document.getElementById(`messages-${convId}`);
+        if (existing) { existing.remove(); return; }
+        const div = document.createElement('tr');
+        div.id = `messages-${convId}`;
+        div.innerHTML = `<td colspan="5">${msgHtml}</td>`;
+        const rows = document.querySelectorAll('#conversations-list tbody tr');
+        for (const row of rows) {
+            if (row.cells[4]?.querySelector(`button[onclick="deleteConversation('${convId}')"]`)) {
+                row.after(div);
+                break;
+            }
+        }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+loadConversations();
+</script>
+{% endblock %}
