@@ -30,6 +30,17 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+docker-compose.vps.yml
+
+# Dev/test files (not needed in production image)
+tests/
+deploy/
+*.sh
+CONTRIBUTING.md
+DEPLOY.md
+caddy-snippet.conf
+.dockerignore
+.gitignore
 
 # Git
 .git/
