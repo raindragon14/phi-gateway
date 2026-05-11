@@ -1,0 +1,37 @@
+# docker-compose.vps.yml — Phi AI Gateway (VPS deployment)
+# Place in: /opt/docker/phiconsulting/
+#
+# This runs ONLY the API container. SSL termination and routing
+# are handled by the main Caddy at /opt/docker/caddy/.
+#
+# Usage:
+#   docker compose -f docker-compose.vps.yml up -d
+
+version: "3.8"
+
+services:
+  api:
+    build: .
+    container_name: phi-api
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///data/phi.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+    volumes:
+      - phi_data:/app/data
+    restart: unless-stopped
+    mem_limit: 1g
+    networks:
+      - caddy_net
+
+volumes:
+  phi_data:
+
+networks:
+  caddy_net:
+    external: true
+    name: caddy_net

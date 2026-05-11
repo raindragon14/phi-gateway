@@ -1,8 +1,10 @@
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from phi_gateway.api.router import api_router
 from phi_gateway.config import settings
@@ -48,6 +50,12 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "ok", "version": "0.1.0"}
+
+    @app.get("/", response_class=HTMLResponse)
+    async def landing_page():
+        """Serve the landing page at the root."""
+        landing_path = Path(__file__).resolve().parent.parent.parent / "srv" / "landing" / "index.html"
+        return HTMLResponse(content=landing_path.read_text(encoding="utf-8"))
 
     return app
 
