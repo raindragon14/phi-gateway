@@ -1,0 +1,15 @@
+[Unit]
+Description=Phi AI Gateway auto-update service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/phi-gateway/auto-update.sh staging
+WorkingDirectory=/opt/phi-gateway
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
