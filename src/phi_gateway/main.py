@@ -54,7 +54,10 @@ def create_app() -> FastAPI:
     @app.get("/", response_class=HTMLResponse)
     async def landing_page():
         """Serve the landing page at the root."""
-        landing_path = Path(__file__).resolve().parent.parent.parent / "srv" / "landing" / "index.html"
+        # APP_ROOT is set in Docker to /app; fallback for local dev
+        import os
+        app_root = Path(os.environ.get("APP_ROOT", Path(__file__).resolve().parent.parent.parent))
+        landing_path = app_root / "srv" / "landing" / "index.html"
         return HTMLResponse(content=landing_path.read_text(encoding="utf-8"))
 
     return app
