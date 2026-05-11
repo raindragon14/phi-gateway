@@ -1,7 +1,4 @@
-import uuid
-from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -77,28 +74,3 @@ async def get_api_key(
 
     return api_key
 
-
-def require_tier(min_tier: str) -> Callable:
-    """Dependency factory: require API key tier to be at least ``min_tier``.
-
-    Tier ordering: free < pro < team
-
-    Usage::
-
-        @router.get("/admin")
-        async def admin_endpoint(key: ApiKey = Depends(require_tier("team"))):
-            ...
-    """
-
-    async def _require_tier(
-        api_key: Annotated[ApiKey, Depends(get_api_key)],
-    ) -> ApiKey:
-        tier_order = {"free": 0, "pro": 1, "team": 2}
-        if tier_order.get(api_key.tier, 0) < tier_order.get(min_tier, 0):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Requires tier '{min_tier}' or higher. Current tier: '{api_key.tier}'",
-            )
-        return api_key
-
-    return _require_tier

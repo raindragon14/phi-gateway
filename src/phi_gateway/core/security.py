@@ -27,13 +27,3 @@ def verify_api_key(plain_key: str, hashed: str) -> bool:
         return bcrypt.checkpw(plain_key.encode(), hashed.encode())
     except (ValueError, TypeError):
         return False
-
-
-def hash_key(key: str) -> str:
-    """Hash a key for storage (used when key is not freshly generated)."""
-    return bcrypt.hashpw(key.encode(), bcrypt.gensalt()).decode()
-
-
-def extract_prefix(key: str) -> str:
-    """Extract the display prefix from a full API key."""
-    return key[:12]

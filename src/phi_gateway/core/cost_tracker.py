@@ -21,8 +21,6 @@ COST_PER_1M_TOKENS: dict[str, tuple[float, float]] = {
     # OpenRouter — key models (prices are OpenRouter pass-through rates)
     "mistral-medium-3-5": (2.00, 6.00),
     "mistral-large-3": (2.00, 6.00),
-    "gpt-5-mini": (0.25, 2.00),
-    "claude-sonnet-4.6": (3.00, 15.00),
     "gemini-2.5-flash": (0.15, 0.60),
     "deepseek-r1": (0.55, 2.19),
 }

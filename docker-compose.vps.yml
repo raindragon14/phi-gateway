@@ -32,6 +32,6 @@ volumes:
   phi_data:
 
 networks:
-  caddy_net:
+  proxy_net:
     external: true
-    name: caddy_net
+    name: proxy_net

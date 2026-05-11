@@ -1,6 +1,7 @@
 import logging
-import uuid as _uuid
+import uuid
 
+import httpx
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -58,7 +59,6 @@ async def mcp_endpoint(
 
             # For now, execute via the registry's stored endpoint
             # (full auth handling is in the REST endpoint)
-            import httpx
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
                     tool.endpoint,
@@ -108,7 +108,7 @@ async def mcp_endpoint(
 
             # Query documents for this knowledge base
             try:
-                kb_uuid = _uuid.UUID(kb_id_str)
+                kb_uuid = uuid.UUID(kb_id_str)
             except ValueError:
                 return {
                     "jsonrpc": "2.0",
