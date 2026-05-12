@@ -74,4 +74,4 @@ src/phi_gateway/
 
 ## Architecture Decisions
 
-See `docs/03-decisions.md` for Architecture Decision Records (ADRs).
+Architecture Decision Records (ADRs) are available at [phiconsulting.biz.id/docs](https://phiconsulting.biz.id/docs).

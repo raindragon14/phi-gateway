@@ -7,7 +7,6 @@ LLM Proxy + Tool Registry (MCP) + Knowledge Base (RAG) + Agent Memory in a singl
 <p>
   <a href="#quick-start">Quick Start</a> &middot;
   <a href="#features">Features</a> &middot;
-  <a href="docs/03-decisions.md">Architecture</a> &middot;
   <a href="https://phiconsulting.biz.id/docs">Documentation</a> &middot;
   <a href="https://phiconsulting.biz.id">Website</a>
 </p>
@@ -111,7 +110,7 @@ Caddy (reverse proxy, auto SSL)
               └── SQLite (single file, ~20MB)
 ```
 
-Idle RAM footprint is approximately 800 MB on a 4GB VPS, leaving roughly 3.2GB of headroom. See `docs/02-architecture.md` for full details.
+Idle RAM footprint is approximately 800 MB on a 4GB VPS, leaving roughly 3.2GB of headroom.
 
 ## Key Decisions
 
@@ -124,13 +123,12 @@ Idle RAM footprint is approximately 800 MB on a 4GB VPS, leaving roughly 3.2GB o
 | MCP protocol from day one | JSON-RPC 2.0, de facto standard for agent-tool communication |
 | API-key-only auth | Simple to implement and use, familiar to developers |
 
-Full ADRs in `docs/03-decisions.md`.
+
 
 ## Project Structure
 
 ```
 phi-gateway/
-├── AGENTS.md                 # Agent handoff protocol
 ├── src/phi_gateway/          # Application code
 │   ├── api/                  # FastAPI route handlers (10 modules)
 │   ├── core/                 # Business logic (LLM proxy, auth, cost, embeddings)
@@ -142,7 +140,6 @@ phi-gateway/
 │   ├── database.py           # Async SQLAlchemy engine + session
 │   ├── dependencies.py       # FastAPI dependency injection
 │   └── main.py               # App factory + lifespan
-├── docs/                     # Architecture docs
 ├── srv/landing/              # Landing page
 ├── tests/                    # pytest suite (unit + integration)
 ├── alembic/                  # Database migrations (3 revisions)
