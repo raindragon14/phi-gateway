@@ -6,216 +6,202 @@ schema: design.md/v1
 tokens:
   colors:
     - name: background-primary
-      value: "#ffffff"
-      description: Main page background (crisp white)
+      value: "#000000"
+      description: True black main page background for maximum contrast and snappy rendering
     - name: background-surface
-      value: "#f8f9fa"
-      description: Card, section, and interactive element backgrounds
+      value: "#0a0a0a"
+      description: Barely lifted background for cards and main sections
     - name: background-elevated
-      value: "#f1f3f5"
-      description: Terminal body, inset elements, plan cards
+      value: "#121212"
+      description: Inset elements, terminal body, and high-level structural components
     - name: background-terminal-bar
-      value: "#e9ecef"
-      description: Terminal window title bar
+      value: "#1a1a1a"
+      description: Terminal window title bar, ultra-minimal
     - name: border-default
-      value: "#dee2e6"
-      description: Standard border for cards, sections, dividers
+      value: "#222222"
+      description: Razor-thin, subtle border for structure without visual weight
     - name: border-hover
-      value: "#adb5bd"
+      value: "#333333"
       description: Border color on hover for interactive elements
     - name: text-primary
-      value: "#212529"
-      description: Primary body text (high contrast dark slate)
+      value: "#ededed"
+      description: Crisp, high-contrast primary text
     - name: text-heading
-      value: "#111111"
-      description: Headings and emphasized text
+      value: "#ffffff"
+      description: Pure white for critical headings to establish hierarchy
     - name: text-secondary
-      value: "#495057"
-      description: Secondary descriptions, hero subtitle
+      value: "#a1a1aa"
+      description: Classic technical gray for descriptions and subtitles
     - name: text-muted
-      value: "#868e96"
-      description: Card body text, muted labels
+      value: "#71717a"
+      description: Muted text for data points and passive UI elements
     - name: text-subtle
-      value: "#ced4da"
-      description: Footer text, very subtle labels
+      value: "#3f3f46"
+      description: Extremely recessive text for footers and structural markers
     - name: accent-primary
-      value: "#0f52ba"
-      description: Primary accent (Sapphire/Engineering Blue)
+      value: "#ededed"
+      description: Primary accent is now high-contrast monochrome for a classic, serious look
     - name: accent-primary-hover
-      value: "#0b3d8c"
-      description: Accent on hover for buttons
+      value: "#ffffff"
+      description: Accent hover state brightens slightly
     - name: accent-soft
-      value: "#e7f0ff"
-      description: Softer accent for subtle highlights
+      value: "#2d3748"
+      description: A subtle slate-gray/blue for quiet highlights, avoiding "catchy" neons
     - name: terminal-dim
-      value: "#adb5bd"
+      value: "#52525b"
       description: Dim prefix in terminal ($)
     - name: terminal-command
-      value: "#0f52ba"
-      description: Command text in terminal
+      value: "#e4e4e7"
+      description: Command text in terminal - stark and clear
     - name: terminal-output
-      value: "#495057"
+      value: "#a1a1aa"
       description: Output text in terminal
     - name: terminal-body-bg
-      value: "#f8f9fa"
-      description: Terminal content background
+      value: "#050505"
+      description: Deepest black/gray for terminal content
     - name: terminal-border
-      value: "#dee2e6"
-      description: Terminal window border
+      value: "#1f1f1f"
+      description: Sharp, minimal terminal window border
   typography:
     - name: font-primary
-      value: "'IBM Plex Sans', 'Helvetica Neue', 'Inter', system-ui, sans-serif"
-      description: Primary font. Neo-grotesque, mechanical, highly legible.
+      value: "'Geist', 'Helvetica Neue', -apple-system, sans-serif"
+      description: Classic, highly legible, professional sans-serif
     - name: font-mono
-      value: "'IBM Plex Mono', 'SF Mono', 'Menlo', 'Consolas', monospace"
-      description: Monospace font for terminal, code, and endpoint paths.
+      value: "'Geist Mono', 'SF Mono', 'JetBrains Mono', monospace"
+      description: Clinical, perfectly aligned monospace font for technical data
     - name: heading-hero-size
       value: "32px"
-      description: Hero heading font size
+      description: Hero heading font size - scaled down for elegance
     - name: heading-hero-weight
-      value: "600"
-      description: Hero heading font weight
+      value: "500"
+      description: Medium weight instead of ultra-bold. Feels more classic and confident.
     - name: heading-hero-spacing
-      value: "-0.2px"
-      description: Hero heading letter spacing
+      value: "-0.02em"
+      description: Tight letter spacing for precision
     - name: heading-section-size
-      value: "16px"
-      description: Section heading size
+      value: "14px"
+      description: Section headings are small, acting as functional labels
     - name: heading-section-weight
       value: "600"
-      description: Section heading weight
+      description: Semibold for clear, readable hierarchy
     - name: card-title-size
-      value: "14px"
+      value: "13px"
       description: Card title size
     - name: card-title-weight
       value: "500"
-      description: Card title weight (medium, not bold)
+      description: Card title weight - kept light and snappy
     - name: body-size
-      value: "14px"
-      description: Standard body text size
+      value: "13px"
+      description: Slightly smaller body text for higher information density
     - name: body-small-size
-      value: "12px"
-      description: Smaller body text for cards and descriptions
-    - name: label-size
       value: "11px"
-      description: Small labels, plan text, step descriptions
+      description: Microcopy and technical labels
+    - name: label-size
+      value: "10px"
+      description: Utility labels, uppercase tracking
     - name: mono-size
       value: "12px"
-      description: Monospace font size for terminal and endpoint paths
+      description: Monospace font size
     - name: line-height-body
       value: "1.6"
-      description: Default line height
+      description: Generous line height for reading technical documentation
     - name: line-height-mono
       value: "1.5"
-      description: Monospace line height for terminal
+      description: Tighter line height for code blocks to group logic
   spacing:
     - name: page-padding
       value: "32px 40px"
-      description: Outer page padding
+      description: Generous outer padding framing the UI
     - name: section-gap
-      value: "16px"
-      description: Gap between grid items, sections, and cards
+      value: "1px"
+      description: Used 1px gaps for grid layouts to create "hairline" dividers between flush cards
     - name: card-padding
       value: "20px"
-      description: Standard card internal padding
+      description: Ample breathing room inside cards
     - name: section-padding
       value: "24px"
-      description: Internal padding for larger section containers
+      description: Internal padding for structural containers
     - name: header-margin-bottom
-      value: "32px"
-      description: Space below header
-    - name: hero-margin-bottom
       value: "40px"
-      description: Space below hero section
-    - name: grid-margin-bottom
-      value: "32px"
-      description: Space below feature grid
+      description: Distinct separation between header and content
     - name: button-padding
-      value: "6px 16px"
-      description: Button internal padding
+      value: "6px 14px"
+      description: Tighter, sharper buttons
   radii:
     - name: card-radius
       value: "4px"
-      description: Sharp, structural border radius
+      description: Sharp, classic technical corners (reduced from 10px)
     - name: button-radius
-      value: "3px"
-      description: Button border radius
+      value: "2px"
+      description: Near-square buttons for a utilitarian feel
     - name: chip-radius
       value: "2px"
-      description: Radius for endpoint chips and badges
+      description: Utilitarian badges and endpoint markers
     - name: avatar-radius
       value: "50%"
-      description: Circular elements like step numbers
-    - name: favicon-radius
+      description: Circular elements retained only for literal avatars
+    - name: terminal-radius
       value: "4px"
-      description: Favicon outer rect radius
+      description: Subtle rounding for the terminal window, mimicking lightweight window managers
   borders:
     - name: border-width
       value: "1px"
-      description: Standard border width
+      description: Hairline precision everywhere
     - name: border-style
       value: "solid"
       description: Standard border style
   shadows:
     - name: none
       value: "none"
-      description: No shadows - flat structural design
+      description: Strict flat design. Depth is established purely through layout and 1px borders.
   motion:
+    - name: transition-instant
+      value: "50ms"
+      description: Nearly instant feedback for extreme snappiness
     - name: transition-fast
-      value: "0.1s"
-      description: Near-instant transitions
-    - name: transition-standard
-      value: "0.15s"
-      description: Standard transitions
-    - name: easing-default
-      value: "linear"
-      description: Linear easing for mechanical feel
+      value: "120ms"
+      description: Very quick transitions for hover states
+    - name: easing-snappy
+      value: "cubic-bezier(0.2, 0, 0, 1)"
+      description: Fast-out, slow-in easing that feels lightweight and highly responsive
   breakpoints:
     - name: mobile-max
       value: "720px"
-      description: Breakpoint where layouts collapse to single-column
+      description: Collapse to single column
   layout:
     - name: page-max-width
       value: "960px"
-      description: Maximum content width
+      description: Slightly wider to accommodate dense technical data without feeling cramped
     - name: grid-columns
       value: "4"
-      description: Number of columns in desktop feature grid
-    - name: terminal-min-width
-      value: "380px"
-      description: Minimum width of terminal panel in hero
+      description: High-density layout capability
 ---
 
 # Phi AI Gateway Design System
 
 ## Overview
 
-Phi AI Gateway uses a light, highly structural, and classic engineering aesthetic optimized for professional developers and enterprise environments. The design avoids consumer trends in favor of extreme legibility, data density, and quiet confidence.
+Phi AI Gateway employs an ultra-minimalist, high-performance aesthetic designed for professional engineers. It rejects "trendy" SaaS design patterns (like heavy drop shadows, neon gradients, or overly bubbly border radii) in favor of a classic, utilitarian interface. The design feels inherently *fast*, prioritizing high information density, razor-sharp edges, and clinical typography.
 
 ## Visual Identity
 
-### The "Clean Tech" Light Mode
+### Absolute Flat & True Black
 
-The interface is anchored by crisp white (`#ffffff`) offset by slate grays (`#f8f9fa` to `#212529`). This high-contrast, low-saturation approach mimics classic technical documentation and enterprise IDEs. Depth is completely flat; we rely on sharp 1px borders (`#dee2e6`) to separate spatial zones, creating a precise, wireframe-like layout.
+The interface uses pure black (`#000000`) for the root background. This creates infinite contrast on high-end displays and gives the app an incredibly lightweight, snappy feel. Cards and panels use extremely subtle shifts in gray (`#0a0a0a` to `#121212`) separated solely by 1px hairline borders (`#222222`). There are absolutely no shadows, glows, or blurs.
 
-### Engineering Blue as Signal
+### Monochrome Over Color
 
-A classic Sapphire/Engineering Blue (`#0f52ba`) serves as the sole accent color. It is used with extreme restraint: only for active states, primary actions, and syntax highlighting. It commands attention without feeling trendy or playful.
+We avoid "catchy" or loud accent colors. Instead, the UI relies heavily on a beautifully calibrated grayscale. "Accent" states are achieved by stepping up the contrast to pure white (`#ffffff`). The only colors introduced should be strictly functional (e.g., standard red/yellow/green for status indicators or standard terminal output syntax). This makes the platform feel like serious infrastructure, not a toy.
 
-### The Utility Terminal
+### Typography: Classic & Confident
 
-The hero terminal is a utilitarian, light-themed console window with stark borders and subdued syntax colors. It communicates pure functionality over visual flair, treating code as the primary interface.
+- **Sans-Serif:** We use highly legible, classic neo-grotesque fonts (`Geist`, `Helvetica Neue`). Weights are kept to a confident Medium (`500`) rather than shouting with Extra Bold (`800`). Font sizes are slightly reduced to allow for greater data density.
+- **Monospace Focus:** `Geist Mono` or `SF Mono` takes center stage. Because the surrounding UI is so quiet, code snippets, endpoint paths, and terminal outputs naturally draw the eye.
 
-### Structural Typography
+### Sharp Geometry
 
-- **IBM Plex Sans** is the primary typeface. Its neo-grotesque, mechanical proportions bridge classic print and modern screen design. It feels inherently technical and serious.
-- **IBM Plex Mono** handles all code, endpoints, and terminal blocks. Its distinct italics and sharp structural features make it highly legible for technical reading.
-- **Weights and Sizing**: Maximum hero size is a restrained 32px. We use Medium (500) and Semi-Bold (600) for emphasis, avoiding heavy Bold (800) weights which read as loud.
+A hallmark of "classic tech" design is sharp corners. Border radii are strictly limited to `2px` or `4px`. This prevents the UI from feeling soft or playful, reinforcing a structured, architectural feel.
 
-### Layout Strategy
+### Snappy Motion
 
-Grid-driven and rigidly structured. A wider 960px max-width accommodates dense technical information comfortably. Margins and paddings are slightly increased to give typography room to breathe while keeping everything above the fold.
-
-### Borders over Backgrounds, Zero-Shadow Policy
-
-No drop-shadows, blurs, or gradients. Interactive states use near-instant (0.1s) background color shifts and border darkening. Border radii are aggressively reduced to 2-4px, giving sharp, precise corners that communicate precision and reliability.
+Motion is near-instantaneous. Standard transitions happen in `50ms` to `120ms` using an aggressive cubic-bezier curve. When a developer hovers or clicks, the interface responds as fast as a native CLI tool.

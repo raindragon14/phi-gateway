@@ -43,9 +43,9 @@ SCALAR_HTML = """<!DOCTYPE html>
 
 FAVICON_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-    '<rect width="32" height="32" rx="4" fill="#0f52ba"/>'
+    '<rect width="32" height="32" rx="4" fill="#0a0a0a" stroke="#222" stroke-width="1"/>'
     '<text x="16" y="22" text-anchor="middle" font-size="19" '
-    'font-family="Georgia,serif" font-weight="700" fill="#fff" font-style="italic">&phi;</text>'
+    'font-family="Georgia,serif" font-weight="700" fill="#ededed" font-style="italic">&phi;</text>'
     '</svg>'
 )
 
