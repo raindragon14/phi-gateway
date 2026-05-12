@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from phi_gateway import __version__
 from phi_gateway.api.router import api_router
@@ -14,9 +14,43 @@ from phi_gateway.models import Base
 
 logger = logging.getLogger(__name__)
 
-LANDING_TITLE = "Phi AI Gateway - Agent-First API Platform"
-LANDING_DESC = "LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. One API, one docker compose up."
-LONG_DESC = "LLM Proxy (OpenAI, Anthropic, Groq, OpenRouter) + Tool Registry (MCP-native) + Knowledge Base (RAG with embeddings) + Agent Memory (conversation management). All in one lightweight API."
+LANDING_DESC = (
+    "LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. "
+    "One API, one docker compose up."
+)
+LONG_DESC = (
+    "LLM Proxy (OpenAI, Anthropic, Groq, OpenRouter) + "
+    "Tool Registry (MCP-native, JSON-RPC 2.0) + "
+    "Knowledge Base (RAG with embeddings, cosine similarity) + "
+    "Agent Memory (conversation storage, context window management). "
+    "All in one lightweight API."
+)
+
+SCALAR_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phi AI Gateway - API Reference</title>
+    <style>body{margin:0;padding:0;background:#0a0a0f}</style>
+</head>
+<body>
+    <script id="api-reference" data-url="/openapi.json"
+        data-configuration='{"spec":{"content":""},"darkMode":true,"hideClientButton":false,"defaultHttpClient":{"targetKey":"shell","clientKey":"curl"}}'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
+</body>
+</html>"""
+
+FAVICON_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="32" y2="32">'
+    '<stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/>'
+    '</linearGradient></defs>'
+    '<rect width="32" height="32" rx="7" fill="url(#g)"/>'
+    '<text x="16" y="22.5" text-anchor="middle" font-size="20" '
+    'font-family="Georgia,serif" font-weight="700" fill="#fff" font-style="italic">&phi;</text>'
+    '</svg>'
+)
 
 
 @asynccontextmanager
@@ -42,8 +76,8 @@ def create_app() -> FastAPI:
         title="Phi AI Gateway",
         description=LONG_DESC,
         version=__version__,
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url=None,
+        redoc_url=None,
         openapi_url="/openapi.json",
         lifespan=lifespan,
     )
@@ -59,30 +93,24 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
 
-    @app.get("/favicon.ico")
+    @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
-        """Serve SVG favicon inline."""
-        svg = (
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-            '<rect width="32" height="32" rx="6" fill="#6366f1"/>'
-            '<text x="16" y="23" text-anchor="middle" font-size="22" '
-            'font-family="system-ui" font-weight="700" fill="#fff">'
-            '&phi;</text></svg>'
-        )
-        from fastapi.responses import Response
-        return Response(content=svg, media_type="image/svg+xml")
+        return Response(content=FAVICON_SVG, media_type="image/svg+xml")
 
-    @app.get("/health")
+    @app.get("/health", include_in_schema=False)
     async def health_check():
         return {"status": "ok", "version": __version__}
 
-    @app.get("/", response_class=HTMLResponse)
+    @app.get("/", include_in_schema=False)
     async def root(request: Request):
-        """Landing page on main domain, API info on api subdomain."""
         host = request.headers.get("host", "")
         if host.startswith("api."):
             return _api_root_response()
         return HTMLResponse(content=_get_landing_html())
+
+    @app.get("/docs", include_in_schema=False)
+    async def api_docs():
+        return HTMLResponse(content=SCALAR_HTML)
 
     return app
 
@@ -93,7 +121,7 @@ def _api_root_response() -> JSONResponse:
         "version": __version__,
         "description": LANDING_DESC,
         "docs": "https://phiconsulting.biz.id/docs",
-        "redoc": "https://phiconsulting.biz.id/redoc",
+        "openapi": "https://phiconsulting.biz.id/openapi.json",
         "health": "/health",
         "endpoints": {
             "chat": "/v1/chat/completions",
