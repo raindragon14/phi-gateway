@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from phi_gateway.core.rate_limiter import enforce_rate_limit, get_rate_limit_headers
+from phi_gateway.core.rate_limiter import enforce_rate_limit
 from phi_gateway.core.security import verify_api_key
 from phi_gateway.database import get_db
 from phi_gateway.models.api_key import ApiKey
