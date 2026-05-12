@@ -43,11 +43,8 @@ SCALAR_HTML = """<!DOCTYPE html>
 
 FAVICON_SVG = (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
-    '<defs><linearGradient id="g" x1="0" y1="0" x2="32" y2="32">'
-    '<stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/>'
-    '</linearGradient></defs>'
-    '<rect width="32" height="32" rx="7" fill="url(#g)"/>'
-    '<text x="16" y="22.5" text-anchor="middle" font-size="20" '
+    '<rect width="32" height="32" rx="4" fill="#0f52ba"/>'
+    '<text x="16" y="22" text-anchor="middle" font-size="19" '
     'font-family="Georgia,serif" font-weight="700" fill="#fff" font-style="italic">&phi;</text>'
     '</svg>'
 )

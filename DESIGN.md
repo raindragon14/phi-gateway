@@ -6,90 +6,90 @@ schema: design.md/v1
 tokens:
   colors:
     - name: background-primary
-      value: "#0a0a0f"
-      description: Main page background
+      value: "#ffffff"
+      description: Main page background (crisp white)
     - name: background-surface
-      value: "#12121a"
+      value: "#f8f9fa"
       description: Card, section, and interactive element backgrounds
     - name: background-elevated
-      value: "#0e1015"
+      value: "#f1f3f5"
       description: Terminal body, inset elements, plan cards
     - name: background-terminal-bar
-      value: "#161820"
+      value: "#e9ecef"
       description: Terminal window title bar
     - name: border-default
-      value: "#1a1a2e"
+      value: "#dee2e6"
       description: Standard border for cards, sections, dividers
     - name: border-hover
-      value: "#2a2a3e"
-      description: Border color on hover for interactive cards
+      value: "#adb5bd"
+      description: Border color on hover for interactive elements
     - name: text-primary
-      value: "#e1e1e8"
-      description: Primary body text
+      value: "#212529"
+      description: Primary body text (high contrast dark slate)
     - name: text-heading
-      value: "#ffffff"
+      value: "#111111"
       description: Headings and emphasized text
     - name: text-secondary
-      value: "#888888"
+      value: "#495057"
       description: Secondary descriptions, hero subtitle
     - name: text-muted
-      value: "#666666"
+      value: "#868e96"
       description: Card body text, muted labels
     - name: text-subtle
-      value: "#444444"
+      value: "#ced4da"
       description: Footer text, very subtle labels
     - name: accent-primary
-      value: "#6366f1"
-      description: Primary accent (indigo-500). Used for headings emphasis, buttons, icons, links
+      value: "#0f52ba"
+      description: Primary accent (Sapphire/Engineering Blue)
     - name: accent-primary-hover
-      value: "#5558e0"
+      value: "#0b3d8c"
       description: Accent on hover for buttons
     - name: accent-soft
-      value: "#a5b4fc"
-      description: Softer accent for card titles and subtle highlights
+      value: "#e7f0ff"
+      description: Softer accent for subtle highlights
     - name: terminal-dim
-      value: "#555555"
+      value: "#adb5bd"
       description: Dim prefix in terminal ($)
     - name: terminal-command
-      value: "#6366f1"
+      value: "#0f52ba"
       description: Command text in terminal
     - name: terminal-output
-      value: "#666666"
+      value: "#495057"
       description: Output text in terminal
     - name: terminal-body-bg
-      value: "#0e1015"
+      value: "#f8f9fa"
       description: Terminal content background
     - name: terminal-border
-      value: "#1e2030"
+      value: "#dee2e6"
       description: Terminal window border
   typography:
     - name: font-primary
-      value: "'Inter', system-ui, -apple-system, sans-serif"
-      description: Primary font for all UI text
+      value: "'IBM Plex Sans', 'Helvetica Neue', 'Inter', system-ui, sans-serif"
+      description: Primary font. Neo-grotesque, mechanical, highly legible.
     - name: font-mono
-      value: "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace"
-      description: Monospace font for terminal, code, and endpoint paths
+      value: "'IBM Plex Mono', 'SF Mono', 'Menlo', 'Consolas', monospace"
+      description: Monospace font for terminal, code, and endpoint paths.
     - name: heading-hero-size
-      value: "38px"
+      value: "32px"
       description: Hero heading font size
     - name: heading-hero-weight
-      value: "800"
+      value: "600"
       description: Hero heading font weight
     - name: heading-hero-spacing
-      value: "-0.5px"
+      value: "-0.2px"
       description: Hero heading letter spacing
     - name: heading-section-size
-      value: "15px"
+      value: "16px"
       description: Section heading size
     - name: heading-section-weight
-      value: "700"
+      value: "600"
       description: Section heading weight
     - name: card-title-size
-      value: "13px"
+      value: "14px"
       description: Card title size
     - name: card-title-weight
-      value: "600"
-      description: Card title weight
+      value: "500"
+      description: Card title weight (medium, not bold)
     - name: body-size
       value: "14px"
       description: Standard body text size
@@ -103,51 +103,51 @@ tokens:
       value: "12px"
       description: Monospace font size for terminal and endpoint paths
     - name: line-height-body
-      value: "1.5"
+      value: "1.6"
       description: Default line height
     - name: line-height-mono
-      value: "1.65"
+      value: "1.5"
       description: Monospace line height for terminal
   spacing:
     - name: page-padding
-      value: "24px 28px"
+      value: "32px 40px"
       description: Outer page padding
     - name: section-gap
-      value: "10px"
+      value: "16px"
       description: Gap between grid items, sections, and cards
     - name: card-padding
-      value: "16px"
+      value: "20px"
       description: Standard card internal padding
     - name: section-padding
-      value: "18px"
+      value: "24px"
       description: Internal padding for larger section containers
     - name: header-margin-bottom
-      value: "28px"
+      value: "32px"
       description: Space below header
     - name: hero-margin-bottom
-      value: "28px"
+      value: "40px"
       description: Space below hero section
     - name: grid-margin-bottom
-      value: "24px"
+      value: "32px"
       description: Space below feature grid
     - name: button-padding
-      value: "8px 18px"
+      value: "6px 16px"
       description: Button internal padding
   radii:
     - name: card-radius
-      value: "10px"
-      description: Standard border radius for cards, sections, terminal
+      value: "4px"
+      description: Sharp, structural border radius
     - name: button-radius
-      value: "7px"
+      value: "3px"
       description: Button border radius
     - name: chip-radius
-      value: "5px"
-      description: Smaller radius for endpoint chips and badges
+      value: "2px"
+      description: Radius for endpoint chips and badges
     - name: avatar-radius
       value: "50%"
-      description: Circular elements like step numbers and favicon
+      description: Circular elements like step numbers
     - name: favicon-radius
-      value: "6px"
+      value: "4px"
       description: Favicon outer rect radius
   borders:
     - name: border-width
@@ -159,30 +159,30 @@ tokens:
   shadows:
     - name: none
       value: "none"
-      description: No shadows - flat design
+      description: No shadows - flat structural design
   motion:
     - name: transition-fast
-      value: "0.15s"
-      description: Quick transitions for buttons and hover states
+      value: "0.1s"
+      description: Near-instant transitions
     - name: transition-standard
-      value: "0.2s"
-      description: Standard transitions for cards and interactive elements
+      value: "0.15s"
+      description: Standard transitions
     - name: easing-default
-      value: "ease"
-      description: Default easing function (implicit via CSS transition)
+      value: "linear"
+      description: Linear easing for mechanical feel
   breakpoints:
     - name: mobile-max
       value: "720px"
       description: Breakpoint where layouts collapse to single-column
   layout:
     - name: page-max-width
-      value: "880px"
+      value: "960px"
       description: Maximum content width
     - name: grid-columns
       value: "4"
       description: Number of columns in desktop feature grid
     - name: terminal-min-width
-      value: "340px"
+      value: "380px"
       description: Minimum width of terminal panel in hero
 ---
 
@@ -190,40 +190,32 @@ tokens:
 
 ## Overview
 
-Phi AI Gateway uses a dark, minimalistic aesthetic optimized for developer audiences. The design prioritizes readability, information density, and a terminal-inspired feel that resonates with the target audience of AI developers and indie hackers.
+Phi AI Gateway uses a light, highly structural, and classic engineering aesthetic optimized for professional developers and enterprise environments. The design avoids consumer trends in favor of extreme legibility, data density, and quiet confidence.
 
 ## Visual Identity
 
-### Dark Mode by Default
+### The "Clean Tech" Light Mode
 
-The interface uses a deep near-black background (`#0a0a0f`) that reduces eye strain and creates a focused environment. Cards and interactive surfaces float slightly above the background at `#12121a`, creating subtle depth without shadows. This flat-dark approach is common in developer tools like VS Code and linear.app.
+The interface is anchored by crisp white (`#ffffff`) offset by slate grays (`#f8f9fa` to `#212529`). This high-contrast, low-saturation approach mimics classic technical documentation and enterprise IDEs. Depth is completely flat; we rely on sharp 1px borders (`#dee2e6`) to separate spatial zones, creating a precise, wireframe-like layout.
 
-### Indigo as Signal
+### Engineering Blue as Signal
 
-A single accent color, indigo-500 (`#6366f1`), is used sparingly for interactive elements, key headings, and the phi brand. Everything else uses a monochromatic gray scale from `#e1e1e8` (primary text) down to `#444` (footer). This restraint prevents visual noise and creates clear hierarchy.
+A classic Sapphire/Engineering Blue (`#0f52ba`) serves as the sole accent color. It is used with extreme restraint: only for active states, primary actions, and syntax highlighting. It commands attention without feeling trendy or playful.
 
-### Terminal as Hero
+### The Utility Terminal
 
-The hero section features a macOS-style terminal window with red/yellow/green dots, monospace font, and colored command output. This immediately signals to developers: "this is a tool for you." The terminal acts as both a visual hook and a quick-start demonstration.
+The hero terminal is a utilitarian, light-themed console window with stark borders and subdued syntax colors. It communicates pure functionality over visual flair, treating code as the primary interface.
 
-### Typography
+### Structural Typography
 
-- **Inter** at sizes 11-38px handles all UI text. Its clean, neutral character works well at both display and micro sizes.
-- **JetBrains Mono** is used exclusively in the terminal and endpoint paths, creating clear separation between code and prose.
-- No italic, no serif, no decorative fonts. The palette is deliberately small.
+- **IBM Plex Sans** is the primary typeface. Its neo-grotesque, mechanical proportions bridge classic print and modern screen design. It feels inherently technical and serious.
+- **IBM Plex Mono** handles all code, endpoints, and terminal blocks. Its distinct italics and sharp structural features make it highly legible for technical reading.
+- **Weights and Sizing**: Maximum hero size is a restrained 32px. We use Medium (500) and Semi-Bold (600) for emphasis, avoiding heavy Bold (800) weights which read as loud.
 
 ### Layout Strategy
 
-The page fits in a single viewport on a 900px-tall screen. Four-column feature grids collapse to two columns on mobile. The hero uses a side-by-side layout (text on left, terminal on right) that stacks vertically on narrow screens. No scroll-triggering or long-form content - everything is above the fold.
+Grid-driven and rigidly structured. A wider 960px max-width accommodates dense technical information comfortably. Margins and paddings are slightly increased to give typography room to breathe while keeping everything above the fold.
 
-### Buttons and Links
+### Borders over Backgrounds, Zero-Shadow Policy
 
-Primary buttons use the solid indigo fill. Secondary buttons use a bordered transparent background. All external links (GitHub, Docs) open in new tabs to keep the landing page as a persistent reference point. Navigation links are subtle (`#777`) to avoid competing with the hero.
-
-### No Gradients, No Shadows
-
-The design is flat. Depth is communicated through background layering alone (page -> card -> inset). No box-shadows, no gradients, no blurs. This keeps the CSS minimal and the visual clean.
-
-### Responsive Behavior
-
-At 720px and below, layouts collapse: hero stacks, grids go to 2 columns, terminal loses min-width, font sizes reduce slightly. The design works on phones but is optimized for desktop where developers typically evaluate tools.
+No drop-shadows, blurs, or gradients. Interactive states use near-instant (0.1s) background color shifts and border darkening. Border radii are aggressively reduced to 2-4px, giving sharp, precise corners that communicate precision and reliability.
