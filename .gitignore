@@ -8,3 +8,7 @@ __pycache__/
 .venv/
 docs/
 AGENTS.md
+deploy/
+caddy-snippet.conf
+auto-update.sh
+deploy.sh

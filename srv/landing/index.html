@@ -6,233 +6,228 @@
     <title>Phi AI Gateway - Agent-First API Platform</title>
     <meta name="description" content="LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. One API, one docker compose up.">
     <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: #0a0a0f; color: #e1e1e8; line-height: 1.6;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0a0a0f; color: #e1e1e8; line-height: 1.5;
+            min-height: 100vh; display: flex; flex-direction: column;
         }
-        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-        nav {
+        .page { max-width: 880px; margin: 0 auto; padding: 24px 28px; flex: 1; display: flex; flex-direction: column; }
+        header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 18px 0; border-bottom: 1px solid #1a1a2e; margin-bottom: 64px;
+            padding-bottom: 16px; border-bottom: 1px solid #1a1a2e; margin-bottom: 28px;
         }
-        nav .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #fff; text-decoration: none; }
-        nav .logo svg { width: 28px; height: 28px; }
-        nav .links { display: flex; gap: 20px; }
-        nav .links a { color: #888; text-decoration: none; font-size: 14px; }
-        nav .links a:hover { color: #e1e1e8; }
-        .hero { margin-bottom: 80px; }
-        .hero .command {
-            background: #12121a; border: 1px solid #1a1a2e; border-radius: 10px;
-            padding: 16px 24px; display: inline-block; margin-bottom: 32px;
+        header .brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; color: #fff; text-decoration: none; }
+        header .brand svg { width: 26px; height: 26px; }
+        header nav { display: flex; gap: 18px; }
+        header nav a { color: #777; text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: 0.2px; }
+        header nav a:hover { color: #e1e1e8; }
+
+        .hero { display: flex; gap: 32px; margin-bottom: 28px; align-items: center; }
+        .hero-text { flex: 1; }
+        .hero-text h1 { font-size: 38px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; color: #fff; }
+        .hero-text h1 em { font-style: normal; color: #6366f1; }
+        .hero-text p { font-size: 14px; color: #888; max-width: 380px; margin-bottom: 16px; }
+        .hero-text .actions { display: flex; gap: 10px; }
+        .hero-terminal {
+            flex: 1; background: #0e1015; border: 1px solid #1e2030; border-radius: 10px;
+            overflow: hidden; min-width: 340px;
         }
-        .hero .command code {
-            font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; color: #6366f1;
+        .hero-terminal .bar {
+            background: #161820; padding: 8px 14px; display: flex; gap: 6px; align-items: center;
+            border-bottom: 1px solid #1e2030;
         }
-        .hero .command .dim { color: #555; }
-        h1 { font-size: 48px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px; max-width: 500px; text-align: left; }
-        h1 span { color: #6366f1; }
-        .hero p { font-size: 18px; color: #888; max-width: 500px; text-align: left; }
-        .primitives {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 14px; margin-bottom: 64px;
-        }
-        .primitive {
+        .hero-terminal .bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .hero-terminal .bar .dot.r { background: #ff5f57; } .hero-terminal .bar .dot.y { background: #febc2e; } .hero-terminal .bar .dot.g { background: #28c840; }
+        .hero-terminal .bar .title { font-size: 11px; color: #555; margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+        .hero-terminal .body { padding: 14px 18px; font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 12px; line-height: 1.65; }
+        .hero-terminal .body .dim { color: #555; }
+        .hero-terminal .body .cmd { color: #6366f1; }
+        .hero-terminal .body .out { color: #666; }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+        .card {
             background: #12121a; border: 1px solid #1a1a2e;
-            border-radius: 10px; padding: 20px;
+            border-radius: 10px; padding: 16px; transition: border-color .2s;
         }
-        .primitive .icon { font-size: 20px; margin-bottom: 8px; }
-        .primitive h3 { font-size: 14px; color: #a5b4fc; margin-bottom: 4px; font-weight: 600; }
-        .primitive p { font-size: 13px; color: #666; line-height: 1.5; }
-        .how-it-works { margin-bottom: 80px; }
-        .how-it-works h2 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
-        .flow {
-            display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;
+        .card:hover { border-color: #2a2a3e; }
+        .card .icon { font-size: 18px; margin-bottom: 6px; }
+        .card h3 { font-size: 13px; font-weight: 600; color: #a5b4fc; margin-bottom: 2px; }
+        .card p { font-size: 12px; color: #666; line-height: 1.45; }
+
+        .sections { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+        .section {
+            background: #12121a; border: 1px solid #1a1a2e;
+            border-radius: 10px; padding: 18px;
         }
-        .flow-step {
-            flex: 1; min-width: 180px; background: #12121a;
-            border: 1px solid #1a1a2e; border-radius: 10px; padding: 20px;
-            text-align: center;
+        .section h2 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .flow { display: flex; gap: 10px; }
+        .step {
+            flex: 1; text-align: center; padding: 8px;
+            background: #0e1015; border-radius: 8px;
         }
-        .flow-step .num {
-            width: 32px; height: 32px; background: #6366f1; border-radius: 50%;
+        .step .num {
+            width: 24px; height: 24px; background: #6366f1; border-radius: 50%;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 12px;
+            font-size: 11px; font-weight: 700; color: #fff; margin-bottom: 6px;
         }
-        .flow-step h4 { font-size: 14px; color: #fff; margin-bottom: 6px; }
-        .flow-step p { font-size: 13px; color: #666; }
-        .self-hosted { margin-bottom: 80px; }
-        .self-hosted h2 { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
-        .self-hosted p { color: #888; margin-bottom: 24px; max-width: 560px; }
-        .pricing {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 500px;
-        }
+        .step h4 { font-size: 12px; color: #e1e1e8; margin-bottom: 2px; }
+        .step p { font-size: 11px; color: #666; }
+        .plans { display: flex; gap: 10px; }
         .plan {
-            background: #12121a; border: 1px solid #1a1a2e;
-            border-radius: 10px; padding: 20px;
+            flex: 1; padding: 14px; background: #0e1015; border-radius: 8px;
         }
-        .plan h3 { font-size: 16px; color: #fff; margin-bottom: 4px; }
-        .plan .price { font-size: 13px; color: #6366f1; margin-bottom: 6px; }
-        .plan ul { list-style: none; }
-        .plan li { font-size: 13px; color: #666; padding: 2px 0; }
-        .plan li::before { content: "+ "; }
-        .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+        .plan h3 { font-size: 13px; font-weight: 600; color: #fff; }
+        .plan .price { font-size: 11px; color: #6366f1; margin-bottom: 4px; }
+        .plan li { font-size: 11px; color: #666; padding: 1px 0; list-style: none; }
+        .plan li::before { content: "+ "; color: #444; }
+
+        .endpoint-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-bottom: 16px; }
+        .ep {
+            background: #12121a; border: 1px solid #1a1a2e;
+            border-radius: 5px; padding: 6px 10px;
+        }
+        .ep .method { font-size: 9px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.3px; }
+        .ep .path { font-size: 10px; color: #999; font-family: 'JetBrains Mono', monospace; }
+
         .btn {
-            padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 500;
-            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 500;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+            font-family: 'Inter', system-ui, sans-serif; transition: all .15s;
         }
         .btn-primary { background: #6366f1; color: #fff; }
-        .btn-primary:hover { background: #4f46e5; }
+        .btn-primary:hover { background: #5558e0; }
         .btn-secondary { background: #12121a; border: 1px solid #1a1a2e; color: #e1e1e8; }
-        .btn-secondary:hover { border-color: #333; }
-        .endpoints {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
-            margin-bottom: 6px; max-width: 560px;
-        }
-        .endpoint {
-            background: #12121a; border: 1px solid #1a1a2e;
-            border-radius: 6px; padding: 8px 12px;
-        }
-        .endpoint .method { font-size: 10px; font-weight: 700; color: #6366f1; text-transform: uppercase; }
-        .endpoint .path { font-size: 11px; color: #aaa; font-family: monospace; }
+        .btn-secondary:hover { border-color: #2a2a3e; }
+        .btn-ghost { color: #888; font-size: 12px; } .btn-ghost:hover { color: #e1e1e8; }
+
         footer {
-            border-top: 1px solid #1a1a2e; padding: 20px 0;
-            text-align: center; font-size: 13px; color: #444;
+            text-align: center; font-size: 12px; color: #444; padding: 14px 0;
+            border-top: 1px solid #1a1a2e; margin-top: auto;
         }
-        footer a { color: #666; text-decoration: none; }
-        footer a:hover { color: #999; }
-        @media (max-width: 700px) {
-            .primitives { grid-template-columns: repeat(2, 1fr); }
-            .endpoints { grid-template-columns: repeat(2, 1fr); }
-            h1 { font-size: 32px; }
-            .pricing { grid-template-columns: 1fr; }
-            .flow { flex-direction: column; }
+        footer a { color: #666; text-decoration: none; } footer a:hover { color: #999; }
+
+        @media (max-width: 720px) {
+            .hero { flex-direction: column; }
+            .hero-terminal { min-width: auto; }
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .sections { grid-template-columns: 1fr; }
+            .endpoint-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-text h1 { font-size: 28px; }
+            .page { padding: 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <nav>
-            <a href="/" class="logo">
+    <div class="page">
+        <header>
+            <a href="/" class="brand">
                 <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#6366f1"/><text x="16" y="23" text-anchor="middle" font-size="22" font-family="system-ui" font-weight="700" fill="#fff">&phi;</text></svg>
                 phigatway
             </a>
-            <div class="links">
-                <a href="https://github.com/raindragon14/phi-gateway">GitHub</a>
-                <a href="/docs">API Docs</a>
-                <a href="/redoc">ReDoc</a>
-            </div>
-        </nav>
+            <nav>
+                <a href="https://github.com/raindragon14/phi-gateway" target="_blank" rel="noopener">GitHub</a>
+                <a href="/docs" target="_blank" rel="noopener">API Docs</a>
+                <a href="/redoc" target="_blank" rel="noopener">ReDoc</a>
+            </nav>
+        </header>
 
         <div class="hero">
-            <div class="command">
-                <code><span class="dim">$</span> git clone https://github.com/raindragon14/phi-gateway<br><span class="dim">$</span> docker compose up -d</code>
+            <div class="hero-text">
+                <h1>One API for <em>AI agents</em></h1>
+                <p>LLM Proxy, Tool Registry, Knowledge Base, and Agent Memory. Self-host or use our cloud.</p>
+                <div class="actions">
+                    <a href="https://github.com/raindragon14/phi-gateway" target="_blank" rel="noopener" class="btn btn-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        View on GitHub
+                    </a>
+                    <a href="/docs" target="_blank" rel="noopener" class="btn btn-primary">API Docs</a>
+                </div>
             </div>
-            <h1>One API for <span>AI agents</span></h1>
-            <p>
-                LLM Proxy, Tool Registry, Knowledge Base, and Agent Memory. 
-                Self-host on your own server or use our managed cloud. 
-                Built for developers who build AI agents.
-            </p>
+            <div class="hero-terminal">
+                <div class="bar">
+                    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                    <div class="title">terminal</div>
+                </div>
+                <div class="body">
+                    <span class="dim">$</span> <span class="cmd">git clone</span> https://github.com/raindragon14/phi-gateway<br>
+                    <span class="dim">$</span> <span class="cmd">docker compose up</span> -d<br>
+                    <span class="out">[+] Running 2/2</span><br>
+                    <span class="out">phi-gateway-api Running</span><br>
+                    <span class="out">phi-gateway-caddy Running</span><br>
+                    <span class="dim">$</span> <span class="cmd">curl</span> http://localhost:8000/v1/models<br>
+                    <span class="out">[{"id":"gpt-5-nano","provider":"openai"}...]</span>
+                </div>
+            </div>
         </div>
 
-        <div class="primitives">
-            <div class="primitive">
+        <div class="grid">
+            <div class="card">
                 <div class="icon">&#x1F4E1;</div>
                 <h3>LLM Proxy</h3>
-                <p>OpenAI-compatible endpoint. Routes to 10+ models across OpenAI, Anthropic, Groq, and OpenRouter. Cost tracking per request.</p>
+                <p>OpenAI-compatible. Routes to 10+ models across OpenAI, Anthropic, Groq, OpenRouter. Cost tracking.</p>
             </div>
-            <div class="primitive">
+            <div class="card">
                 <div class="icon">&#x1F6E0;</div>
                 <h3>Tool Registry</h3>
-                <p>Register tools with JSON Schema contracts. Agents discover and call them via REST or MCP (JSON-RPC 2.0).</p>
+                <p>Register tools with JSON Schema. MCP-native. Agents discover and call via REST or JSON-RPC.</p>
             </div>
-            <div class="primitive">
+            <div class="card">
                 <div class="icon">&#x1F4DA;</div>
                 <h3>Knowledge Base</h3>
-                <p>Ingest documents, chunk by paragraph, generate embeddings, search with cosine similarity. Keyword fallback built in.</p>
+                <p>Chunk, embed, semantic search with cosine similarity. Keyword fallback when no embeddings.</p>
             </div>
-            <div class="primitive">
+            <div class="card">
                 <div class="icon">&#x1F9E0;</div>
                 <h3>Agent Memory</h3>
-                <p>Persistent conversation storage with session management, pagination, and automatic context window trimming.</p>
+                <p>Conversation storage, session management, pagination, auto context window trimming.</p>
             </div>
         </div>
 
-        <div class="how-it-works">
-            <h2>How it works</h2>
-            <div class="flow">
-                <div class="flow-step">
-                    <div class="num">1</div>
-                    <h4>Deploy</h4>
-                    <p>One docker compose command. Runs on any VPS with 4GB RAM.</p>
-                </div>
-                <div class="flow-step">
-                    <div class="num">2</div>
-                    <h4>Connect</h4>
-                    <p>Point your LLM app or AI agent to the API. OpenAI-compatible format.</p>
-                </div>
-                <div class="flow-step">
-                    <div class="num">3</div>
-                    <h4>Build</h4>
-                    <p>Register tools, ingest knowledge, store conversations. All through one API.</p>
+        <div class="sections">
+            <div class="section">
+                <h2>How it works</h2>
+                <div class="flow">
+                    <div class="step"><div class="num">1</div><h4>Deploy</h4><p>One docker compose command</p></div>
+                    <div class="step"><div class="num">2</div><h4>Connect</h4><p>Point your agent to the API</p></div>
+                    <div class="step"><div class="num">3</div><h4>Build</h4><p>Register tools, ingest docs</p></div>
                 </div>
             </div>
-        </div>
-
-        <div class="self-hosted">
-            <h2>Self-hosted or Cloud</h2>
-            <p>Open source under MIT license. Run it yourself for free, or use our managed cloud with SSL, updates, and support included.</p>
-            <div class="pricing">
-                <div class="plan">
-                    <h3>Self-Hosted</h3>
-                    <div class="price">Free forever</div>
-                    <ul>
-                        <li>MIT license</li>
-                        <li>Full feature set</li>
-                        <li>You manage the server</li>
-                        <li>Unlimited usage</li>
-                    </ul>
-                </div>
-                <div class="plan">
-                    <h3>Cloud</h3>
-                    <div class="price">Free tier available</div>
-                    <ul>
-                        <li>No server management</li>
-                        <li>SSL and updates included</li>
-                        <li>Pay as you scale</li>
-                        <li>Priority support</li>
-                    </ul>
+            <div class="section">
+                <h2>Self-hosted or Cloud</h2>
+                <div class="plans">
+                    <div class="plan">
+                        <h3>Self-Hosted</h3>
+                        <div class="price">Free, MIT license</div>
+                        <ul><li>Full features</li><li>You manage</li><li>Unlimited</li></ul>
+                    </div>
+                    <div class="plan">
+                        <h3>Cloud</h3>
+                        <div class="price">Free tier available</div>
+                        <ul><li>No ops</li><li>SSL + updates</li><li>Pay as you scale</li></ul>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <p style="color: #666; font-size: 13px; margin-bottom: 8px;">API endpoints</p>
-        <div class="endpoints">
-            <div class="endpoint"><div class="method">POST</div><div class="path">/v1/chat/completions</div></div>
-            <div class="endpoint"><div class="method">GET</div><div class="path">/v1/models</div></div>
-            <div class="endpoint"><div class="method">POST</div><div class="path">/v1/embeddings</div></div>
-            <div class="endpoint"><div class="method">POST</div><div class="path">/v1/tools</div></div>
-            <div class="endpoint"><div class="method">POST</div><div class="path">/v1/kb</div></div>
-            <div class="endpoint"><div class="method">POST</div><div class="path">/v1/memory</div></div>
-            <div class="endpoint"><div class="method">POST</div><div class="path">/v1/keys</div></div>
-            <div class="endpoint"><div class="method">POST</div><div class="path">/mcp</div></div>
+        <div class="endpoint-grid">
+            <div class="ep"><div class="method">POST</div><div class="path">/v1/chat/completions</div></div>
+            <div class="ep"><div class="method">GET</div><div class="path">/v1/models</div></div>
+            <div class="ep"><div class="method">POST</div><div class="path">/v1/embeddings</div></div>
+            <div class="ep"><div class="method">POST</div><div class="path">/v1/tools</div></div>
+            <div class="ep"><div class="method">POST</div><div class="path">/v1/kb</div></div>
+            <div class="ep"><div class="method">POST</div><div class="path">/v1/memory</div></div>
+            <div class="ep"><div class="method">POST</div><div class="path">/v1/keys</div></div>
+            <div class="ep"><div class="method">POST</div><div class="path">/mcp</div></div>
         </div>
 
-        <div class="cta" style="margin-top: 20px; margin-bottom: 60px;">
-            <a href="/docs" class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                API Documentation
-            </a>
-            <a href="https://github.com/raindragon14/phi-gateway" class="btn btn-secondary">View on GitHub</a>
-        </div>
+        <footer>
+            <a href="https://github.com/raindragon14/phi-gateway" target="_blank" rel="noopener">open source</a> &middot; MIT license &middot; <a href="https://phiconsulting.biz.id">Phi Consulting</a>
+        </footer>
     </div>
-
-    <footer>
-        <div class="container">
-            <a href="https://github.com/raindragon14/phi-gateway">open source</a> &middot; MIT license &middot; <a href="https://phiconsulting.biz.id">Phi Consulting</a>
-        </div>
-    </footer>
 </body>
 </html>
