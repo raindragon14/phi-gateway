@@ -33,7 +33,7 @@
             min-height: 100vh; display: flex; flex-direction: column;
             -webkit-font-smoothing: antialiased;
         }
-        .page { max-width: 960px; margin: 0 auto; padding: 32px 40px; flex: 1; display: flex; flex-direction: column; }
+        .page { max-width: 1024px; margin: 0 auto; padding: 40px 48px; flex: 1; display: flex; flex-direction: column; }
         header {
             display: flex; justify-content: space-between; align-items: center;
             padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 40px;
@@ -44,15 +44,15 @@
         header nav a { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500; transition: color 50ms var(--ease); }
         header nav a:hover { color: var(--text); }
 
-        .hero { display: flex; gap: 32px; margin-bottom: 40px; align-items: center; }
+        .hero { display: flex; gap: 48px; margin-bottom: 44px; align-items: center; }
         .hero-text { flex: 1; }
-        .hero-text h1 { font-size: 32px; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--text-heading); }
+        .hero-text h1 { font-size: 36px; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 10px; color: var(--text-heading); }
         .hero-text h1 em { font-style: normal; color: var(--text); }
-        .hero-text p { font-size: 13px; color: var(--text-secondary); max-width: 400px; margin-bottom: 16px; }
+        .hero-text p { font-size: 14px; color: var(--text-secondary); max-width: 420px; margin-bottom: 18px; line-height: 1.7; }
         .hero-text .actions { display: flex; gap: 8px; }
         .hero-terminal {
-            flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px;
-            overflow: hidden; min-width: 380px;
+            flex: 1.1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px;
+            overflow: hidden; min-width: 400px; max-width: 480px;
         }
         .hero-terminal .bar {
             background: var(--bg-term-bar); padding: 5px 12px; display: flex; gap: 4px; align-items: center;
@@ -120,12 +120,13 @@
         footer a { color: var(--text-muted); text-decoration: none; } footer a:hover { color: var(--text); }
 
         @media (max-width: 720px) {
-            .hero { flex-direction: column; }
-            .hero-terminal { min-width: auto; }
+            .hero { flex-direction: column; gap: 28px; }
+            .hero-terminal { min-width: auto; max-width: none; }
             .grid { grid-template-columns: repeat(2, 1fr); }
             .sections { grid-template-columns: 1fr; }
             .endpoint-grid { grid-template-columns: repeat(2, 1fr); }
             .hero-text h1 { font-size: 26px; }
+            .hero-text p { font-size: 13px; }
             .page { padding: 20px; }
         }
     </style>
@@ -135,7 +136,7 @@
         <header>
             <a href="/" class="brand">
                 <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#0a0a0a" stroke="#222" stroke-width="1"/><text x="16" y="22" text-anchor="middle" font-size="19" font-family="Georgia,serif" font-weight="700" fill="#ededed" font-style="italic">&phi;</text></svg>
-                phigatway
+                PhiGateway
             </a>
             <nav>
                 <a href="https://github.com/raindragon14/phi-gateway" target="_blank" rel="noopener">GitHub</a>
