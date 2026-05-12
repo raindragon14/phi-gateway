@@ -5,11 +5,11 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from phi_gateway.core.security import generate_api_key
 from phi_gateway.database import get_db
 from phi_gateway.main import app
 from phi_gateway.models import Base
 from phi_gateway.models.api_key import ApiKey
-from phi_gateway.core.security import generate_api_key
 
 TEST_DB_URL = "sqlite+aiosqlite://"
 

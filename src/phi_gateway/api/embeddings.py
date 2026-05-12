@@ -1,7 +1,7 @@
 """OpenAI-compatible embeddings endpoint."""
 
-from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 
 from phi_gateway.core.embedding import generate_embedding, generate_embeddings_batch
 from phi_gateway.dependencies import get_api_key
