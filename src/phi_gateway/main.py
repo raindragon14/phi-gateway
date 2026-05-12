@@ -15,15 +15,15 @@ from phi_gateway.models import Base
 logger = logging.getLogger(__name__)
 
 LANDING_DESC = (
-    "LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. "
-    "One API, one docker compose up."
+    "One API for AI agents. "
+    "LLM Proxy + Tool Registry + Knowledge Base + Agent Memory."
 )
 LONG_DESC = (
     "LLM Proxy (OpenAI, Anthropic, Groq, OpenRouter) + "
     "Tool Registry (MCP-native, JSON-RPC 2.0) + "
     "Knowledge Base (RAG with embeddings, cosine similarity) + "
     "Agent Memory (conversation storage, context window management). "
-    "All in one lightweight API."
+    "Self-host for free or use a managed instance."
 )
 
 SCALAR_HTML = """<!DOCTYPE html>
@@ -31,7 +31,7 @@ SCALAR_HTML = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phi AI Gateway - API Reference</title>
+    <title>PhiGateway — API Reference</title>
     <style>body{margin:0;padding:0;background:#0a0a0f}</style>
 </head>
 <body>

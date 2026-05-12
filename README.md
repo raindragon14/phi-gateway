@@ -1,154 +1,245 @@
-# Phi AI Gateway
+# PhiGateway
 
-**Agent-First API Platform**
+**One API for AI agents.** LLM proxy, tool registry, knowledge base, and agent memory in a single container.
 
-LLM Proxy + Tool Registry (MCP) + Knowledge Base (RAG) + Agent Memory in a single lightweight API. Runs on a 4GB VPS.
-
-<p>
-  <a href="#quick-start">Quick Start</a> &middot;
-  <a href="#features">Features</a> &middot;
-  <a href="https://phiconsulting.biz.id/docs">Documentation</a> &middot;
-  <a href="https://phiconsulting.biz.id">Website</a>
+<p align="center">
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#agent-workflow">Agent Workflow</a> ·
+  <a href="#self-hosting">Self-Hosting</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#license">License</a>
 </p>
 
 ---
 
-## What is Phi AI Gateway?
+## What is PhiGateway?
 
-Phi AI Gateway provides all the primitives AI agents need behind a single API. Instead of stitching together six services, you run one Docker container.
+When building an AI agent, you need four things: a way to call LLMs, tools the agent can use, a place to store knowledge, and memory across conversations. PhiGateway provides all four behind a single OpenAI-compatible API. Run it on your own server or use a hosted instance.
 
-| Primitive | Description |
+| Primitive | What it does |
 |---|---|
-| **LLM Proxy** | OpenAI-compatible chat completions across 10+ models (OpenAI, Anthropic, Groq, OpenRouter). Streaming, cost tracking, request logging. |
-| **Tool Registry** | Register, discover, and execute tools via REST or MCP (JSON-RPC 2.0). JSON Schema contracts for agent-discoverable tools. |
-| **Knowledge Base** | Document ingestion with chunking and embedding. Semantic search via cosine similarity with keyword fallback. |
-| **Agent Memory** | Persistent conversation storage with session management, pagination, and automatic context window trimming. |
-
-## Hosted or Self-Hosted
-
-Phi AI Gateway is open source (MIT). Run it on your own server for free, or use the hosted version at **[phiconsulting.biz.id](https://phiconsulting.biz.id)** with managed infrastructure, SSL, and support included.
-
-| | Self-Hosted | Cloud |
-|---|---|---|
-| **License** | MIT, free forever | Managed service |
-| **Setup** | `docker compose up` | Instant, no setup |
-| **Pricing** | Free | Free tier available, paid plans for scale |
-| **Maintenance** | You manage it | Fully managed |
-
-The hosted API is available at `api.phiconsulting.biz.id`. Full documentation at [phiconsulting.biz.id/docs](https://phiconsulting.biz.id/docs).
+| **LLM Proxy** | Route chat completions to OpenAI, Anthropic, Groq, and OpenRouter. Streaming, cost tracking, request logging. |
+| **Tool Registry** | Register tools with JSON Schema. Agents discover them via REST or MCP (JSON-RPC 2.0). The gateway proxies execution. |
+| **Knowledge Base** | Chunk, embed, and search documents. Cosine similarity with keyword fallback. No external vector DB required. |
+| **Agent Memory** | Store conversations, paginate history, auto-trim context windows. Returns `X-Context-Truncated` header when trimming occurs. |
 
 ## Quick Start
 
 ```bash
-# Clone
 git clone https://github.com/raindragon14/phi-gateway
 cd phi-gateway
-
-# Install
-pip install -e ".[dev]"
-cp .env.example .env  # Add your LLM API keys
-
-# Run
-uvicorn phi_gateway.main:app --reload
-```
-
-Create an API key and start using it:
-
-```bash
-# Create a key
-curl -X POST http://localhost:8000/v1/keys \
-  -H "Content-Type: application/json" \
-  -d '{"name": "dev", "tier": "free"}'
-
-# Chat with Groq (free tier)
-curl http://localhost:8000/v1/chat/completions \
-  -H "Authorization: Bearer <your-key>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "groq/llama-3.3-70b",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
-```
-
-Or deploy with Docker:
-
-```bash
+cp .env.example .env    # add your LLM provider keys here
 docker compose up -d
 ```
+
+The gateway starts on port 8000. Create an API key and chat:
+
+```bash
+# Step 1: Create a gateway API key
+curl -sX POST http://localhost:8000/v1/keys \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-agent","tier":"free"}'
+
+# Step 2: Use it
+curl -s http://localhost:8000/v1/chat/completions \
+  -H "Authorization: Bearer <your-key>" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"groq/llama-3.3-70b","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+## Agent Workflow
+
+Here is how an AI agent uses the gateway programmatically:
+
+```
+┌─ Agent (your code) ────────────────────────────────────────┐
+│                                                             │
+│  1. Authenticate  →  POST /v1/keys  →  get phi‑sk‑...      │
+│  2. Think          →  POST /v1/chat/completions  →  LLM    │
+│  3. Use tools      →  POST /v1/tools  →  tool execution    │
+│  4. Search docs    →  POST /v1/kb/*/search  →  RAG         │
+│  5. Remember       →  POST /v1/memory/*  →  conversation   │
+│  6. Monitor        →  GET  /v1/usage  →  cost breakdown    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Step-by-step (Python agent example)
+
+```python
+import httpx
+
+async def agent_workflow():
+    async with httpx.AsyncClient(base_url="http://localhost:8000") as c:
+        # 1. Create a key (do this once, save it)
+        r = await c.post("/v1/keys", json={"name": "agent", "tier": "free"})
+        key = r.json()["key"]
+
+        headers = {"Authorization": f"Bearer {key}"}
+
+        # 2. Chat with any model
+        r = await c.post("/v1/chat/completions", json={
+            "model": "groq/llama-3.3-70b",
+            "messages": [{"role": "user", "content": "What tools do I have?"}]
+        }, headers=headers)
+        reply = r.json()["choices"][0]["message"]["content"]
+
+        # 3. Register a tool the agent can call
+        await c.post("/v1/tools", json={
+            "name": "calculator",
+            "description": "Evaluate math expressions",
+            "json_schema": {
+                "type": "object",
+                "properties": {"expr": {"type": "string"}},
+                "required": ["expr"]
+            },
+            "endpoint": "https://api.mathjs.org/v4/"
+        }, headers=headers)
+
+        # 4. Search a knowledge base (after ingesting docs)
+        await c.post("/v1/kb", json={"name": "docs"}, headers=headers)
+        await c.post(f"/v1/kb/{kb_id}/search", json={
+            "query": "deployment guide", "top_k": 5
+        }, headers=headers)
+
+        # 5. Persist conversation for context
+        r = await c.post("/v1/memory/conversations", json={
+            "session_id": "agent-session-42", "title": "User inquiry"
+        }, headers=headers)
+
+        # 6. Check usage and cost
+        r = await c.get("/v1/usage", headers=headers)
+        usage = r.json()
+        print(f"Cost so far: ${usage['total_cost_usd']:.4f}")
+```
+
+A full walkthrough is available on the built-in dashboard at `/dashboard/docs` and in the [Scalar API docs](/docs).
 
 ## Features
 
 ### LLM Proxy
-OpenAI-compatible endpoint with multi-provider routing, SSE streaming, and transparent per-request cost tracking.
 
-### Tool Registry (MCP-Native)
-Register tools with JSON Schema contracts. Execute via proxied HTTP calls or the MCP endpoint (`POST /mcp`) with `tools/list` and `tools/call`.
+Single endpoint (`/v1/chat/completions`) routes to multiple providers. Model string determines the backend — your agent code never changes:
+
+| Model | Provider | Pricing (1M tokens) | Context |
+|---|---|---|---|
+| `gpt-5-nano` | OpenAI | $0.05 / $0.40 | 400k |
+| `gpt-5.2` | OpenAI | $1.75 / $14.00 | 400k |
+| `claude-sonnet-4.6` | Anthropic | $3.00 / $15.00 | 200k |
+| `groq/llama-3.3-70b` | Groq | Free | 128k |
+| `openrouter/*` | OpenRouter | Varies | Varies |
+
+Streaming (SSE), cost tracking per request, and transparent error handling included.
+
+### Tool Registry (MCP-native)
+
+Agents register external capabilities with JSON Schema contracts. The gateway validates inputs and proxies executions:
+
+```bash
+# Register
+curl -sX POST /v1/tools -H "Authorization: Bearer <key>" \
+  -d '{"name":"search","description":"Web search","json_schema":{...},"endpoint":"https://..."}'
+
+# Discover (MCP)
+curl -sX POST /mcp -H "Authorization: Bearer <key>" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":"1"}'
+
+# Execute
+curl -sX POST /v1/tools/{id}/call -H "Authorization: Bearer <key>" \
+  -d '{"method":"search","params":{"query":"phi gateway"}}'
+```
 
 ### Knowledge Base
-Create knowledge bases, ingest documents with paragraph-aware chunking, generate embeddings via OpenAI, and search with cosine similarity. Falls back to keyword search when embeddings are unavailable.
+
+Paragraph-aware chunking, embeddings via OpenAI, cosine similarity search. Falls back to keyword search when embeddings are unavailable. No external vector database needed — everything lives in SQLite.
 
 ### Agent Memory
-Conversation CRUD with session IDs, paginated message history, and context window management. Returns `X-Context-Truncated` header when old messages are trimmed.
 
-### Dashboard
-HTMX + Tailwind CSS admin UI for managing API keys, viewing usage breakdowns by provider and model, and browsing documentation.
+Full CRUD for conversations with pagination and context window management. The gateway automatically trims oldest messages when token count exceeds the model's context limit, returning an `X-Context-Truncated` header so your agent can react.
+
+## Self-Hosting vs Hosted
+
+PhiGateway is open source (MIT). You have two deployment options:
+
+| | Self-Hosted | Hosted Instance |
+|---|---|---|
+| **Infrastructure** | Your server (>= 1GB RAM) | Managed for you |
+| **Provider keys** | You bring your own | Platform provisions |
+| **SSL / domain** | You configure | Included |
+| **Updates** | You apply | Automatic |
+| **Rate limits** | You control per tier | Platform enforces |
+| **Cost** | Your server + provider bills | Free tier available |
+
+### Self-Hosting
+
+```bash
+# Requirements: Docker, a domain (for SSL), provider API keys
+git clone https://github.com/raindragon14/phi-gateway
+cd phi-gateway
+cp .env.example .env   # add your OpenAI / Anthropic / Groq / OpenRouter keys
+docker compose up -d
+```
+
+The `.env.example` file documents every provider key you need. The gateway does **not** ship with any keys — you bring your own and pay your own provider bills. Rate limits are configurable per API key tier in the database.
+
+### Hosted Instance
+
+A managed deployment is available for those who prefer not to operate infrastructure. It includes provider key management, automatic SSL, and a free tier for evaluation.
+
+Visit **[phiconsulting.biz.id](https://phiconsulting.biz.id)** for details.
+
+**The open-source project and the hosted service are separate:** the hosted instance uses the same codebase with additional operational layers (key pool, billing, monitoring) that are not part of this repository. Nothing in this repo requires the hosted service.
 
 ## Architecture
 
 ```
 Caddy (reverse proxy, auto SSL)
-  └── FastAPI (2 uvicorn workers, ~300MB RAM)
-        ├── /v1/chat         → LLM proxy → OpenAI/Anthropic/Groq/OpenRouter
-        ├── /v1/tools        → Tool registry (MCP-native)
-        ├── /v1/kb           → RAG (SQLite + cosine similarity)
-        ├── /v1/memory       → Agent memory
-        ├── /v1/keys         → API key management
-        ├── /v1/usage        → Usage analytics
-        ├── /mcp             → JSON-RPC 2.0 MCP endpoint
-        ├── /dashboard       → HTMX admin UI
-        └── /docs            → Swagger UI
-              └── SQLite (single file, ~20MB)
+  └── FastAPI (uvicorn, 2 workers)
+        ├── /v1/chat/completions  →  LLM proxy  →  provider APIs
+        ├── /v1/tools             →  tool registry
+        ├── /v1/kb                →  RAG (SQLite + cosine similarity)
+        ├── /v1/memory            →  agent memory
+        ├── /v1/keys              →  API key management
+        ├── /v1/usage             →  cost analytics
+        ├── /mcp                  →  JSON-RPC 2.0 (MCP)
+        └── /dashboard            →  HTMX admin UI
+              └── SQLite (single file)
 ```
 
-Idle RAM footprint is approximately 800 MB on a 4GB VPS, leaving roughly 3.2GB of headroom.
+Idle RAM: approximately 800 MB on a 4 GB VPS.
 
-## Key Decisions
+## Design Decisions
 
 | Decision | Rationale |
 |---|---|
-| Python + FastAPI | AI ecosystem, async-native, auto OpenAPI 3.1 |
-| SQLite + pure Python vectors | Zero ops, single file, 200MB saved vs external vector DB |
-| Caddy reverse proxy | Auto SSL via Let's Encrypt, single binary, ~50MB RAM |
-| Proxy-first architecture | 4GB VPS cannot run local LLMs alongside the app; Groq free tier fills the gap |
-| MCP protocol from day one | JSON-RPC 2.0, de facto standard for agent-tool communication |
-| API-key-only auth | Simple to implement and use, familiar to developers |
-
-
+| Python + FastAPI | AI ecosystem standard, async-native, auto OpenAPI 3.1 |
+| SQLite + pure Python vectors | Zero ops, single file, no external vector DB needed |
+| Caddy reverse proxy | Auto Let's Encrypt SSL, ~50 MB RAM, single binary |
+| Proxy-first architecture | No local models — routes to provider APIs via your keys |
+| MCP from day one | JSON-RPC 2.0, de facto standard for agent-tool communication |
+| API-key-only auth | Simple, developer-familiar, no OAuth complexity |
+| In-memory rate limiter | Adequate for single-worker; Redis-ready for multi-worker |
 
 ## Project Structure
 
 ```
 phi-gateway/
-├── src/phi_gateway/          # Application code
-│   ├── api/                  # FastAPI route handlers (10 modules)
-│   ├── core/                 # Business logic (LLM proxy, auth, cost, embeddings)
-│   ├── dashboard/            # HTMX admin UI templates
-│   ├── models/               # SQLAlchemy ORM models (6 tables)
+├── src/phi_gateway/
+│   ├── api/                  # FastAPI routes (10 modules)
+│   ├── core/                 # LLM proxy, auth, cost, embeddings, rate limiter
+│   ├── dashboard/templates/  # HTMX admin UI
+│   ├── models/               # SQLAlchemy ORM (6 tables)
 │   ├── schemas/              # Pydantic request/response schemas
-│   ├── services/             # Service layer orchestration
-│   ├── config.py             # pydantic-settings
-│   ├── database.py           # Async SQLAlchemy engine + session
-│   ├── dependencies.py       # FastAPI dependency injection
+│   ├── services/             # Business logic orchestration
+│   ├── config.py             # Environment configuration
+│   ├── database.py           # Async SQLAlchemy engine
+│   ├── dependencies.py       # Dependency injection (auth + rate limiting)
 │   └── main.py               # App factory + lifespan
 ├── srv/landing/              # Landing page
 ├── tests/                    # pytest suite (unit + integration)
-├── alembic/                  # Database migrations (3 revisions)
-├── .github/workflows/        # CI/CD (pytest + ruff + Docker build)
 ├── docker-compose.yml        # Local dev (Caddy + API)
-├── docker-compose.vps.yml    # VPS deploy (API only)
 ├── Dockerfile                # Production build
-├── Caddyfile                 # Reverse proxy config
-└── pyproject.toml            # Project metadata + tool config
+└── pyproject.toml            # Package metadata
 ```
 
 ## Development
@@ -163,12 +254,23 @@ pytest -v
 # Lint
 ruff check src/ tests/
 
-# Run server with auto-reload
+# Run with auto-reload
 uvicorn phi_gateway.main:app --reload
 ```
+
+## Monetization
+
+This project is **MIT-licensed** — you can self-host it for free, forever. The open-source code is complete and functional without any external service.
+
+If you build a business on top of it, common monetization paths include:
+
+- **Hosted SaaS** — operate a managed instance and charge for access (tiered plans, usage-based pricing)
+- **Support contracts** — offer enterprise support, SLAs, and managed deployments
+- **Value-added features** — build proprietary layers (admin dashboards, analytics, SSO) on top of the open core
+- **Consulting** — help organizations integrate agents with their existing infrastructure
+
+PhiGateway's architecture cleanly separates the core (this repo) from operational layers (key management at scale, billing, monitoring) so either path works without conflict.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-Self-hosting is free forever. [phiconsulting.biz.id](https://phiconsulting.biz.id) provides a managed hosted option if you prefer not to operate your own infrastructure.

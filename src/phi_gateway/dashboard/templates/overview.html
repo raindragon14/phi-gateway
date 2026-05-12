@@ -1,56 +1,74 @@
 {% extends "base.html" %}
 {% block title %}Overview{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold text-white mb-2">Overview</h1>
-    <p class="text-gray-400 mb-8">Welcome to your Phi AI Gateway dashboard.</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="stat-card">
-            <div class="stat-value" id="total-requests">—</div>
-            <div class="stat-label">Total Requests</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="total-tokens">—</div>
-            <div class="stat-label">Tokens Used</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="total-cost">—</div>
-            <div class="stat-label">Total Cost (USD)</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="active-keys">—</div>
-            <div class="stat-label">Active Keys</div>
-        </div>
-    </div>
+<h1>Overview</h1>
+<p class="subtitle">Your PhiGateway instance at a glance.</p>
 
-    <div class="card mb-8">
-        <h2 class="text-xl font-semibold mb-4">Quick Start</h2>
-        <div class="bg-gray-950 rounded-lg p-4 text-sm font-mono text-green-400">
-            <p class="text-gray-400 mb-2"># Create an API key</p>
-            <p>curl -X POST https://api.phiconsulting.biz.id/v1/keys \<br>
-            &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
-            &nbsp;&nbsp;-d '{"name": "my-key", "tier": "free"}'</p>
-            <p class="text-gray-400 mt-4 mb-2"># Chat completion</p>
-            <p>curl https://api.phiconsulting.biz.id/v1/chat/completions \<br>
-            &nbsp;&nbsp;-H "Authorization: Bearer &lt;your-key&gt;" \<br>
-            &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
-            &nbsp;&nbsp;-d '{"model": "groq/llama-3.3-70b", "messages": [{"role": "user", "content": "Hello!"}]}'</p>
-        </div>
+<div class="stat-grid">
+    <div class="stat">
+        <div class="val" id="total-requests">—</div>
+        <div class="lbl">Requests</div>
     </div>
+    <div class="stat">
+        <div class="val" id="total-tokens">—</div>
+        <div class="lbl">Tokens</div>
+    </div>
+    <div class="stat">
+        <div class="val" id="total-cost">—</div>
+        <div class="lbl">Cost (USD)</div>
+    </div>
+    <div class="stat">
+        <div class="val" id="active-keys">—</div>
+        <div class="lbl">Active Keys</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Quick Start</h2>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">
+        Create an API key and make your first agent chat request.
+    </p>
+    <pre class="code"><span class="comment"># 1. Create a gateway API key (do this once)</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/keys \
+  <span class="flag">-H</span> <span class="comment">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"name":"first-key","tier":"free"}'</span>
+
+<span class="comment"># 2. Your agent's first chat completion</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/chat/completions \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="comment">'{
+    "model": "groq/llama-3.3-70b",
+    "messages": [{"role":"user","content":"Hello, world!"}]
+  }'</span>
+
+<span class="comment"># 3. Full agent workflow — see <a href="/dashboard/docs" style="color:var(--text);">Docs</a> for tools, knowledge base, memory</span></pre>
 </div>
 
 <script>
 async function loadStats() {
     const key = sessionStorage.getItem('phi_api_key');
-    if (!key) { return; }
+    if (!key) {
+        document.querySelectorAll('.stat .val').forEach(el => el.textContent = '🔑');
+        return;
+    }
     try {
         const resp = await fetch('/v1/usage', { headers: { 'Authorization': `Bearer ${key}` }});
         const data = await resp.json();
-        document.getElementById('total-requests').textContent = data.total_requests || 0;
-        document.getElementById('total-tokens').textContent = (data.total_input_tokens + data.total_output_tokens).toLocaleString();
+        document.getElementById('total-requests').textContent = (data.total_requests || 0).toLocaleString();
+        document.getElementById('total-tokens').textContent = ((data.total_input_tokens || 0) + (data.total_output_tokens || 0)).toLocaleString();
         document.getElementById('total-cost').textContent = `$${(data.total_cost_usd || 0).toFixed(4)}`;
-    } catch(e) { console.error(e); }
+    } catch(e) {
+        console.error('Failed to load stats:', e);
+    }
+
+    // Count active keys
+    try {
+        const resp = await fetch('/v1/keys', { headers: { 'Authorization': `Bearer ${key}` }});
+        const keys = await resp.json();
+        document.getElementById('active-keys').textContent = Array.isArray(keys) ? keys.length : '—';
+    } catch(e) { /* optional */ }
 }
 loadStats();
 </script>

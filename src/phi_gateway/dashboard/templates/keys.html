@@ -1,85 +1,103 @@
 {% extends "base.html" %}
 {% block title %}API Keys{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold text-white mb-2">API Keys</h1>
-    <p class="text-gray-400 mb-8">Manage your API keys. The full key is shown only once after creation.</p>
 
-    <!-- Create Key Form -->
-    <div class="card mb-8">
-        <h2 class="text-xl font-semibold mb-4">Create New Key</h2>
-        <div class="flex gap-4 items-end">
-            <div class="flex-1">
-                <label class="block text-sm text-gray-400 mb-1">Key Name</label>
-                <input type="text" id="key-name" class="input" placeholder="e.g., Production Key">
-            </div>
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Tier</label>
-                <select id="key-tier" class="input">
-                    <option value="free">Free</option>
-                    <option value="pro">Pro</option>
-                    <option value="team">Team</option>
-                </select>
-            </div>
-            <button onclick="createKey()" class="btn-primary">Create Key</button>
-        </div>
-        <div id="key-result" class="mt-4 hidden">
-            <div class="bg-gray-950 border border-phi-800 rounded-lg p-4">
-                <p class="text-sm text-phi-400 mb-2">⚠️ Copy this key now — it won't be shown again!</p>
-                <code id="key-value" class="text-sm font-mono text-green-400 break-all"></code>
-            </div>
-        </div>
-    </div>
+<h1>API Keys</h1>
+<p class="subtitle">Create, view, and revoke gateway API keys.</p>
 
-    <!-- Keys List -->
-    <div class="card">
-        <h2 class="text-xl font-semibold mb-4">Your Keys</h2>
-        <div id="keys-list" hx-get="/dashboard/keys/table" hx-trigger="load, every:10s" hx-swap="innerHTML">
-            <p class="text-gray-500">Loading...</p>
-        </div>
+<div class="card" style="margin-bottom: 20px;">
+    <h2>Create New Key</h2>
+    <form style="display:flex;gap:8px;margin-top:12px;" onsubmit="event.preventDefault(); createKey(this);">
+        <input type="text" name="name" placeholder="Key name (e.g., agent-1, ci-cd)" class="input" style="flex:1;max-width:300px;" required>
+        <select name="tier" class="input" style="width:100px;">
+            <option value="free">free</option>
+            <option value="pro">pro</option>
+            <option value="team">team</option>
+            <option value="admin">admin</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+    <div id="new-key-result" style="margin-top:12px;"></div>
+</div>
+
+<div class="card">
+    <h2>Your Keys</h2>
+    <div id="keys-table" style="margin-top:12px;">
+        <p style="font-size:12px;color:var(--text-muted);">Loading...</p>
     </div>
 </div>
 
 <script>
-async function createKey() {
-    const name = document.getElementById('key-name').value;
-    const tier = document.getElementById('key-tier').value;
+async function createKey(form) {
+    const name = form.name.value;
+    const tier = form.tier.value;
     const key = sessionStorage.getItem('phi_api_key');
-    if (!name) { alert('Please enter a key name'); return; }
-
-    const headers = { 'Content-Type': 'application/json' };
-    if (key) { headers['Authorization'] = `Bearer ${key}`; }
+    if (!key) { showResult('Set your API key in sessionStorage.phi_api_key first.', true); return; }
 
     try {
-        const resp = await fetch('/v1/keys', { method: 'POST', headers, body: JSON.stringify({name, tier}) });
+        const resp = await fetch('/v1/keys', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ name, tier })
+        });
         const data = await resp.json();
         if (resp.ok) {
-            document.getElementById('key-value').textContent = data.key;
-            document.getElementById('key-result').classList.remove('hidden');
-            document.getElementById('key-name').value = '';
-            // Reload the keys table
-            htmx.trigger('#keys-list', 'load');
+            document.getElementById('new-key-result').innerHTML =
+                `<div style="background:var(--bg);border:1px solid var(--ok);border-radius:2px;padding:12px;margin-top:8px;">
+                    <p style="font-size:12px;color:var(--ok);margin-bottom:6px;">Key created — save it now</p>
+                    <pre class="code" style="margin:0;">${data.key}</pre>
+                    <p style="font-size:10px;color:var(--text-muted);margin-top:6px;">This key will not be shown again.</p>
+                </div>`;
+            loadKeys();
         } else {
-            alert('Error: ' + (data.detail || 'Unknown error'));
+            showResult(data.detail || 'Failed to create key', true);
         }
-    } catch(e) { alert('Error: ' + e.message); }
+    } catch(e) { showResult(e.message, true); }
 }
 
-async function revokeKey(id) {
-    if (!confirm('Revoke this API key? This cannot be undone.')) return;
+async function loadKeys() {
     const key = sessionStorage.getItem('phi_api_key');
+    if (!key) {
+        document.getElementById('keys-table').innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Set your API key in sessionStorage.phi_api_key to manage keys.</p>';
+        return;
+    }
     try {
-        const resp = await fetch(`/v1/keys/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${key}` }
-        });
-        if (resp.ok) {
-            htmx.trigger('#keys-list', 'load');
-        } else {
-            const data = await resp.json();
-            alert('Error: ' + (data.detail || 'Unknown error'));
+        const resp = await fetch('/v1/keys', { headers: { 'Authorization': `Bearer ${key}` }});
+        const keys = await resp.json();
+        if (!Array.isArray(keys) || keys.length === 0) {
+            document.getElementById('keys-table').innerHTML = '<p style="font-size:12px;color:var(--text-muted);">No keys yet. Create one above.</p>';
+            return;
         }
-    } catch(e) { alert('Error: ' + e.message); }
+        document.getElementById('keys-table').innerHTML = `
+            <table>
+                <thead><tr><th>Prefix</th><th>Name</th><th>Tier</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+                <tbody>${keys.map(k => `
+                    <tr>
+                        <td class="mono">${k.prefix}&hellip;</td>
+                        <td>${k.name}</td>
+                        <td><span class="badge badge-${k.tier}">${k.tier}</span></td>
+                        <td>${new Date(k.created_at).toLocaleDateString()}</td>
+                        <td>${k.last_used_at ? new Date(k.last_used_at).toLocaleString() : '—'}</td>
+                        <td><button class="btn btn-danger" style="padding:3px 8px;font-size:10px;" onclick="revokeKey('${k.id}', this)">Revoke</button></td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>`;
+    } catch(e) {
+        document.getElementById('keys-table').innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Failed to load keys.</p>';
+    }
 }
+
+async function revokeKey(id, btn) {
+    const key = sessionStorage.getItem('phi_api_key');
+    if (!confirm('Revoke this key?')) return;
+    try {
+        await fetch(`/v1/keys/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${key}` }});
+        btn.textContent = 'Revoked';
+        btn.disabled = true;
+        setTimeout(loadKeys, 1000);
+    } catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadKeys();
 </script>
 {% endblock %}

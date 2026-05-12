@@ -1,49 +1,32 @@
-<table class="w-full">
-    <thead>
-        <tr class="text-left text-gray-400 text-sm border-b border-gray-800">
-            <th class="pb-3 font-medium">Name</th>
-            <th class="pb-3 font-medium">Prefix</th>
-            <th class="pb-3 font-medium">Tier</th>
-            <th class="pb-3 font-medium">Status</th>
-            <th class="pb-3 font-medium">Created</th>
-            <th class="pb-3 font-medium">Last Used</th>
-            <th class="pb-3 font-medium"></th>
-        </tr>
-    </thead>
-    <tbody id="keys-table-body">
-        <!-- Populated by JS -->
-    </tbody>
-</table>
+<!-- HTMX fragment: keys table (loaded by /dashboard/keys/table) -->
+<div id="keys-table">
+    <p style="font-size:12px;color:var(--text-muted);" hx-get="/v1/keys" hx-trigger="load" hx-target="#keys-table">
+        Loading keys...
+    </p>
+</div>
 
 <script>
-async function loadKeysTable() {
-    const key = sessionStorage.getItem('phi_api_key');
-    if (!key) { document.getElementById('keys-table-body').innerHTML = '<tr><td colspan="7" class="text-gray-500 py-4 text-center">Enter your API key first</td></tr>'; return; }
-    try {
-        const resp = await fetch('/v1/keys', { headers: { 'Authorization': `Bearer ${key}` }});
-        if (!resp.ok) { throw new Error('Unauthorized'); }
-        const keys = await resp.json();
-        let html = '';
-        if (keys.length === 0) {
-            html = '<tr><td colspan="7" class="text-gray-500 py-4 text-center">No keys yet</td></tr>';
-        } else {
-            for (const k of keys) {
-                const tierClass = k.tier === 'pro' ? 'badge-pro' : k.tier === 'team' ? 'badge-team' : 'badge-free';
-                html += `<tr class="border-b border-gray-800/50">
-                    <td class="py-3 text-white">${k.name}</td>
-                    <td class="py-3 font-mono text-xs text-gray-400">${k.prefix}...</td>
-                    <td class="py-3"><span class="badge ${tierClass}">${k.tier}</span></td>
-                    <td class="py-3">${k.is_active ? '<span class="text-green-400">Active</span>' : '<span class="text-red-400">Revoked</span>'}</td>
-                    <td class="py-3 text-sm text-gray-400">${new Date(k.created_at).toLocaleDateString()}</td>
-                    <td class="py-3 text-sm text-gray-400">${k.last_used_at ? new Date(k.last_used_at).toLocaleString() : 'Never'}</td>
-                    <td class="py-3">${k.is_active ? `<button onclick="revokeKey('${k.id}')" class="text-red-400 hover:text-red-300 text-sm">Revoke</button>` : ''}</td>
-                </tr>`;
-            }
+// HTMX after-swap handler for key data
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'keys-table' && evt.detail.xhr.responseURL.includes('/v1/keys')) {
+        const data = JSON.parse(evt.detail.xhr.response);
+        if (!Array.isArray(data) || data.length === 0) {
+            evt.detail.target.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">No keys yet.</p>';
+            return;
         }
-        document.getElementById('keys-table-body').innerHTML = html;
-    } catch(e) {
-        document.getElementById('keys-table-body').innerHTML = '<tr><td colspan="7" class="text-gray-500 py-4 text-center">Enter your API key in the sidebar to view keys</td></tr>';
+        evt.detail.target.innerHTML = `
+            <table>
+                <thead><tr><th>Prefix</th><th>Name</th><th>Tier</th><th>Created</th><th>Last used</th></tr></thead>
+                <tbody>${data.map(k => `
+                    <tr>
+                        <td class="mono">${k.prefix}&hellip;</td>
+                        <td>${k.name}</td>
+                        <td><span class="badge badge-${k.tier}">${k.tier}</span></td>
+                        <td>${new Date(k.created_at).toLocaleDateString()}</td>
+                        <td>${k.last_used_at ? new Date(k.last_used_at).toLocaleString() : '—'}</td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>`;
     }
-}
-loadKeysTable();
+});
 </script>

@@ -1,60 +1,180 @@
+<!--
+  This page serves dual duty:
+  1. Tutorial for AI agents integrating with PhiGateway
+  2. Human-readable API reference
+
+  All example endpoints use relative paths so they work on both
+  self-hosted (localhost) and cloud (api.phiconsulting.biz.id) deployments.
+  No bias. No hardcoded domains.
+-->
 {% extends "base.html" %}
-{% block title %}Docs{% endblock %}
+{% block title %}Documentation{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold text-white mb-2">Documentation</h1>
-    <p class="text-gray-400 mb-8">Quick-start guide and API reference.</p>
 
-    <div class="card mb-8">
-        <h2 class="text-xl font-semibold mb-4">Quick Start</h2>
-        <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
-            <p>Phi AI Gateway provides all primitives AI agents need in one API.</p>
+<h1>Documentation</h1>
+<p class="subtitle">Agent-first guide to integrating with Phi AI Gateway.</p>
 
-            <h3 class="text-white font-semibold mt-6">1. Get an API key</h3>
-            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
-                curl -X POST https://api.phiconsulting.biz.id/v1/keys \<br>
-                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
-                &nbsp;&nbsp;-d '{"name": "dev", "tier": "free"}'
-            </div>
+<!-- ────────────────────────────────────────────────────────────────
+     AGENT-FIRST TUTORIAL
+     ──────────────────────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom: 20px;">
+    <h2>Agent-First Tutorial</h2>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;line-height:1.7;">
+        This guide shows how an AI agent programmatically uses PhiGateway.
+        All four primitives — chat, tools, knowledge, memory — are covered in sequence.
+        Replace the placeholder API key in examples with your own.
+    </p>
 
-            <h3 class="text-white font-semibold mt-6">2. Chat with any LLM</h3>
-            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
-                curl https://api.phiconsulting.biz.id/v1/chat/completions \<br>
-                &nbsp;&nbsp;-H "Authorization: Bearer &lt;key&gt;" \<br>
-                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
-                &nbsp;&nbsp;-d '{"model": "groq/llama-3.3-70b", "messages": [{"role": "user", "content": "Hello!"}]}'
-            </div>
-
-            <h3 class="text-white font-semibold mt-6">3. Register a tool</h3>
-            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
-                curl -X POST https://api.phiconsulting.biz.id/v1/tools \<br>
-                &nbsp;&nbsp;-H "Authorization: Bearer &lt;key&gt;" \<br>
-                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
-                &nbsp;&nbsp;-d '{"name": "search", "description": "Web search", "json_schema": {"type": "object", "properties": {}}, "endpoint": "https://..."}'
-            </div>
-
-            <h3 class="text-white font-semibold mt-6">4. Use MCP</h3>
-            <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm text-green-400">
-                curl -X POST https://api.phiconsulting.biz.id/mcp \<br>
-                &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
-                &nbsp;&nbsp;-d '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": "1"}'
-            </div>
+    <!-- Step 1: Auth -->
+    <div class="tutorial-step">
+        <div class="num">1</div>
+        <div class="body">
+            <h3>Get an API key</h3>
+            <p>Your agent authenticates with a gateway API key, not individual provider keys. Keys are created once and can be revoked at any time. Tier determines rate limits.</p>
+            <pre class="code"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/keys \
+  <span class="flag">-H</span> <span class="comment">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"name":"agent-key","tier":"free"}'</span></pre>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                Response includes the full key <strong>once</strong>. Save it — only the prefix is stored.
+            </p>
         </div>
     </div>
 
-    <div class="card mb-8">
-        <h2 class="text-xl font-semibold mb-4">API Reference</h2>
-        <p class="text-gray-400 mb-4">Full OpenAPI 3.1 specification available at:</p>
-        <div class="bg-gray-950 rounded-lg p-4 font-mono text-sm">
-            <a href="/docs" class="text-phi-400 hover:text-phi-300 underline">/docs</a> (Swagger UI)<br>
-            <a href="/openapi.json" class="text-phi-400 hover:text-phi-300 underline">/openapi.json</a> (JSON)
+    <!-- Step 2: Chat -->
+    <div class="tutorial-step">
+        <div class="num">2</div>
+        <div class="body">
+            <h3>Chat completion (LLM proxy)</h3>
+            <p>Agents send chat requests to a single endpoint. The gateway routes to the correct provider based on the model string. OpenAI-compatible response format.</p>
+            <pre class="code"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/chat/completions \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="comment">'{
+    "model": "groq/llama-3.3-70b",
+    "messages": [{"role":"user","content":"What is 2+2?"}],
+    "stream": false
+  }'</span></pre>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                Supported models: <span class="badge badge-free">groq/*</span> free tier,
+                <span class="badge badge-pro">openai/*</span>,
+                <span class="badge badge-pro">anthropic/*</span>,
+                <span class="badge badge-pro">openrouter/*</span>
+                &mdash; full list at <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">/v1/models</code>
+            </p>
         </div>
     </div>
 
-    <div class="card">
-        <h2 class="text-xl font-semibold mb-4">Available Models</h2>
-        <div id="models-list" class="text-gray-400">Loading...</div>
+    <!-- Step 3: Tools -->
+    <div class="tutorial-step">
+        <div class="num">3</div>
+        <div class="body">
+            <h3>Register and call tools</h3>
+            <p>Agents register external capabilities (APIs, databases, UIs) as tools. Each tool has a JSON Schema and HTTP endpoint. The gateway proxies calls.</p>
+            <pre class="code"><span class="comment"># Register a tool</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/tools \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{
+    "name":"weather","description":"Get current weather",
+    "json_schema":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]},
+    "endpoint":"https://api.weather.example/v1/current"
+  }'</span>
+
+<span class="comment"># Call via REST</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/tools/{id}/call \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"method":"weather","params":{"city":"Tokyo"}}'</span></pre>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                Tools are also discoverable via MCP: <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">POST /mcp</code> with <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">tools/list</code>
+            </p>
+        </div>
     </div>
+
+    <!-- Step 4: Knowledge Base -->
+    <div class="tutorial-step">
+        <div class="num">4</div>
+        <div class="body">
+            <h3>Knowledge base (RAG)</h3>
+            <p>Ingest documents, the gateway chunks and embeds them automatically. Agents search with semantic similarity. Falls back to keyword when embeddings unavailable.</p>
+            <pre class="code"><span class="comment"># Create a knowledge base</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/kb \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"name":"docs","description":"Company docs"}'</span>
+
+<span class="comment"># Ingest documents</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/kb/{kb_id}/documents \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"documents":[{"title":"FAQ","content":"Our policy covers..."}]}'</span>
+
+<span class="comment"># Semantic search</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/kb/{kb_id}/search \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"query":"policy","top_k":5}'</span></pre>
+        </div>
+    </div>
+
+    <!-- Step 5: Memory -->
+    <div class="tutorial-step">
+        <div class="num">5</div>
+        <div class="body">
+            <h3>Agent memory (conversation store)</h3>
+            <p>Persist agent conversations between LLM calls. Supports pagination, session IDs, automatic context window trimming (returns <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">X-Context-Truncated</code> header).</p>
+            <pre class="code"><span class="comment"># Create conversation</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/memory/conversations \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"session_id":"agent-42","title":"Debug session"}'</span>
+
+<span class="comment"># Add messages</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/memory/conversations/{id}/messages \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-d</span> <span class="comment">'{"role":"user","content":"The build failed at step 4"}'</span>
+
+<span class="comment"># Retrieve history (paginated)</span>
+<span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/memory/conversations/{id}/messages<span class="flag">?limit=50</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span></pre>
+        </div>
+    </div>
+
+    <!-- Step 6: Usage -->
+    <div class="tutorial-step">
+        <div class="num">6</div>
+        <div class="body">
+            <h3>Monitor usage and cost</h3>
+            <p>Track token consumption and cost breakdown by provider and model. Useful for budget-aware agents that optimize model selection by price.</p>
+            <pre class="code"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/usage \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span></pre>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                Optional query params: <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">from_date</code>,
+                <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">to_date</code>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ────────────────────────────────────────────────────────────────
+     API REFERENCE
+     ──────────────────────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom: 20px;">
+    <h2>API Reference</h2>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
+        Full OpenAPI 3.1 specification available at:
+    </p>
+    <a href="/docs" class="btn btn-secondary" style="margin-right:8px;">
+        Scalar API Docs
+    </a>
+    <a href="/openapi.json" class="btn btn-secondary">
+        OpenAPI JSON
+    </a>
+</div>
+
+<!-- ────────────────────────────────────────────────────────────────
+     MODEL CATALOG
+     ──────────────────────────────────────────────────────────────── -->
+<div class="card">
+    <h2>Available Models</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+        Models are provider-neutral. Your agent picks any model and the gateway routes to the correct provider.
+    </p>
+    <div id="models-list" style="font-size:12px;color:var(--text-muted);">Loading model catalog...</div>
 </div>
 
 <script>
@@ -63,13 +183,14 @@ async function loadModels() {
         const resp = await fetch('/v1/models');
         const models = await resp.json();
         document.getElementById('models-list').innerHTML = models.map(m =>
-            `<div class="flex justify-between py-2 border-b border-gray-800 last:border-0">
-                <span class="text-white font-mono text-sm">${m.id}</span>
-                <span class="text-gray-400">${m.provider} · ${m.pricing || '—'}</span>
+            `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
+                <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text);">${m.id}</span>
+                <span style="font-size:11px;color:var(--text-muted);">${m.provider} · ${m.pricing || '—'}</span>
             </div>`
-        ).join('');
+        ).join('') || '<p style="color:var(--text-muted);">No models loaded.</p>';
     } catch(e) {
-        document.getElementById('models-list').innerHTML = '<p>Failed to load models.</p>';
+        document.getElementById('models-list').innerHTML =
+            '<p style="color:var(--text-muted);">Could not load models. Is the API running?</p>';
     }
 }
 loadModels();
