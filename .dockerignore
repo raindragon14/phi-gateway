@@ -35,7 +35,8 @@ docker-compose.vps.yml
 # Dev/test files (not needed in production image)
 tests/
 deploy/
-*.sh
+auto-update.sh
+deploy.sh
 CONTRIBUTING.md
 DEPLOY.md
 caddy-snippet.conf
