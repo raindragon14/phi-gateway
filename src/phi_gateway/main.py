@@ -70,7 +70,7 @@ def _get_landing_html() -> str:
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
-        title="Phi AI Gateway",
+        title="PhiGateway",
         description=LONG_DESC,
         version=__version__,
         docs_url=None,
@@ -102,7 +102,7 @@ def create_app() -> FastAPI:
     async def root(request: Request):
         host = request.headers.get("host", "")
         if host.startswith("api."):
-            return _api_root_response()
+            return _api_root_response(host)
         return HTMLResponse(content=_get_landing_html())
 
     @app.get("/docs", include_in_schema=False)
@@ -112,13 +112,15 @@ def create_app() -> FastAPI:
     return app
 
 
-def _api_root_response() -> JSONResponse:
+def _api_root_response(host: str) -> JSONResponse:
+    scheme = "https" if "localhost" not in host and ":" not in host else "http"
+    base = f"{scheme}://{host.replace("api.", "")}"
     return JSONResponse(content={
-        "name": "Phi AI Gateway",
+        "name": "PhiGateway",
         "version": __version__,
         "description": LANDING_DESC,
-        "docs": "https://phiconsulting.biz.id/docs",
-        "openapi": "https://phiconsulting.biz.id/openapi.json",
+        "docs": f"{base}/docs",
+        "openapi": f"{base}/openapi.json",
         "health": "/health",
         "endpoints": {
             "chat": "/v1/chat/completions",

@@ -7,8 +7,7 @@ staging.phiconsulting.biz.id {
 }
 
 phiconsulting.biz.id {
-    root * /srv/landing
-    file_server
+    reverse_proxy api:8000
 }
 
 # Local development
