@@ -258,19 +258,6 @@ ruff check src/ tests/
 uvicorn phi_gateway.main:app --reload
 ```
 
-## Monetization
-
-This project is **MIT-licensed** — you can self-host it for free, forever. The open-source code is complete and functional without any external service.
-
-If you build a business on top of it, common monetization paths include:
-
-- **Hosted SaaS** — operate a managed instance and charge for access (tiered plans, usage-based pricing)
-- **Support contracts** — offer enterprise support, SLAs, and managed deployments
-- **Value-added features** — build proprietary layers (admin dashboards, analytics, SSO) on top of the open core
-- **Consulting** — help organizations integrate agents with their existing infrastructure
-
-PhiGateway's architecture cleanly separates the core (this repo) from operational layers (key management at scale, billing, monitoring) so either path works without conflict.
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
