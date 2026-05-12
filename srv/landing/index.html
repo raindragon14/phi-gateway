@@ -60,10 +60,19 @@
         }
         .hero-terminal .bar .dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--text-subtle); opacity: 0.4; }
         .hero-terminal .bar .title { font-size: 10px; color: var(--text-muted); margin-left: 8px; font-family: 'SF Mono', 'Geist Mono', monospace; }
-        .hero-terminal .body { padding: 14px 18px; font-family: 'SF Mono', 'Geist Mono', 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; color: var(--text-secondary); background: var(--bg-surface); }
-        .hero-terminal .body .dim { color: #52525b; }
+        .hero-terminal .body {
+            padding: 14px 18px; font-family: 'SF Mono', 'Geist Mono', 'JetBrains Mono', monospace;
+            font-size: 12px; line-height: 1.55; color: var(--text-secondary); background: #050505;
+        }
+        .hero-terminal .body .line { display: block; margin-bottom: 1px; }
+        .hero-terminal .body .ps1 { color: #52525b; user-select: none; }
+        .hero-terminal .body .ps1::before { content: "$"; margin-right: 8px; color: #3f3f46; }
         .hero-terminal .body .cmd { color: #e4e4e7; }
-        .hero-terminal .body .out { color: #a1a1aa; }
+        .hero-terminal .body .flag { color: #a1a1aa; }
+        .hero-terminal .body .out { color: #71717a; }
+        .hero-terminal .body .out-ok { color: #22c55e; }
+        .hero-terminal .body .cursor { display: inline-block; width: 7px; height: 14px; background: #a1a1aa; vertical-align: text-bottom; animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-bottom: 32px; background: var(--border); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
         .card {
@@ -152,12 +161,15 @@
                     <div class="title">terminal</div>
                 </div>
                 <div class="body">
-                    <span class="dim">$</span> <span class="cmd">git clone</span> https://github.com/raindragon14/phi-gateway<br>
-                    <span class="dim">$</span> <span class="cmd">docker compose up</span> -d<br>
-                    <span class="out">Running 2/2</span><br>
-                    <span class="out">phi-gateway-api Running</span><br>
-                    <span class="dim">$</span> <span class="cmd">curl</span> http://localhost:8000/v1/models<br>
-                    <span class="out">[{"id":"gpt-5-nano","provider":"openai"}...]</span>
+                    <span class="line"><span class="ps1"></span><span class="cmd">git clone</span> <span class="flag">https://github.com/raindragon14/phi-gateway</span></span>
+                    <span class="line"><span class="ps1"></span><span class="cmd">docker compose up</span> <span class="flag">-d</span></span>
+                    <span class="line out-ok">[+] Running 2/2</span>
+                    <span class="line out-ok">phi-gateway-api Running</span>
+                    <span class="line out-ok">phi-gateway-caddy Running</span>
+                    <span class="line"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> http://localhost:8000/v1/models</span>
+                    <span class="line out">[{"id":"gpt-5-nano","provider":"openai"},{"id":"claude-sonnet-4.6"</span>
+                    <span class="line out">,{"id":"groq/llama-3.3-70b","provider":"groq"}...]</span>
+                    <span class="line"><span class="ps1"></span><span class="cursor"></span></span>
                 </div>
             </div>
         </div>

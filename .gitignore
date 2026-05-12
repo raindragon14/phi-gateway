@@ -12,3 +12,4 @@ deploy/
 caddy-snippet.conf
 auto-update.sh
 deploy.sh
+DEPLOY.md
