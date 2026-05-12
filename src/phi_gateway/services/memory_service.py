@@ -70,7 +70,7 @@ async def add_message(
         conversation_id=conv.id,
         role=body.role,
         content=body.content,
-        tool_calls=[tc.model_dump() for tc in body.tool_calls] if body.tool_calls else None,
+        tool_calls=body.tool_calls if body.tool_calls else None,
         token_count=body.token_count,
     )
     db.add(msg)
