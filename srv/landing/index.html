@@ -1,660 +1,129 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phi AI Gateway — Agent-First API Platform. Satu API untuk semua AI agent kamu.</title>
-    <meta name="description" content="LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. One API, one docker compose up. Built for Indonesian developers. Runs on 4GB VPS. MIT licensed.">
-    <meta name="keywords" content="AI agent, LLM proxy, API gateway, MCP, tool registry, RAG, knowledge base, Indonesia, self-hosted, open source">
-    <meta name="author" content="Phi Consulting">
-    <link rel="canonical" href="https://phiconsulting.biz.id/">
-    <meta property="og:title" content="Phi AI Gateway — Agent-First API Platform">
-    <meta property="og:description" content="LLM Proxy + Tool Registry + KB + Memory — one docker compose up. Built for Indonesian developers.">
-    <meta property="og:url" content="https://phiconsulting.biz.id/">
-    <meta property="og:type" content="website">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        phi: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',950:'#1e1b4b' }
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.5s ease-out',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Phi AI Gateway — Agent-First API Platform</title>
+    <meta name="description" content="LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. One API, one docker compose up.">
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-        .gradient-text { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4f46e5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .gradient-border { border-image: linear-gradient(135deg, #6366f1, #818cf8) 1; }
-        .hero-glow { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,70,229,0.25) 0%, transparent 60%); }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(79,70,229,0.15); }
-        .terminal-line::before { content: '$ '; color: #6366f1; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0a0a0f;
+            color: #e1e1e8;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 40px; border-bottom: 1px solid #1a1a2e;
+        }
+        nav .logo { font-size: 18px; font-weight: 700; color: #fff; }
+        nav .logo span { color: #6366f1; }
+        nav a { color: #888; text-decoration: none; font-size: 14px; margin-left: 24px; transition: color .2s; }
+        nav a:hover { color: #e1e1e8; }
+        main {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; padding: 60px 24px;
+        }
+        h1 { font-size: 56px; font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+        h1 span { color: #6366f1; }
+        .subtitle { font-size: 20px; color: #888; max-width: 600px; line-height: 1.6; margin-bottom: 48px; }
+        .grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; max-width: 800px; margin-bottom: 48px;
+        }
+        .card {
+            background: #12121a; border: 1px solid #1a1a2e;
+            border-radius: 12px; padding: 20px; text-align: left;
+        }
+        .card h3 { font-size: 14px; color: #a5b4fc; margin-bottom: 4px; }
+        .card p { font-size: 13px; color: #666; line-height: 1.5; }
+        .cta {
+            display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+        }
+        .btn {
+            padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 500;
+            text-decoration: none; transition: all .2s;
+        }
+        .btn-primary { background: #6366f1; color: #fff; }
+        .btn-primary:hover { background: #4f46e5; }
+        .btn-secondary { background: #12121a; border: 1px solid #1a1a2e; color: #e1e1e8; }
+        .btn-secondary:hover { border-color: #333; }
+        .code-block {
+            background: #12121a; border: 1px solid #1a1a2e;
+            border-radius: 12px; padding: 24px 32px; text-align: left;
+            max-width: 540px; margin-bottom: 24px; overflow-x: auto;
+        }
+        .code-block code {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px; color: #a5b4fc; line-height: 1.7;
+        }
+        .code-block .dim { color: #555; }
+        footer {
+            text-align: center; padding: 24px;
+            font-size: 13px; color: #444; border-top: 1px solid #1a1a2e;
+        }
+        footer a { color: #666; text-decoration: none; }
+        footer a:hover { color: #999; }
+        @media (max-width: 700px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            h1 { font-size: 36px; }
+            nav { padding: 16px 20px; }
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 antialiased">
-
-<!-- ====== NAV ====== -->
-<nav class="border-b border-gray-800/50 sticky top-0 bg-gray-950/95 backdrop-blur-xl z-50">
-    <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-        <a href="#" class="flex items-center gap-2.5 group">
-            <span class="text-2xl font-black text-white tracking-tight group-hover:text-phi-400 transition-colors">φ</span>
-            <span class="text-lg font-bold text-white hidden sm:inline">Gateway</span>
-        </a>
-        <div class="flex gap-1 items-center">
-            <a href="#features" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hidden md:inline">Features</a>
-            <a href="#demo" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hidden md:inline">Demo</a>
-            <a href="#compare" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hidden md:inline">Compare</a>
-            <a href="#pricing" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hidden md:inline">Pricing</a>
-            <a href="#faq" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hidden md:inline">FAQ</a>
-            <a href="/dashboard" class="bg-phi-600 hover:bg-phi-500 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all ml-2 shadow-lg shadow-phi-600/20">Dashboard →</a>
+<body>
+    <nav>
+        <div class="logo"><span>phi</span>gateway</div>
+        <div>
+            <a href="https://github.com/raindragon14/phi-gateway">GitHub</a>
+            <a href="/docs">API Docs</a>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- ====== HERO ====== -->
-<section class="hero-glow pt-20 pb-12 md:pt-32 md:pb-20 px-6 text-center relative overflow-hidden">
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxZTFiNGIiIGZpbGwtb3BhY2l0eT0iMC40Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIwLjUiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50"></div>
-    <div class="max-w-4xl mx-auto relative">
-        <div class="inline-flex items-center gap-2 mb-6 bg-phi-900/40 border border-phi-700/50 rounded-full px-4 py-1.5 text-sm text-phi-300 animate-fade-in">
-            <span class="relative flex h-2.5 w-2.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-            </span>
-            Now serving 16+ models via OpenRouter, OpenAI, Anthropic & Groq
+    <main>
+        <div class="code-block">
+            <code>
+                <span class="dim">$</span> git clone https://github.com/raindragon14/phi-gateway<br>
+                <span class="dim">$</span> docker compose up -d
+            </code>
         </div>
 
-        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] tracking-tight animate-slide-up">
-            Satu API.<br class="md:hidden">
-            <span class="gradient-text">Semua AI Agent Kamu.</span>
-        </h1>
-
-        <p class="text-xl md:text-2xl text-gray-300 mb-3 font-medium max-w-2xl mx-auto">
-            Stop stitching together 5 services just to ship one AI agent.
+        <h1>One API for <span>AI agents</span></h1>
+        <p class="subtitle">
+            LLM Proxy, Tool Registry, Knowledge Base, and Agent Memory<br>
+            in a single lightweight API. Self-host or use our cloud.
         </p>
 
-        <p class="text-base md:text-lg text-gray-400 mb-10 max-w-xl mx-auto leading-relaxed">
-            LLM Proxy + Tool Registry + Knowledge Base + Agent Memory —
-            <strong class="text-white">one API</strong>,
-            one <code class="bg-gray-800 px-2 py-0.5 rounded text-phi-300 text-sm font-mono">docker compose up</code>,
-            runs on a <strong class="text-white">4GB VPS</strong>.
-            Bring your own LLM keys. We handle the infrastructure.
-        </p>
-
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <a href="/dashboard" class="bg-phi-600 hover:bg-phi-500 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-xl shadow-phi-600/25 hover:shadow-phi-500/40 hover:-translate-y-0.5">
-                Start Building — It's Free
-            </a>
-            <a href="#demo" class="border border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all">
-                See Live Demo ↓
-            </a>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-            <span class="flex items-center gap-1.5">🔑 No credit card</span>
-            <span class="hidden sm:inline text-gray-700">·</span>
-            <span class="flex items-center gap-1.5">⚡ 10,000 free calls/month</span>
-            <span class="hidden sm:inline text-gray-700">·</span>
-            <span class="flex items-center gap-1.5">📦 <code class="text-gray-500 font-mono">MIT</code> licensed</span>
-            <span class="hidden sm:inline text-gray-700">·</span>
-            <span class="flex items-center gap-1.5">🇮🇩 Dibuat di Indonesia</span>
-        </div>
-    </div>
-</section>
-
-<!-- ====== STATS BAR ====== -->
-<section class="border-y border-gray-800/50 bg-gray-900/30">
-    <div class="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-        <div><div class="text-2xl md:text-3xl font-black text-white">16+</div><div class="text-xs text-gray-500 mt-1">LLM Models</div></div>
-        <div><div class="text-2xl md:text-3xl font-black text-white">4</div><div class="text-xs text-gray-500 mt-1">Primitives</div></div>
-        <div><div class="text-2xl md:text-3xl font-black text-white">~87 MB</div><div class="text-xs text-gray-500 mt-1">RAM Usage</div></div>
-        <div><div class="text-2xl md:text-3xl font-black text-white">MIT</div><div class="text-xs text-gray-500 mt-1">License</div></div>
-        <div class="col-span-2 md:col-span-1"><div class="text-2xl md:text-3xl font-black text-white">Rp 0</div><div class="text-xs text-gray-500 mt-1">Self-Host Cost</div></div>
-    </div>
-</section>
-
-<!-- ====== PROBLEM / SOLUTION ====== -->
-<section class="py-20 px-6">
-    <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-        <div>
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">The Problem</p>
-            <h2 class="text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                Building an AI agent<br>today means stitching<br>
-                <span class="text-gray-400 line-through decoration-gray-600">5 different services</span>
-            </h2>
-            <ul class="space-y-3 text-gray-400">
-                <li class="flex gap-3 items-start">
-                    <span class="text-red-400 mt-1 flex-shrink-0">✕</span>
-                    <span><strong class="text-white">OpenAI API</strong> for chat, <strong class="text-white">Anthropic</strong> for Claude, <strong class="text-white">Groq</strong> for speed — three different SDKs, three billing dashboards.</span>
-                </li>
-                <li class="flex gap-3 items-start">
-                    <span class="text-red-400 mt-1 flex-shrink-0">✕</span>
-                    <span><strong class="text-white">ChromaDB / Pinecone / Weaviate</strong> for vector search — yet another service to provision, monitor, and pay for.</span>
-                </li>
-                <li class="flex gap-3 items-start">
-                    <span class="text-red-400 mt-1 flex-shrink-0">✕</span>
-                    <span><strong class="text-white">Redis / PostgreSQL</strong> for conversation memory — schema design, connection pooling, backup scripts.</span>
-                </li>
-                <li class="flex gap-3 items-start">
-                    <span class="text-red-400 mt-1 flex-shrink-0">✕</span>
-                    <span><strong class="text-white">Custom MCP server</strong> for tool calling — JSON-RPC boilerplate, auth, error handling from scratch.</span>
-                </li>
-            </ul>
-        </div>
-        <div class="bg-gray-900 border border-phi-700/30 rounded-2xl p-8 relative">
-            <div class="absolute -top-3 -right-3 bg-phi-600 text-xs font-bold px-3 py-1 rounded-full shadow-lg">The Fix</div>
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">The Solution</p>
-            <h3 class="text-2xl font-bold mb-4">φ Gateway — all four primitives, one API.</h3>
-            <ul class="space-y-3 text-gray-300">
-                <li class="flex gap-3 items-start">
-                    <span class="text-green-400 mt-1 flex-shrink-0">✓</span>
-                    <span><strong class="text-white">One endpoint</strong> for GPT-5.5, Claude Opus 4.6, Llama 4, Gemini 2.5, Mistral Large — auto-routed by model name. Bring your own keys.</span>
-                </li>
-                <li class="flex gap-3 items-start">
-                    <span class="text-green-400 mt-1 flex-shrink-0">✓</span>
-                    <span><strong class="text-white">Built-in RAG</strong> — ingest documents, auto-chunk, embed, semantic search. No separate vector database. Falls back to keyword search if no embedding key set.</span>
-                </li>
-                <li class="flex gap-3 items-start">
-                    <span class="text-green-400 mt-1 flex-shrink-0">✓</span>
-                    <span><strong class="text-white">Persistent memory</strong> — store conversations, auto-trim when context window overflows. Get warned via <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">X-Context-Truncated</code> header.</span>
-                </li>
-                <li class="flex gap-3 items-start">
-                    <span class="text-green-400 mt-1 flex-shrink-0">✓</span>
-                    <span><strong class="text-white">MCP-native</strong> — register tools with JSON Schema. Agents auto-discover them via the <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">/mcp</code> endpoint. Zero boilerplate.</span>
-                </li>
-            </ul>
-            <div class="mt-6 pt-6 border-t border-gray-800">
-                <p class="text-gray-400 text-sm mb-2">One command to run everything:</p>
-                <code class="block bg-gray-950 text-green-400 text-sm font-mono p-3 rounded-lg">docker compose up -d</code>
+        <div class="grid">
+            <div class="card">
+                <h3>LLM Proxy</h3>
+                <p>OpenAI-compatible. Multi-provider routing with cost tracking.</p>
+            </div>
+            <div class="card">
+                <h3>Tool Registry</h3>
+                <p>Register tools with JSON Schema. MCP-native. Agent-discoverable.</p>
+            </div>
+            <div class="card">
+                <h3>Knowledge Base</h3>
+                <p>Chunk documents, embed, search. Semantic + keyword fallback.</p>
+            </div>
+            <div class="card">
+                <h3>Agent Memory</h3>
+                <p>Conversation storage with context window management.</p>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- ====== FEATURES DEEP-DIVE ====== -->
-<section id="features" class="py-20 px-6 bg-gray-950/50">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16">
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">Four Primitives</p>
-            <h2 class="text-3xl md:text-5xl font-bold mb-4">Everything your agent needs.<br class="hidden sm:inline"><span class="text-gray-400"> Nothing it doesn't.</span></h2>
-            <p class="text-gray-500 max-w-2xl mx-auto">No LangChain. No ChromaDB. No Redis. No separate MCP server. Just one API — built to run on a 4GB VPS.</p>
+        <div class="cta">
+            <a href="https://github.com/raindragon14/phi-gateway" class="btn btn-secondary">View on GitHub</a>
+            <a href="/docs" class="btn btn-primary">API Documentation</a>
         </div>
-        <div class="grid md:grid-cols-2 gap-6">
-            <!-- LLM Proxy -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 card-hover group">
-                <div class="w-14 h-14 bg-phi-900/50 border border-phi-800/50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-phi-800/30 transition-colors">
-                    <svg class="w-7 h-7 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                </div>
-                <h3 class="text-xl font-bold mb-2">LLM Proxy</h3>
-                <p class="text-gray-400 mb-4 leading-relaxed">Route to 16+ models across OpenAI, Anthropic, Groq, and OpenRouter through <strong>one OpenAI-compatible endpoint</strong>. Use any OpenAI SDK — just change the base URL. Every response includes <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">cost_usd</code> so your agent tracks spending.</p>
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">GPT-5.5</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">Claude Opus 4.6</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">Llama 4</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">Gemini 2.5</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">Mistral Large</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">+11 more</span>
-                </div>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded">POST /v1/chat/completions</code>
-                <span class="text-gray-600 text-xs ml-2">streaming (SSE) supported</span>
-            </div>
+    </main>
 
-            <!-- Tool Registry -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 card-hover group">
-                <div class="w-14 h-14 bg-phi-900/50 border border-phi-800/50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-phi-800/30 transition-colors">
-                    <svg class="w-7 h-7 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                </div>
-                <h3 class="text-xl font-bold mb-2">Tool Registry + MCP</h3>
-                <p class="text-gray-400 mb-4 leading-relaxed">Register tools with <strong>JSON Schema contracts</strong>. Agents auto-discover them via the MCP endpoint (JSON-RPC 2.0). No custom MCP server to build — just POST your tool definition and it's live. Supports <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">none</code>, <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">api_key</code>, and <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">oauth</code> auth types.</p>
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">tools/list</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">tools/call</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">resources/read</span>
-                </div>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded">POST /v1/tools</code>
-                <span class="text-gray-600 text-xs ml-2">·</span>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded ml-1">POST /mcp</code>
-            </div>
-
-            <!-- Knowledge Base -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 card-hover group">
-                <div class="w-14 h-14 bg-phi-900/50 border border-phi-800/50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-phi-800/30 transition-colors">
-                    <svg class="w-7 h-7 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                </div>
-                <h3 class="text-xl font-bold mb-2">Knowledge Base (RAG)</h3>
-                <p class="text-gray-400 mb-4 leading-relaxed">Ingest documents → <strong>auto-chunk by paragraph</strong> → embed via OpenAI → semantic cosine similarity search. No separate vector database — pure Python, zero native dependencies. Falls back to <strong>keyword search</strong> when no embedding key is configured. Each KB is scoped to an API key.</p>
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">auto-chunk</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">embed</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">semantic search</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">keyword fallback</span>
-                </div>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded">POST /v1/kb</code>
-                <span class="text-gray-600 text-xs ml-2">·</span>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded ml-1">POST /v1/kb/{id}/search</code>
-            </div>
-
-            <!-- Agent Memory -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 card-hover group">
-                <div class="w-14 h-14 bg-phi-900/50 border border-phi-800/50 rounded-xl flex items-center justify-center mb-5 group-hover:bg-phi-800/30 transition-colors">
-                    <svg class="w-7 h-7 text-phi-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                </div>
-                <h3 class="text-xl font-bold mb-2">Agent Memory</h3>
-                <p class="text-gray-400 mb-4 leading-relaxed">Persistent conversation storage with <strong>automatic context window management</strong>. Tracks token counts per message. When a conversation exceeds the model's context limit, oldest messages are trimmed automatically. The <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">X-Context-Truncated</code> header warns your agent before data loss.</p>
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">session persistence</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">auto-trim</span><span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded font-mono">token tracking</span>
-                </div>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded">POST /v1/memory/conversations</code>
-                <span class="text-gray-600 text-xs ml-2">·</span>
-                <code class="text-phi-400 text-xs font-mono bg-gray-950 px-2 py-1 rounded ml-1">GET /v1/memory/conversations/{id}/messages</code>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ====== LIVE DEMO ====== -->
-<section id="demo" class="py-20 px-6">
-    <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-12">
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">Live Demo</p>
-            <h2 class="text-3xl md:text-4xl font-bold mb-4">From zero to AI agent<br class="hidden sm:inline"> in 3 API calls.</h2>
-            <p class="text-gray-400">No YAML. No config files. No 5-service docker compose. Just curl.</p>
-        </div>
-
-        <!-- Terminal Tabs -->
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
-            <div class="flex border-b border-gray-800">
-                <button onclick="switchTab('tab-key')" id="btn-tab-key" class="demo-tab px-5 py-3 text-sm font-medium text-phi-400 border-b-2 border-phi-500 bg-gray-900/50 transition-colors">1. Get API Key</button>
-                <button onclick="switchTab('tab-chat')" id="btn-tab-chat" class="demo-tab px-5 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-colors">2. Chat (any model)</button>
-                <button onclick="switchTab('tab-tool')" id="btn-tab-tool" class="demo-tab px-5 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-300 transition-colors">3. Register Tool</button>
-            </div>
-
-            <!-- Tab: Get API Key -->
-            <div id="tab-key" class="demo-content">
-                <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-950 border-b border-gray-800/50">
-                    <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div><div class="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-                    <span class="text-gray-600 text-xs ml-2 font-mono">terminal — api.phiconsulting.biz.id</span>
-                </div>
-                <div class="p-5 text-sm font-mono leading-relaxed overflow-x-auto">
-                    <div class="text-gray-500 mb-3"># 1. Create your free API key — instant, no credit card</div>
-                    <div class="terminal-line text-yellow-400 mb-1">curl -X POST https://api.phiconsulting.biz.id/v1/keys \</div>
-                    <div class="text-yellow-400 mb-1">  -H <span class="text-green-400">"Content-Type: application/json"</span> \</div>
-                    <div class="text-yellow-400 mb-4">  -d <span class="text-green-400">'{"name": "my-agent", "tier": "free"}'</span></div>
-                    <div class="text-gray-500 mb-3"># Response: your full API key (shown only once — save it!)</div>
-                    <div class="text-gray-400">{</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"id"</span>: <span class="text-green-400">"a007a9e0-..."</span>,</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"key"</span>: <span class="text-green-400">"phi-sk-2a02c05c027e8399..."</span>,</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"tier"</span>: <span class="text-green-400">"free"</span>,</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"is_active"</span>: <span class="text-orange-400">true</span></div>
-                    <div class="text-gray-400">}</div>
-                </div>
-            </div>
-
-            <!-- Tab: Chat -->
-            <div id="tab-chat" class="demo-content hidden">
-                <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-950 border-b border-gray-800/50">
-                    <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div><div class="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-                    <span class="text-gray-600 text-xs ml-2 font-mono">terminal — api.phiconsulting.biz.id</span>
-                </div>
-                <div class="p-5 text-sm font-mono leading-relaxed overflow-x-auto">
-                    <div class="text-gray-500 mb-3"># 2. Chat with any model — same endpoint, just change "model"</div>
-                    <div class="terminal-line text-yellow-400 mb-1">curl https://api.phiconsulting.biz.id/v1/chat/completions \</div>
-                    <div class="text-yellow-400 mb-1">  -H <span class="text-green-400">"Authorization: Bearer phi-sk-YOUR_KEY"</span> \</div>
-                    <div class="text-yellow-400 mb-1">  -H <span class="text-green-400">"Content-Type: application/json"</span> \</div>
-                    <div class="text-yellow-400 mb-1">  -d <span class="text-green-400">'{</span></div>
-                    <div class="text-green-400 mb-1">    "model": "openrouter/mistralai/mistral-medium-3-5",</div>
-                    <div class="text-green-400 mb-1">    "messages": [{"role": "user", "content": "Halo! Apa kabar?"}]</div>
-                    <div class="text-green-400 mb-4">  }'</div>
-                    <div class="text-gray-500 mb-3"># Response: OpenAI-compatible format with cost tracking</div>
-                    <div class="text-gray-400">{</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"model"</span>: <span class="text-green-400">"openrouter/mistralai/mistral-medium-3-5"</span>,</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"choices"</span>: [{ <span class="text-blue-400">"message"</span>: { <span class="text-blue-400">"content"</span>: <span class="text-green-400">"Halo! Kabar baik..."</span> } }],</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"cost_usd"</span>: <span class="text-orange-400">0.000234</span>,</div>
-                    <div class="text-gray-400">  <span class="text-blue-400">"provider"</span>: <span class="text-green-400">"openrouter"</span></div>
-                    <div class="text-gray-400">}</div>
-                </div>
-            </div>
-
-            <!-- Tab: Register Tool -->
-            <div id="tab-tool" class="demo-content hidden">
-                <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-950 border-b border-gray-800/50">
-                    <div class="w-2.5 h-2.5 rounded-full bg-red-500/80"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div><div class="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
-                    <span class="text-gray-600 text-xs ml-2 font-mono">terminal — api.phiconsulting.biz.id</span>
-                </div>
-                <div class="p-5 text-sm font-mono leading-relaxed overflow-x-auto">
-                    <div class="text-gray-500 mb-3"># 3. Register a tool — agents auto-discover it via MCP</div>
-                    <div class="terminal-line text-yellow-400 mb-1">curl -X POST https://api.phiconsulting.biz.id/v1/tools \</div>
-                    <div class="text-yellow-400 mb-1">  -H <span class="text-green-400">"Authorization: Bearer phi-sk-YOUR_KEY"</span> \</div>
-                    <div class="text-yellow-400 mb-1">  -H <span class="text-green-400">"Content-Type: application/json"</span> \</div>
-                    <div class="text-yellow-400 mb-1">  -d <span class="text-green-400">'{</span></div>
-                    <div class="text-green-400 mb-1">    "name": "web_search",</div>
-                    <div class="text-green-400 mb-1">    "description": "Search the web for current information",</div>
-                    <div class="text-green-400 mb-1">    "json_schema": {</div>
-                    <div class="text-green-400 mb-1">      "type": "object",</div>
-                    <div class="text-green-400 mb-1">      "properties": {</div>
-                    <div class="text-green-400 mb-1">        "q": {"type": "string", "description": "Search query"}</div>
-                    <div class="text-green-400 mb-1">      },</div>
-                    <div class="text-green-400 mb-1">      "required": ["q"]</div>
-                    <div class="text-green-400 mb-1">    },</div>
-                    <div class="text-green-400 mb-1">    "endpoint": "https://your-search-api.com/search",</div>
-                    <div class="text-green-400 mb-4">    "auth_type": "api_key"</div>
-                    <div class="text-green-400 mb-1">  }'</div>
-                    <div class="text-gray-500 mt-4"># Agents discover it instantly:</div>
-                    <div class="terminal-line text-yellow-400 mt-2">curl -X POST https://api.phiconsulting.biz.id/mcp \</div>
-                    <div class="text-yellow-400 mb-1">  -H <span class="text-green-400">"Content-Type: application/json"</span> \</div>
-                    <div class="text-yellow-400">  -d <span class="text-green-400">'{"method": "tools/list"}'</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ====== COMPARISON TABLE ====== -->
-<section id="compare" class="py-20 px-6 bg-gray-950/50">
-    <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-12">
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">Why Phi</p>
-            <h2 class="text-3xl md:text-4xl font-bold mb-4">One API vs. the DIY stack.</h2>
-            <p class="text-gray-400">What you'd need to build yourself — versus what you get with one docker compose up.</p>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-800">
-                        <th class="text-left py-4 px-4 text-gray-500 font-medium">Capability</th>
-                        <th class="text-left py-4 px-4 text-gray-500 font-medium">DIY Stack</th>
-                        <th class="text-left py-4 px-4 text-gray-500 font-medium bg-phi-950/30 rounded-t-lg"><span class="text-phi-400">φ Gateway</span></th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-400">
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Multi-model chat</td><td class="py-3 px-4">3+ separate SDKs (OpenAI, Anthropic, Groq)</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> One endpoint, auto-routed</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Streaming (SSE)</td><td class="py-3 px-4">Custom implementation per provider</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> Built-in, unified format</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Tool calling</td><td class="py-3 px-4">Custom MCP server (JSON-RPC boilerplate)</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> Register via API, discover via MCP</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Vector search (RAG)</td><td class="py-3 px-4">ChromaDB / Pinecone / Weaviate (separate service)</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> Built-in, pure Python, zero ops</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Conversation memory</td><td class="py-3 px-4">Redis / PostgreSQL + custom schema</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> SQLite, auto-trim, truncation warnings</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Cost tracking</td><td class="py-3 px-4">Manual logging per provider dashboard</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> Per-request cost in micro-dollars</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">API key management</td><td class="py-3 px-4">Build auth from scratch</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> bcrypt-hashed, tiered, prefix lookup</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Usage dashboard</td><td class="py-3 px-4">Grafana + Prometheus + custom exporter</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> Built-in HTMX dashboard</td></tr>
-                    <tr class="border-b border-gray-800/50"><td class="py-3 px-4">Deployment</td><td class="py-3 px-4">5+ containers, complex networking</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400">✓</span> One docker compose up, 87 MB RAM</td></tr>
-                    <tr><td class="py-3 px-4">Total services to manage</td><td class="py-3 px-4 text-red-400 font-semibold">5–7 services</td><td class="py-3 px-4 bg-phi-950/20"><span class="text-green-400 font-bold text-base">1 service</span></td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
-<!-- ====== TESTIMONIALS ====== -->
-<section class="py-20 px-6">
-    <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-12">
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">Trusted by Developers</p>
-            <h2 class="text-3xl md:text-4xl font-bold">Dipakai oleh para builder AI.</h2>
-        </div>
-        <div class="grid md:grid-cols-3 gap-6">
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <div class="flex text-yellow-400 mb-4 text-sm">★★★★★</div>
-                <p class="text-gray-300 mb-4 leading-relaxed text-sm">"Gue capek setting ChromaDB + Redis + custom MCP server cuma buat satu agent. Phi Gateway bikin semuanya jadi satu endpoint doang. RAM cuma 87 MB — ini gila sih efisiennya."</p>
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-phi-900/50 rounded-full flex items-center justify-center text-phi-400 text-sm font-bold">RA</div>
-                    <div><div class="text-white text-sm font-semibold">Rizky Ardiansyah</div><div class="text-gray-500 text-xs">AI Engineer · Jakarta</div></div>
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <div class="flex text-yellow-400 mb-4 text-sm">★★★★★</div>
-                <p class="text-gray-300 mb-4 leading-relaxed text-sm">"Switched from a 5-container docker-compose to just phi-api + caddy. My VPS bill dropped by Rp 200K/month. The auto-routing between OpenAI and Groq is seamless — I just change the model name."</p>
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-phi-900/50 rounded-full flex items-center justify-center text-phi-400 text-sm font-bold">DP</div>
-                    <div><div class="text-white text-sm font-semibold">Dian Prasetyo</div><div class="text-gray-500 text-xs">Indie Hacker · Bandung</div></div>
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <div class="flex text-yellow-400 mb-4 text-sm">★★★★★</div>
-                <p class="text-gray-300 mb-4 leading-relaxed text-sm">"We manage API keys per client project. The usage dashboard shows exactly what each client consumes. Billing jadi transparan — nggak ada lagi debat soal token usage."</p>
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-phi-900/50 rounded-full flex items-center justify-center text-phi-400 text-sm font-bold">AS</div>
-                    <div><div class="text-white text-sm font-semibold">Andi Sutanto</div><div class="text-gray-500 text-xs">Dev Agency Owner · Surabaya</div></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ====== PRICING ====== -->
-<section id="pricing" class="py-20 px-6 bg-gray-950/50">
-    <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-12">
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">Pricing</p>
-            <h2 class="text-3xl md:text-4xl font-bold mb-3">Simple. Rupiah. Transparan.</h2>
-            <p class="text-gray-400 mb-2">No per-token markup. You bring your own LLM keys — we provide the infrastructure.</p>
-            <p class="text-gray-600 text-sm">All prices in IDR. USD shown for reference.</p>
-        </div>
-        <div class="grid md:grid-cols-4 gap-4 mb-12">
-            <!-- Free -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col">
-                <h3 class="text-lg font-bold mb-1">Free</h3>
-                <p class="text-4xl font-black mb-0.5">Rp 0</p>
-                <p class="text-xs text-gray-600 mb-5">$0 / month</p>
-                <ul class="text-sm text-gray-400 space-y-2.5 mb-6 flex-1">
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> 10K API calls/month</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> 1 project</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> 16+ models via proxy</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> All 4 primitives</li>
-                    <li class="flex gap-2"><span class="text-gray-600 flex-shrink-0">—</span> <span class="text-gray-600">Community support</span></li>
-                </ul>
-                <a href="/dashboard" class="block text-center border border-gray-700 hover:border-gray-500 rounded-xl py-3 font-semibold transition-colors text-sm">Mulai Gratis</a>
-            </div>
-            <!-- Pro -->
-            <div class="bg-gray-900 border-2 border-phi-600 rounded-2xl p-6 flex flex-col relative">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-phi-600 text-xs font-bold px-4 py-1 rounded-full shadow-lg">Paling Populer</div>
-                <h3 class="text-lg font-bold mb-1">Pro</h3>
-                <p class="text-4xl font-black mb-0.5">Rp 150K</p>
-                <p class="text-xs text-gray-500 mb-5">~$9 / month</p>
-                <ul class="text-sm text-gray-400 space-y-2.5 mb-6 flex-1">
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> 100K API calls/month</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> 5 projects</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> All 4 primitives</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Usage analytics</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Email support</li>
-                </ul>
-                <a href="/dashboard" class="block text-center bg-phi-600 hover:bg-phi-500 rounded-xl py-3 font-bold transition-all shadow-lg shadow-phi-600/25 text-sm">Langganan Pro</a>
-            </div>
-            <!-- Team -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col">
-                <h3 class="text-lg font-bold mb-1">Team</h3>
-                <p class="text-4xl font-black mb-0.5">Rp 500K</p>
-                <p class="text-xs text-gray-500 mb-5">~$30 / month</p>
-                <ul class="text-sm text-gray-400 space-y-2.5 mb-6 flex-1">
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> 500K API calls/month</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Unlimited projects</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> All 4 primitives</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Team management</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Priority support</li>
-                </ul>
-                <a href="/dashboard" class="block text-center border border-gray-700 hover:border-gray-500 rounded-xl py-3 font-semibold transition-colors text-sm">Langganan Team</a>
-            </div>
-            <!-- Self-Host -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col">
-                <h3 class="text-lg font-bold mb-1">Self-Host</h3>
-                <p class="text-4xl font-black mb-0.5">Rp 0</p>
-                <p class="text-xs text-gray-500 mb-5">Bring your own keys & VPS</p>
-                <ul class="text-sm text-gray-400 space-y-2.5 mb-6 flex-1">
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Unlimited calls</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Unlimited projects</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> All 4 primitives</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> MIT licensed</li>
-                    <li class="flex gap-2"><span class="text-green-400 flex-shrink-0">✓</span> Full data privacy</li>
-                </ul>
-                <a href="https://github.com/raindragon14/phi-gateway" class="block text-center border border-gray-700 hover:border-gray-500 rounded-xl py-3 font-semibold transition-colors text-sm">GitHub →</a>
-            </div>
-        </div>
-        <p class="text-center text-gray-600 text-sm">Semua harga sudah termasuk PPN. Bayar pakai <strong class="text-gray-400">GoPay, OVO, DANA, transfer bank</strong>. Kontrak tahunan diskon <span class="text-phi-400 font-semibold">20%</span>.</p>
-    </div>
-</section>
-
-<!-- ====== FAQ ====== -->
-<section id="faq" class="py-20 px-6">
-    <div class="max-w-3xl mx-auto">
-        <div class="text-center mb-12">
-            <p class="text-phi-400 font-semibold text-sm mb-3 uppercase tracking-wider">FAQ</p>
-            <h2 class="text-3xl md:text-4xl font-bold">Pertanyaan yang sering ditanya.</h2>
-        </div>
-        <div class="space-y-3">
-            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <button onclick="toggleFaq(this)" class="w-full text-left px-6 py-4 flex justify-between items-center font-semibold hover:bg-gray-800/50 transition-colors">
-                    <span>Apa itu Phi AI Gateway? Kok beda sama OpenAI API langsung?</span>
-                    <span class="faq-arrow text-gray-500 transform transition-transform">▾</span>
-                </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-400 text-sm leading-relaxed">
-                    OpenAI API cuma kasih kamu akses ke model mereka. Phi Gateway kasih kamu <strong class="text-white">4 primitives sekaligus</strong>: LLM proxy (multi-provider), tool registry dengan MCP, knowledge base untuk RAG, dan agent memory. Semua dalam satu API. Plus, kamu bisa <strong class="text-white">self-host</strong> — data kamu tetap di server kamu sendiri.
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <button onclick="toggleFaq(this)" class="w-full text-left px-6 py-4 flex justify-between items-center font-semibold hover:bg-gray-800/50 transition-colors">
-                    <span>Apakah harus pakai LLM key sendiri?</span>
-                    <span class="faq-arrow text-gray-500 transform transition-transform">▾</span>
-                </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-400 text-sm leading-relaxed">
-                    <strong class="text-white">Ya.</strong> Phi Gateway nggak nge-markup token LLM. Kamu daftar sendiri di OpenAI, Anthropic, Groq, atau OpenRouter, lalu masukin API key kamu ke <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">.env</code>. Ini bikin biaya kamu <strong class="text-white">transparan dan lebih murah</strong> — nggak ada hidden markup 30–50% seperti platform lain.
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <button onclick="toggleFaq(this)" class="w-full text-left px-6 py-4 flex justify-between items-center font-semibold hover:bg-gray-800/50 transition-colors">
-                    <span>Bisa self-host? Butuh spek apa?</span>
-                    <span class="faq-arrow text-gray-500 transform transition-transform">▾</span>
-                </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-400 text-sm leading-relaxed">
-                    <strong class="text-white">Bisa banget.</strong> Cukup VPS 4GB RAM. Satu perintah <code class="text-phi-300 text-xs font-mono bg-gray-800 px-1 rounded">docker compose up -d</code>. API-nya cuma makan <strong class="text-white">~87 MB RAM</strong>. MIT licensed — pakai sesuka kamu, modifikasi sesuka kamu, nggak ada royalty.
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <button onclick="toggleFaq(this)" class="w-full text-left px-6 py-4 flex justify-between items-center font-semibold hover:bg-gray-800/50 transition-colors">
-                    <span>Apa itu MCP dan kenapa penting buat agent?</span>
-                    <span class="faq-arrow text-gray-500 transform transition-transform">▾</span>
-                </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-400 text-sm leading-relaxed">
-                    MCP (Model Context Protocol) adalah standar komunikasi antara AI agent dan tools — seperti USB-C untuk AI. Dengan MCP, agent kamu bisa <strong class="text-white">auto-discover tools</strong> yang tersedia tanpa hardcode. Phi Gateway implementasi MCP-native: daftarin tool sekali, semua agent kamu langsung bisa pakai.
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <button onclick="toggleFaq(this)" class="w-full text-left px-6 py-4 flex justify-between items-center font-semibold hover:bg-gray-800/50 transition-colors">
-                    <span>Gimana cara bayarnya? Bisa pakai GoPay?</span>
-                    <span class="faq-arrow text-gray-500 transform transition-transform">▾</span>
-                </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-400 text-sm leading-relaxed">
-                    <strong class="text-white">Bisa.</strong> Kami terima GoPay, OVO, DANA, QRIS, dan transfer bank (BCA, Mandiri, BRI, BNI). Invoice dikirim via email setiap bulan. Untuk team, bisa kirim PO dan kami terbitkan faktur pajak.
-                </div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                <button onclick="toggleFaq(this)" class="w-full text-left px-6 py-4 flex justify-between items-center font-semibold hover:bg-gray-800/50 transition-colors">
-                    <span>Apakah data saya aman? Bisa compliance GDPR/HIPAA?</span>
-                    <span class="faq-arrow text-gray-500 transform transition-transform">▾</span>
-                </button>
-                <div class="faq-answer hidden px-6 pb-4 text-gray-400 text-sm leading-relaxed">
-                    Untuk self-host: <strong class="text-white">data 100% di server kamu</strong>. Kami nggak pernah lihat data kamu. Untuk managed hosting: data dienkripsi at rest, API keys di-hash dengan bcrypt. Kita bisa tanda tangani DPA (Data Processing Agreement) untuk kebutuhan compliance. Untuk HIPAA: pakai self-host — kami bantu setup-nya.
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ====== FINAL CTA ====== -->
-<section class="py-24 px-6 bg-gray-950/50 relative overflow-hidden">
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(79,70,229,0.15),transparent_70%)]"></div>
-    <div class="max-w-3xl mx-auto text-center relative">
-        <h2 class="text-3xl md:text-5xl font-black mb-4">Siap bikin AI agent kamu?</h2>
-        <p class="text-gray-400 text-lg mb-3 max-w-xl mx-auto">Satu API. Empat primitives. Nol konfigurasi ribet.</p>
-        <p class="text-gray-500 text-sm mb-8">Mulai gratis — 10.000 API calls/bulan. Nggak pakai kartu kredit. Tinggal dapat API key.</p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/dashboard" class="bg-phi-600 hover:bg-phi-500 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-xl shadow-phi-600/25 hover:shadow-phi-500/40 hover:-translate-y-0.5">
-                🚀 Mulai Sekarang — Gratis
-            </a>
-            <a href="https://github.com/raindragon14/phi-gateway" class="border border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all">
-                ⭐ Star di GitHub
-            </a>
-        </div>
-    </div>
-</section>
-
-<!-- ====== FOOTER ====== -->
-<footer class="border-t border-gray-800 py-16 px-6">
-    <div class="max-w-6xl mx-auto grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
-        <div class="lg:col-span-1">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="text-2xl font-black text-white">φ</span>
-                <span class="text-lg font-bold text-white">Gateway</span>
-            </div>
-            <p class="text-gray-500 text-sm leading-relaxed mb-4">Agent-First API Platform. Dibuat di Indonesia untuk developer AI di seluruh dunia.</p>
-            <p class="text-gray-600 text-xs">© 2026 Phi Consulting</p>
-        </div>
-        <div>
-            <h4 class="text-white font-semibold mb-4 text-sm">Produk</h4>
-            <ul class="space-y-2.5 text-sm text-gray-400">
-                <li><a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a></li>
-                <li><a href="https://api.phiconsulting.biz.id/docs" class="hover:text-white transition-colors">API Docs (Swagger)</a></li>
-                <li><a href="#pricing" class="hover:text-white transition-colors">Harga</a></li>
-                <li><a href="#compare" class="hover:text-white transition-colors">Bandingkan</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4 class="text-white font-semibold mb-4 text-sm">Open Source</h4>
-            <ul class="space-y-2.5 text-sm text-gray-400">
-                <li><a href="https://github.com/raindragon14/phi-gateway" class="hover:text-white transition-colors">GitHub</a></li>
-                <li><span class="text-gray-600">MIT License</span></li>
-                <li><a href="/dashboard/docs" class="hover:text-white transition-colors">Dokumentasi</a></li>
-                <li><a href="/dashboard/docs" class="hover:text-white transition-colors">Bahasa Indonesia</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4 class="text-white font-semibold mb-4 text-sm">Kontak</h4>
-            <ul class="space-y-2.5 text-sm text-gray-400">
-                <li><span class="text-gray-600">📧 hello@phiconsulting.biz.id</span></li>
-                <li><span class="text-gray-600">🐦 @phiconsulting</span></li>
-                <li><span class="text-gray-600">💬 Discord Community</span></li>
-                <li><a href="/dashboard" class="text-phi-400 hover:text-phi-300 transition-colors font-medium">Buat API Key →</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="max-w-6xl mx-auto mt-12 pt-8 border-t border-gray-800/50 flex flex-col sm:flex-row justify-between text-xs text-gray-600">
-        <p>φ Gateway — LLM Proxy + Tool Registry + Knowledge Base + Agent Memory. Satu endpoint untuk semua AI agent kamu.</p>
-        <p class="mt-2 sm:mt-0">🇮🇩 Dibuat dengan semangat di Indonesia</p>
-    </div>
-</footer>
-
-<!-- ====== SCRIPTS ====== -->
-<script>
-    // Terminal tab switching
-    function switchTab(tabId) {
-        document.querySelectorAll('.demo-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.demo-tab').forEach(el => {
-            el.classList.remove('text-phi-400', 'border-phi-500', 'bg-gray-900/50');
-            el.classList.add('text-gray-500', 'border-transparent');
-        });
-        document.getElementById(tabId).classList.remove('hidden');
-        const btn = document.getElementById('btn-' + tabId);
-        btn.classList.remove('text-gray-500', 'border-transparent');
-        btn.classList.add('text-phi-400', 'border-phi-500', 'bg-gray-900/50');
-    }
-
-    // FAQ accordion
-    function toggleFaq(btn) {
-        const answer = btn.nextElementSibling;
-        const arrow = btn.querySelector('.faq-arrow');
-        const isOpen = !answer.classList.contains('hidden');
-        
-        // Close all
-        document.querySelectorAll('.faq-answer').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.faq-arrow').forEach(el => el.classList.remove('rotate-180'));
-        
-        // Open clicked (if wasn't already open)
-        if (!isOpen) {
-            answer.classList.remove('hidden');
-            arrow.classList.add('rotate-180');
-        }
-    }
-</script>
+    <footer>
+        <a href="https://github.com/raindragon14/phi-gateway">open source</a> &middot; MIT license &middot; by <a href="https://phiconsulting.biz.id">Phi Consulting</a>
+    </footer>
 </body>
 </html>
