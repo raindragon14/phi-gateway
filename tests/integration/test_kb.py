@@ -46,8 +46,16 @@ async def test_kb_ingest_and_search(async_client: AsyncClient):
         f"/v1/kb/{kb_id}/documents",
         json={
             "documents": [
-                {"title": "D1", "content": "The quick brown fox jumps over the lazy dog.", "metadata": {"tag": "animal"}},
-                {"title": "D2", "content": "Python is a high-level programming language.", "metadata": {"tag": "tech"}},
+                {
+                    "title": "D1",
+                    "content": "The quick brown fox jumps over the lazy dog.",
+                    "metadata": {"tag": "animal"},
+                },
+                {
+                    "title": "D2",
+                    "content": "Python is a high-level programming language.",
+                    "metadata": {"tag": "tech"},
+                },
             ]
         },
         headers={"Authorization": f"Bearer {key}"},

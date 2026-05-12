@@ -42,7 +42,7 @@ async def get_api_key(
     result = await db.execute(
         select(ApiKey).where(
             ApiKey.prefix == prefix,
-            ApiKey.is_active == True,
+            ApiKey.is_active.is_(True),
         )
     )
     api_key = result.scalar_one_or_none()

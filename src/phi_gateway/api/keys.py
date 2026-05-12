@@ -57,7 +57,7 @@ async def list_api_keys(
     result = await db.execute(
         select(ApiKey).where(
             ApiKey.user_id == api_key.user_id,
-            ApiKey.is_active == True,
+            ApiKey.is_active.is_(True),
         )
     )
     keys = result.scalars().all()
@@ -87,7 +87,7 @@ async def revoke_api_key(
         select(ApiKey).where(
             ApiKey.id == key_id,
             ApiKey.user_id == api_key.user_id,
-            ApiKey.is_active == True,
+            ApiKey.is_active.is_(True),
         )
     )
     target = result.scalar_one_or_none()

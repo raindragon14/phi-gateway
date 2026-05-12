@@ -2,7 +2,6 @@ import logging
 from uuid import UUID
 
 import httpx
-
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +46,7 @@ async def create_tool(
 async def list_tools(db: AsyncSession) -> list[ToolResponse]:
     """List all active tools."""
     result = await db.execute(
-        select(ToolDefinition).where(ToolDefinition.is_active == True).order_by(ToolDefinition.name)
+        select(ToolDefinition).where(ToolDefinition.is_active.is_(True)).order_by(ToolDefinition.name)
     )
     tools = result.scalars().all()
     return [ToolResponse.model_validate(t) for t in tools]
@@ -104,7 +103,7 @@ async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
     result = await db.execute(
         select(ToolDefinition).where(
             ToolDefinition.id == tool_id,
-            ToolDefinition.is_active == True,
+            ToolDefinition.is_active.is_(True),
         )
     )
     tool = result.scalar_one_or_none()

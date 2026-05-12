@@ -26,10 +26,8 @@ async def create_embeddings(
     try:
         if isinstance(body.input, str):
             vectors = [await generate_embedding(body.input, body.model)]
-            inputs = [body.input]
         else:
             vectors = await generate_embeddings_batch(body.input, body.model)
-            inputs = body.input
     except RuntimeError as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

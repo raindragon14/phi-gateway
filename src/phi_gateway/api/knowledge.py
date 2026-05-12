@@ -13,7 +13,6 @@ from phi_gateway.schemas.knowledge import (
     KnowledgeBaseResponse,
     SearchRequest,
     SearchResponse,
-    SearchResultItem,
 )
 from phi_gateway.services.kb_service import create_kb, delete_kb, ingest_documents, search_kb
 
