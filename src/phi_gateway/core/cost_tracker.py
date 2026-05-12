@@ -60,6 +60,6 @@ def calculate_cost(
 
     input_price, output_price = prices
 
-    cost = (input_tokens * input_price + output_tokens * output_price) / 1_000_000
-    # Convert to micro-dollars (1 USD = 1,000,000 micro-dollars)
-    return int(cost * 1_000_000)
+    cost_usd = (input_tokens * input_price + output_tokens * output_price) / 1_000_000
+    # Convert to micro-dollars (1 µ$ = 0.000001 USD), round to nearest integer
+    return round(cost_usd * 1_000_000)

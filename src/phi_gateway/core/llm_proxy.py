@@ -1,3 +1,4 @@
+import json
 from collections.abc import AsyncGenerator
 
 from anthropic import AsyncAnthropic
@@ -13,7 +14,7 @@ ModelInfo = dict  # {"id": str, "provider": str, ...}
 
 def _get_client(provider: str):
     """Return the async client for the given provider."""
-    registry = {
+    registry: dict[str, tuple[type, str, str | None]] = {
         "openai": (AsyncOpenAI, "OPENAI_API_KEY", "https://api.openai.com/v1"),
         "anthropic": (AsyncAnthropic, "ANTHROPIC_API_KEY", None),
         "groq": (AsyncGroq, "GROQ_API_KEY", None),
@@ -23,7 +24,7 @@ def _get_client(provider: str):
     if entry is None:
         raise ValueError(f"Unknown provider: {provider}")
 
-    client_cls, env_key, _ = entry
+    client_cls, env_key, base_url = entry
     api_key = getattr(settings, env_key, None)
     if not api_key:
         raise RuntimeError(
@@ -31,9 +32,7 @@ def _get_client(provider: str):
             f"Set {env_key} in your .env file."
         )
 
-    # Providers that use the OpenAI SDK with a custom base URL
-    if provider in ("openai", "openrouter"):
-        _, _, base_url = entry
+    if base_url:
         return client_cls(api_key=api_key, base_url=base_url)
     return client_cls(api_key=api_key)
 
@@ -113,9 +112,11 @@ def _split_system_message(messages: list[dict]) -> tuple[str | None, list[dict]]
 
 
 def _to_openai_message(msg: dict) -> dict:
-    """Normalize a message dict to basic OpenAI format (str content)."""
+    """Normalize a message dict to basic OpenAI format (string content).
+
+    Handles providers that return content as a list of blocks (e.g. Anthropic).
+    """
     content = msg.get("content", "")
-    # Anthropic blocks: if content is a list, extract text
     if isinstance(content, list):
         texts = [b.get("text", "") for b in content if b.get("type") == "text"]
         msg = {**msg, "content": "\n".join(texts)}
@@ -336,12 +337,11 @@ def _openai_stream_chunk(chunk, model: str, provider: str) -> str:
             }
         ],
     }
-    return f"data: {data}\n\n"
+    return f"data: {json.dumps(data)}\n\n"
 
 
 def _anthropic_stream_event(event) -> str:
     """Format an Anthropic streaming event as OpenAI-compatible SSE."""
-    # Anthropic uses content_block_start, content_block_delta, message_stop, etc.
     event_type = event.type
     if event_type == "message_start":
         data = {
@@ -357,7 +357,7 @@ def _anthropic_stream_event(event) -> str:
                 }
             ],
         }
-        return f"data: {data}\n\n"
+        return f"data: {json.dumps(data)}\n\n"
     elif event_type == "content_block_delta":
         if event.delta.type == "text_delta":
             data = {
@@ -373,7 +373,7 @@ def _anthropic_stream_event(event) -> str:
                     }
                 ],
             }
-            return f"data: {data}\n\n"
+            return f"data: {json.dumps(data)}\n\n"
     elif event_type == "message_stop":
         return ""
     return ""
@@ -382,8 +382,5 @@ def _anthropic_stream_event(event) -> str:
 # ── Model listing ──────────────────────────────────────────────────
 
 def list_models() -> list[ModelInfo]:
-    """Return all known models regardless of whether providers are configured.
-
-    Phase 2 improvement: check which providers actually have API keys set.
-    """
+    """Return all known models regardless of whether providers are configured."""
     return KNOWN_MODELS

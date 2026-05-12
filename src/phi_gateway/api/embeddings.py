@@ -1,9 +1,18 @@
+"""OpenAI-compatible embeddings endpoint."""
+
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from phi_gateway.core.embedding import generate_embedding, generate_embeddings_batch
 from phi_gateway.dependencies import get_api_key
 from phi_gateway.models.api_key import ApiKey
-from phi_gateway.schemas.chat import EmbeddingRequest
+
+
+class EmbeddingRequest(BaseModel):
+    """Request schema for embedding generation."""
+    model: str
+    input: str | list[str]
+
 
 router = APIRouter(prefix="/v1", tags=["Embeddings"])
 

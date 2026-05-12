@@ -18,10 +18,9 @@ async def get_usage(
     db: AsyncSession = Depends(get_db),
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
-    granularity: str = "day",
 ):
     """Get usage statistics for the current API key.
 
-    Returns token counts, cost breakdown by provider/model, and time series.
+    Returns token counts, cost breakdown by provider/model.
     """
     return await get_usage_stats(db, str(api_key.id), from_date, to_date)

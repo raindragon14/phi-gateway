@@ -6,7 +6,7 @@
 set -e
 
 BRANCH="${1:-staging}"
-REPO_URL="${2:-https://github.com/phiconsulting/phi-gateway.git}"
+REPO_URL="${2:-https://github.com/raindragon14/phi-gateway.git}"
 APP_DIR="/opt/phi-gateway"
 LOG_FILE="/var/log/phi-gateway-update.log"
 

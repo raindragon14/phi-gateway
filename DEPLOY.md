@@ -10,7 +10,7 @@
 
 ```bash
 cd /opt
-git clone https://github.com/phiconsulting/phi-gateway.git
+git clone https://github.com/raindragon14/phi-gateway.git
 cd phi-gateway
 cp .env.example .env
 # EDIT .env NOW with your API keys
@@ -31,7 +31,7 @@ sudo usermod -aG docker $USER
 
 ```bash
 cd /opt
-git clone https://github.com/phiconsulting/phi-gateway.git
+git clone https://github.com/raindragon14/phi-gateway.git
 cd phi-gateway
 cp .env.example .env
 nano .env  # Add your LLM API keys

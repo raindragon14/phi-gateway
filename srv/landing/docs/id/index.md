@@ -105,7 +105,7 @@ Spesifikasi OpenAPI 3.1 tersedia di `/docs` (Swagger UI) atau `/openapi.json`.
 ## Self-Hosting
 
 ```bash
-git clone https://github.com/phiconsulting/phi-gateway
+git clone https://github.com/raindragon14/phi-gateway
 cd phi-gateway
 cp .env.example .env
 # Edit .env dengan API keys LLM anda

@@ -21,7 +21,7 @@ Phi AI Gateway provides all the primitives AI agents need in a single API:
 |-----------|-------------|
 | **LLM Proxy** | OpenAI-compatible endpoint for 10+ models across OpenAI, Anthropic, Groq. Auto-failover, transparent cost tracking. |
 | **Tool Registry** | Register, discover, and execute tools via REST or MCP (JSON-RPC 2.0). Agent-discoverable with JSON Schema contracts. |
-| **Knowledge Base** | Ingest documents with chunking + embedding. Semantic vector search (sqlite-vec) with keyword fallback. |
+| **Knowledge Base** | Ingest documents with chunking + embedding. Semantic vector search (cosine similarity) with keyword fallback. |
 | **Agent Memory** | Persistent conversation storage with context window management and auto-truncation. |
 
 **Target audience:** Indonesian AI indie hackers, dev agencies, and SEA developers who want a self-hosted, affordable agent infrastructure.
@@ -34,7 +34,7 @@ Phi AI Gateway provides all the primitives AI agents need in a single API:
 
 ```bash
 # Clone
-git clone https://github.com/phiconsulting/phi-gateway
+git clone https://github.com/raindragon14/phi-gateway
 cd phi-gateway
 
 # Install
@@ -107,14 +107,14 @@ Caddy (reverse proxy, auto SSL)
   └── FastAPI (2 uvicorn workers, ~300MB RAM)
         ├── /v1/chat         → LLM proxy → OpenAI/Anthropic/Groq
         ├── /v1/tools        → Tool registry (MCP-native)
-        ├── /v1/kb           → RAG (SQLite + sqlite-vec)
+        ├── /v1/kb           → RAG (SQLite + cosine similarity)
         ├── /v1/memory       → Agent memory
         ├── /v1/keys         → API key management
         ├── /v1/usage        → Usage analytics
         ├── /mcp             → JSON-RPC 2.0 MCP endpoint
         ├── /dashboard       → HTMX admin UI
         └── /docs            → Swagger UI
-              └── SQLite (single file, ~20MB + ~200MB vector index)
+              └── SQLite (single file, ~20MB)
 ```
 
 **RAM budget:** ~800-900MB base idle on 4GB VPS → ~3.2GB headroom.
@@ -126,7 +126,7 @@ See `docs/02-architecture.md` for full details.
 | Decision | Rationale |
 |----------|-----------|
 | Python + FastAPI | AI ecosystem, async native, auto OpenAPI 3.1 |
-| SQLite + sqlite-vec | Zero ops, single file, fits RAM budget |
+| SQLite + pure Python vec | Zero ops, single file, fits RAM budget — 200MB saved vs sqlite-vec |
 | Caddy proxy | Auto SSL, single binary, ~50MB RAM |
 | Proxy-first (not local LLM) | 4GB can't run Ollama + app; Groq free tier exists |
 | MCP protocol from day 1 | JSON-RPC 2.0, de facto standard for agent-tool |
@@ -138,26 +138,29 @@ Full ADRs in `docs/03-decisions.md`.
 ## Project Structure
 
 ```
-D:/PhiConsulting/
+phi-gateway/
 ├── AGENTS.md                 # Agent handoff protocol
 ├── src/phi_gateway/          # Application code
-│   ├── api/                  # FastAPI route handlers
-│   ├── core/                 # Business logic
-│   ├── dashboard/            # HTMX + Tailwind UI templates
-│   ├── models/               # SQLAlchemy ORM models
-│   ├── schemas/              # Pydantic schemas
-│   ├── services/             # Service layer
+│   ├── api/                  # FastAPI route handlers (10 modules)
+│   ├── core/                 # Business logic (LLM proxy, auth, cost, embeddings)
+│   ├── dashboard/            # HTMX admin UI templates
+│   ├── models/               # SQLAlchemy ORM models (6 tables)
+│   ├── schemas/              # Pydantic request/response schemas
+│   ├── services/             # Service layer orchestration
 │   ├── config.py             # pydantic-settings
-│   ├── database.py           # Async SQLAlchemy engine
-│   ├── dependencies.py       # FastAPI DI
-│   └── main.py               # App factory
-├── docs/                     # Architecture docs
-├── srv/                      # Landing page + deploy guide
-├── tests/                    # pytest suite (28+ tests)
-├── alembic/                  # Database migrations (003)
-├── docker-compose.yml        # Caddy + API
-├── Dockerfile                # Multi-stage build
-└── Caddyfile                 # Reverse proxy config
+│   ├── database.py           # Async SQLAlchemy engine + session
+│   ├── dependencies.py       # FastAPI dependency injection
+│   └── main.py               # App factory + lifespan
+├── docs/                     # Architecture docs (research → decisions → implementation)
+├── srv/landing/              # Landing page
+├── tests/                    # pytest suite (unit + integration)
+├── alembic/                  # Database migrations (3 revisions)
+├── .github/workflows/        # CI/CD (pytest + ruff + Docker build)
+├── docker-compose.yml        # Local dev (Caddy + API)
+├── docker-compose.vps.yml    # VPS deploy (API only)
+├── Dockerfile                # Multi-stage production build
+├── Caddyfile                 # Reverse proxy config
+└── pyproject.toml            # Project metadata + dev tool config
 ```
 
 ## Development

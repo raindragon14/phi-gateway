@@ -33,7 +33,7 @@ docker compose version
 ## Step 2: Clone and Configure
 
 ```bash
-git clone https://github.com/phiconsulting/phi-gateway.git
+git clone https://github.com/raindragon14/phi-gateway.git
 cd phi-gateway
 
 # Create environment config

@@ -60,6 +60,16 @@ async def chat_completion(
     """
     start = time.perf_counter()
 
+    def _elapsed_ms() -> int:
+        return int((time.perf_counter() - start) * 1000)
+
+    async def _log_error(provider: str, error_message: str) -> None:
+        await _log_request(
+            db=db, api_key=api_key, model=request.model,
+            provider=provider, input_tokens=0, output_tokens=0,
+            latency_ms=_elapsed_ms(), status="error", error_message=error_message,
+        )
+
     try:
         raw_response = await route_chat(
             model=request.model,
@@ -70,56 +80,20 @@ async def chat_completion(
             tools=request.tools,
         )
     except ValueError as e:
-        await _log_request(
-            db=db,
-            api_key=api_key,
-            model=request.model,
-            provider="unknown",
-            input_tokens=0,
-            output_tokens=0,
-            latency_ms=int((time.perf_counter() - start) * 1000),
-            status="error",
-            error_message=str(e),
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+        await _log_error("unknown", str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except RuntimeError as e:
-        await _log_request(
-            db=db,
-            api_key=api_key,
-            model=request.model,
-            provider="unknown",
-            input_tokens=0,
-            output_tokens=0,
-            latency_ms=int((time.perf_counter() - start) * 1000),
-            status="error",
-            error_message=str(e),
-        )
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=str(e),
-        )
+        await _log_error("unknown", str(e))
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
     except Exception as e:
         logger.exception("Unexpected error in chat completion")
-        await _log_request(
-            db=db,
-            api_key=api_key,
-            model=request.model,
-            provider="unknown",
-            input_tokens=0,
-            output_tokens=0,
-            latency_ms=int((time.perf_counter() - start) * 1000),
-            status="error",
-            error_message=str(e),
-        )
+        await _log_error("unknown", str(e))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"LLM provider error: {str(e)}",
         )
 
-    latency = int((time.perf_counter() - start) * 1000)
+    latency = _elapsed_ms()
 
     # Extract token counts
     usage = raw_response.get("usage", {})

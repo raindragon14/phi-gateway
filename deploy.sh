@@ -5,7 +5,7 @@
 set -e
 
 DOMAIN="${1:-phiconsulting.biz.id}"
-REPO_URL="${2:-https://github.com/phiconsulting/phi-gateway.git}"
+REPO_URL="${2:-https://github.com/raindragon14/phi-gateway.git}"
 BRANCH="${3:-staging}"
 
 echo "=== Phi AI Gateway Deployment ==="

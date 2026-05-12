@@ -117,7 +117,7 @@ Full OpenAPI 3.1 specification available at `/docs` (Swagger UI) or `/openapi.js
 ## Self-Hosting
 
 ```bash
-git clone https://github.com/phiconsulting/phi-gateway
+git clone https://github.com/raindragon14/phi-gateway
 cd phi-gateway
 cp .env.example .env
 # Edit .env with your LLM API keys

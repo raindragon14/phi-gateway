@@ -3,6 +3,32 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
+async def test_mcp_tools_list(async_client: AsyncClient):
+    """POST /mcp with tools/list returns JSON-RPC 2.0 response."""
+    resp = await async_client.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": "1"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["jsonrpc"] == "2.0"
+    assert "result" in data
+    assert data["id"] == "1"
+
+
+@pytest.mark.asyncio
+async def test_mcp_unknown_method(async_client: AsyncClient):
+    """POST /mcp with unknown method returns error code -32601."""
+    resp = await async_client.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "method": "bogus", "params": {}, "id": "1"},
+    )
+    assert resp.status_code == 200  # JSON-RPC uses 200 even for errors
+    data = resp.json()
+    assert data["error"]["code"] == -32601
+
+
+@pytest.mark.asyncio
 async def test_mcp_resources_list_empty(async_client: AsyncClient):
     """POST /mcp with resources/list returns empty list when no KBs exist."""
     resp = await async_client.post(

@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -41,15 +40,3 @@ class ChatCompletionResponse(BaseModel):
     usage: UsageInfo
     provider: str
     cost_usd: float
-
-
-class EmbeddingRequest(BaseModel):
-    model: str
-    input: str | list[str]
-
-
-class EmbeddingResponse(BaseModel):
-    object: str = "list"
-    data: list[dict]
-    model: str
-    usage: UsageInfo

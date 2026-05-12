@@ -408,7 +408,7 @@ gate_4_launch:
 # What the end-user experience will be (Phase 4 deliverable)
 
 # 1. Clone
-git clone https://github.com/phiconsulting/phi-gateway
+git clone https://github.com/raindragon14/phi-gateway
 cd phi-gateway
 
 # 2. Configure

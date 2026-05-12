@@ -9,7 +9,7 @@ from phi_gateway.core.llm_proxy import route_chat_stream
 from phi_gateway.database import get_db
 from phi_gateway.dependencies import get_api_key
 from phi_gateway.models.api_key import ApiKey
-from phi_gateway.schemas.chat import ChatCompletionRequest, ChatCompletionResponse
+from phi_gateway.schemas.chat import ChatCompletionRequest
 from phi_gateway.services.llm_service import chat_completion
 
 logger = logging.getLogger(__name__)

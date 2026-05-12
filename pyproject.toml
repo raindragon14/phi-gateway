@@ -8,6 +8,18 @@ version = "0.1.0"
 description = "Phi AI Gateway — Agent-First API Platform"
 requires-python = ">=3.12"
 license = {text = "MIT"}
+authors = [
+    {name = "Phi Consulting", email = "hello@phiconsulting.biz.id"},
+]
+keywords = ["llm", "ai", "gateway", "api", "openai", "anthropic", "mcp", "rag", "agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.34.0",
@@ -24,11 +36,19 @@ dependencies = [
     "jinja2>=3.0.0",
 ]
 
+[project.urls]
+Homepage = "https://phiconsulting.biz.id"
+Documentation = "https://phiconsulting.biz.id/docs"
+Repository = "https://github.com/raindragon14/phi-gateway"
+Issues = "https://github.com/raindragon14/phi-gateway/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-httpx>=0.30.0",
     "ruff>=0.8.0",
+    "mypy>=1.11.0",
 ]
 
 [tool.ruff]

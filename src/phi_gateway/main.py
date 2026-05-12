@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -6,8 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
+from phi_gateway import __version__
 from phi_gateway.api.router import api_router
-from phi_gateway.config import settings
 from phi_gateway.database import engine
 from phi_gateway.models import Base
 
@@ -29,7 +30,7 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title="Phi AI Gateway",
-        version="0.1.0",
+        version=__version__,
         docs_url="/docs",
         openapi_url="/openapi.json",
         lifespan=lifespan,
@@ -49,13 +50,12 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health_check():
-        return {"status": "ok", "version": "0.1.0"}
+        return {"status": "ok", "version": __version__}
 
     @app.get("/", response_class=HTMLResponse)
     async def landing_page():
         """Serve the landing page at the root."""
         # APP_ROOT is set in Docker to /app; fallback for local dev
-        import os
         app_root = Path(os.environ.get("APP_ROOT", Path(__file__).resolve().parent.parent.parent))
         landing_path = app_root / "srv" / "landing" / "index.html"
         return HTMLResponse(content=landing_path.read_text(encoding="utf-8"))

@@ -162,7 +162,7 @@ async def _get_owned_conversation(
 async def _trim_if_needed(conv: Conversation, db: AsyncSession) -> bool:
     """Trim oldest messages if total token count exceeds context limit.
 
-    Returns True if messages were truncated.
+    Returns True if any messages were truncated.
     """
     result = await db.execute(
         select(Message)
@@ -177,13 +177,13 @@ async def _trim_if_needed(conv: Conversation, db: AsyncSession) -> bool:
     if total_tokens <= limit:
         return False
 
-    # Remove oldest messages until under limit
+    # Remove oldest messages until under 80% of limit
     trimmed = 0
-    for m in messages[:-1]:  # keep at least the most recent
+    for m in messages[:-1]:  # keep the most recent message
         total_tokens -= m.token_count or 0
         await db.delete(m)
         trimmed += 1
-        if total_tokens <= limit * 0.8:  # trim to 80% to avoid repeated trimming
+        if total_tokens <= limit * 0.8:
             break
 
-    return True
+    return trimmed > 0

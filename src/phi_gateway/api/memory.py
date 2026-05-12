@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway.database import get_db
@@ -61,12 +61,12 @@ async def add_message_endpoint(
     body: AddMessageRequest,
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
-    raw_response: Response = None,
+    response: Response = None,  # type: ignore[assignment]
 ):
     """Add a message to a conversation."""
     msg, was_truncated = await add_message(conversation_id, body, api_key, db)
-    if was_truncated and raw_response:
-        raw_response.headers[TRUNCATION_WARNING] = "true"
+    if was_truncated and response:
+        response.headers[TRUNCATION_WARNING] = "true"
     return msg
 
 
