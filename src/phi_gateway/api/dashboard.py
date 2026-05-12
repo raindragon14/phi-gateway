@@ -1,6 +1,8 @@
+"""HTMX dashboard routes — serve the admin UI."""
+
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -11,36 +13,36 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard_overview(request: Request):
+async def dashboard_overview():
     """Dashboard: Overview page."""
-    return templates.TemplateResponse("overview.html", {"request": request, "active": "overview"})
+    return templates.TemplateResponse("overview.html", {"active": "overview"})
 
 
 @router.get("/dashboard/keys", response_class=HTMLResponse)
-async def dashboard_keys(request: Request):
+async def dashboard_keys():
     """Dashboard: API key management page."""
-    return templates.TemplateResponse("keys.html", {"request": request, "active": "keys"})
+    return templates.TemplateResponse("keys.html", {"active": "keys"})
 
 
 @router.get("/dashboard/keys/table", response_class=HTMLResponse)
-async def dashboard_keys_table(request: Request):
+async def dashboard_keys_table():
     """HTMX endpoint: keys table fragment."""
-    return templates.TemplateResponse("keys_table.html", {"request": request})
+    return templates.TemplateResponse("keys_table.html", {})
 
 
 @router.get("/dashboard/usage", response_class=HTMLResponse)
-async def dashboard_usage(request: Request):
+async def dashboard_usage():
     """Dashboard: Usage page."""
-    return templates.TemplateResponse("usage.html", {"request": request, "active": "usage"})
+    return templates.TemplateResponse("usage.html", {"active": "usage"})
 
 
 @router.get("/dashboard/docs", response_class=HTMLResponse)
-async def dashboard_docs(request: Request):
+async def dashboard_docs():
     """Dashboard: Documentation page."""
-    return templates.TemplateResponse("docs.html", {"request": request, "active": "docs"})
+    return templates.TemplateResponse("docs.html", {"active": "docs"})
 
 
 @router.get("/dashboard/memory", response_class=HTMLResponse)
-async def dashboard_memory(request: Request):
+async def dashboard_memory():
     """Dashboard: Agent memory page."""
-    return templates.TemplateResponse("memory.html", {"request": request, "active": "memory"})
+    return templates.TemplateResponse("memory.html", {"active": "memory"})
