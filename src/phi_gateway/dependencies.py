@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from phi_gateway.core.rate_limiter import enforce_rate_limit, get_rate_limit_headers
 from phi_gateway.core.security import verify_api_key
 from phi_gateway.database import get_db
 from phi_gateway.models.api_key import ApiKey
@@ -67,6 +68,9 @@ async def get_api_key(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API key has expired",
         )
+
+    # Enforce rate limits (sliding window)
+    enforce_rate_limit(api_key)
 
     # Update last_used_at in background (don't fail the request on write error)
     api_key.last_used_at = utc_now

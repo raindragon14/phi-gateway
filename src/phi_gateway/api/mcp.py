@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway.database import get_db
+from phi_gateway.dependencies import get_api_key
+from phi_gateway.models.api_key import ApiKey
 from phi_gateway.models.document import Document, KnowledgeBase
 from phi_gateway.schemas.mcp import JsonRpcRequest
 from phi_gateway.services.tool_service import list_tools
@@ -19,6 +21,7 @@ router = APIRouter(tags=["MCP"])
 @router.post("/mcp")
 async def mcp_endpoint(
     body: JsonRpcRequest,
+    api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
     """Model Context Protocol endpoint (JSON-RPC 2.0).

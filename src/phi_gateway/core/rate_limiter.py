@@ -1,0 +1,77 @@
+"""Rate limiting with sliding window — enforced per API key.
+
+Uses an in-memory store (dict) for MVP. Replace with Redis for multi-worker deployments.
+"""
+
+import time
+from collections import defaultdict
+
+from fastapi import HTTPException, status
+
+from phi_gateway.models.api_key import ApiKey
+
+# ── In-memory stores (replace with Redis in production) ────────────
+
+# minute_counts: {key_id: [timestamp, ...]}
+_minute_buckets: dict[str, list[float]] = defaultdict(list)
+_day_buckets: dict[str, list[float]] = defaultdict(list)
+
+
+def _prune(bucket: list[float], cutoff: float) -> list[float]:
+    """Remove timestamps older than cutoff."""
+    while bucket and bucket[0] < cutoff:
+        bucket.pop(0)
+    return bucket
+
+
+def enforce_rate_limit(api_key: ApiKey) -> None:
+    """Check and enforce rate limits for the given API key.
+
+    Raises HTTPException(429) if limits are exceeded.
+    """
+    now = time.time()
+    key_id = str(api_key.id)
+
+    # ── Per-minute check ──
+    minute_cutoff = now - 60
+    _minute_buckets[key_id] = _prune(_minute_buckets[key_id], minute_cutoff)
+
+    if len(_minute_buckets[key_id]) >= api_key.rate_limit_per_min:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded: {api_key.rate_limit_per_min} req/min. "
+            f"Upgrade to pro or team tier.",
+            headers={"Retry-After": "60"},
+        )
+
+    _minute_buckets[key_id].append(now)
+
+    # ── Per-day check ──
+    day_cutoff = now - 86400
+    _day_buckets[key_id] = _prune(_day_buckets[key_id], day_cutoff)
+
+    if len(_day_buckets[key_id]) >= api_key.rate_limit_per_day:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Daily rate limit exceeded: {api_key.rate_limit_per_day} req/day. "
+            f"Upgrade to pro or team tier.",
+            headers={"Retry-After": "86400"},
+        )
+
+    _day_buckets[key_id].append(now)
+
+
+def get_rate_limit_headers(api_key: ApiKey) -> dict[str, str]:
+    """Return rate limit headers for a response (informational)."""
+    key_id = str(api_key.id)
+    now = time.time()
+
+    minute_count = len([t for t in _minute_buckets[key_id] if t > now - 60])
+    day_count = len([t for t in _day_buckets[key_id] if t > now - 86400])
+
+    return {
+        "X-RateLimit-Limit-Min": str(api_key.rate_limit_per_min),
+        "X-RateLimit-Remaining-Min": str(max(0, api_key.rate_limit_per_min - minute_count)),
+        "X-RateLimit-Limit-Day": str(api_key.rate_limit_per_day),
+        "X-RateLimit-Remaining-Day": str(max(0, api_key.rate_limit_per_day - day_count)),
+    }

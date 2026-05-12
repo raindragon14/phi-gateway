@@ -22,7 +22,12 @@ async def create_api_key(
     full_key, prefix, hashed = generate_api_key()
 
     # Map tier to rate limits
-    rate_limits = {"free": (10, 10000), "pro": (60, 100000), "team": (300, 500000)}
+    rate_limits = {
+        "free": (10, 10000),
+        "pro": (60, 100000),
+        "team": (300, 500000),
+        "admin": (1000, 500000),
+    }
     rpm, rpd = rate_limits.get(body.tier, (10, 10000))
 
     api_key = ApiKey(

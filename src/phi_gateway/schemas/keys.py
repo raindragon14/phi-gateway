@@ -11,7 +11,7 @@ class CreateApiKeyRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_tier(self) -> "CreateApiKeyRequest":
-        valid_tiers = {"free", "pro", "team"}
+        valid_tiers = {"free", "pro", "team", "admin"}
         if self.tier not in valid_tiers:
             raise ValueError(f"tier must be one of {valid_tiers}, got '{self.tier}'")
         return self
