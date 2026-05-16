@@ -15,9 +15,9 @@
 <!-- ────────────────────────────────────────────────────────────────
      AGENT-FIRST TUTORIAL
      ──────────────────────────────────────────────────────────────── -->
-<div class="card" style="margin-bottom: 20px;">
+<div class="card card-gap-lg">
     <h2>Agent-First Tutorial</h2>
-    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;line-height:1.7;">
+    <p class="text-small mb-md" style="line-height:1.7;">
         This guide shows how an AI agent programmatically uses PhiGateway.
         All four primitives — chat, tools, knowledge, memory — are covered in sequence.
         Replace the placeholder API key in examples with your own.
@@ -32,7 +32,7 @@
             <pre class="code"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/keys \
   <span class="flag">-H</span> <span class="comment">"Content-Type: application/json"</span> \
   <span class="flag">-d</span> <span class="comment">'{"name":"agent-key","tier":"free"}'</span></pre>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+            <p class="text-small mt-sm">
                 Response includes the full key <strong>once</strong>. Save it — only the prefix is stored.
             </p>
         </div>
@@ -45,19 +45,19 @@
             <h3>Chat completion (LLM proxy)</h3>
             <p>Agents send chat requests to a single endpoint. The gateway routes to the correct provider based on the model string. OpenAI-compatible response format.</p>
             <pre class="code"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/chat/completions \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-H</span> <span class="comment">"Content-Type: application/json"</span> \
   <span class="flag">-d</span> <span class="comment">'{
     "model": "groq/llama-3.3-70b",
     "messages": [{"role":"user","content":"What is 2+2?"}],
     "stream": false
   }'</span></pre>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+            <p class="text-small mt-sm">
                 Supported models: <span class="badge badge-free">groq/*</span> free tier,
                 <span class="badge badge-pro">openai/*</span>,
                 <span class="badge badge-pro">anthropic/*</span>,
                 <span class="badge badge-pro">openrouter/*</span>
-                &mdash; full list at <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">/v1/models</code>
+                &mdash; full list at <code class="inline">/v1/models</code>
             </p>
         </div>
     </div>
@@ -70,7 +70,7 @@
             <p>Agents register external capabilities (APIs, databases, UIs) as tools. Each tool has a JSON Schema and HTTP endpoint. The gateway proxies calls.</p>
             <pre class="code"><span class="comment"># Register a tool</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/tools \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{
     "name":"weather","description":"Get current weather",
     "json_schema":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]},
@@ -79,10 +79,10 @@
 
 <span class="comment"># Call via REST</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/tools/{id}/call \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{"method":"weather","params":{"city":"Tokyo"}}'</span></pre>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
-                Tools are also discoverable via MCP: <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">POST /mcp</code> with <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">tools/list</code>
+            <p class="text-small mt-sm">
+                Tools are also discoverable via MCP: <code class="inline">POST /mcp</code> with <code class="inline">tools/list</code>
             </p>
         </div>
     </div>
@@ -95,17 +95,17 @@
             <p>Ingest documents, the gateway chunks and embeds them automatically. Agents search with semantic similarity. Falls back to keyword when embeddings unavailable.</p>
             <pre class="code"><span class="comment"># Create a knowledge base</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/kb \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{"name":"docs","description":"Company docs"}'</span>
 
 <span class="comment"># Ingest documents</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/kb/{kb_id}/documents \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{"documents":[{"title":"FAQ","content":"Our policy covers..."}]}'</span>
 
 <span class="comment"># Semantic search</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/kb/{kb_id}/search \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{"query":"policy","top_k":5}'</span></pre>
         </div>
     </div>
@@ -115,20 +115,20 @@
         <div class="num">5</div>
         <div class="body">
             <h3>Agent memory (conversation store)</h3>
-            <p>Persist agent conversations between LLM calls. Supports pagination, session IDs, automatic context window trimming (returns <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">X-Context-Truncated</code> header).</p>
+            <p>Persist agent conversations between LLM calls. Supports pagination, session IDs, automatic context window trimming (returns <code class="inline">X-Context-Truncated</code> header).</p>
             <pre class="code"><span class="comment"># Create conversation</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/memory/conversations \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{"session_id":"agent-42","title":"Debug session"}'</span>
 
 <span class="comment"># Add messages</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-sX POST</span> /v1/memory/conversations/{id}/messages \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span> \
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span> \
   <span class="flag">-d</span> <span class="comment">'{"role":"user","content":"The build failed at step 4"}'</span>
 
 <span class="comment"># Retrieve history (paginated)</span>
 <span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/memory/conversations/{id}/messages<span class="flag">?limit=50</span> \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span></pre>
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span></pre>
         </div>
     </div>
 
@@ -139,10 +139,10 @@
             <h3>Monitor usage and cost</h3>
             <p>Track token consumption and cost breakdown by provider and model. Useful for budget-aware agents that optimize model selection by price.</p>
             <pre class="code"><span class="ps1"></span><span class="cmd">curl</span> <span class="flag">-s</span> /v1/usage \
-  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;key&gt;"</span></pre>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">
-                Optional query params: <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">from_date</code>,
-                <code style="color:var(--text);background:var(--bg-elevated);padding:0 4px;border-radius:2px;">to_date</code>
+  <span class="flag">-H</span> <span class="comment">"Authorization: Bearer &lt;your-key&gt;"</span></pre>
+            <p class="text-small mt-sm">
+                Optional query params: <code class="inline">from_date</code>,
+                <code class="inline">to_date</code>
             </p>
         </div>
     </div>
@@ -151,17 +151,19 @@
 <!-- ────────────────────────────────────────────────────────────────
      API REFERENCE
      ──────────────────────────────────────────────────────────────── -->
-<div class="card" style="margin-bottom: 20px;">
+<div class="card card-gap">
     <h2>API Reference</h2>
-    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
+    <p class="text-small mb-md">
         Full OpenAPI 3.1 specification available at:
     </p>
-    <a href="/docs" class="btn btn-secondary" style="margin-right:8px;">
-        Scalar API Docs
-    </a>
-    <a href="/openapi.json" class="btn btn-secondary">
-        OpenAPI JSON
-    </a>
+    <div class="flex-row gap-md">
+        <a href="/docs" class="btn btn-secondary">
+            Scalar API Docs
+        </a>
+        <a href="/openapi.json" class="btn btn-secondary">
+            OpenAPI JSON
+        </a>
+    </div>
 </div>
 
 <!-- ────────────────────────────────────────────────────────────────
@@ -169,7 +171,7 @@
      ──────────────────────────────────────────────────────────────── -->
 <div class="card">
     <h2>Available Models</h2>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+    <p class="text-small mb-md">
         Models are provider-neutral. Your agent picks any model and the gateway routes to the correct provider.
     </p>
     <div id="models-list" style="font-size:12px;color:var(--text-muted);">Loading model catalog...</div>
@@ -182,13 +184,13 @@ async function loadModels() {
         const models = await resp.json();
         document.getElementById('models-list').innerHTML = models.map(m =>
             `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
-                <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text);">${m.id}</span>
-                <span style="font-size:11px;color:var(--text-muted);">${m.provider} · ${m.pricing || '—'}</span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text);">${m.id}</span>
+                <span class="text-small">${m.provider} · ${m.pricing || '—'}</span>
             </div>`
-        ).join('') || '<p style="color:var(--text-muted);">No models loaded.</p>';
+        ).join('') || '<p class="text-small">No models loaded.</p>';
     } catch(e) {
         document.getElementById('models-list').innerHTML =
-            '<p style="color:var(--text-muted);">Could not load models. Is the API running?</p>';
+            '<p class="text-small">Could not load models. Is the API running?</p>';
     }
 }
 loadModels();

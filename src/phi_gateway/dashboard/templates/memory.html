@@ -5,17 +5,17 @@
 <h1>Agent Memory</h1>
 <p class="subtitle">Browse conversations and messages stored for your agents.</p>
 
-<div class="card" style="margin-bottom: 20px;">
+<div class="card card-gap-lg">
     <h2>Conversations</h2>
     <div id="conversations-list">
-        <p style="font-size:12px;color:var(--text-muted);">Loading conversations...</p>
+        <p class="text-small">Loading conversations...</p>
     </div>
 </div>
 
-<div class="card" id="messages-card" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div class="card hidden" id="messages-card">
+    <div class="flex-between mb-md">
         <h2 style="margin:0;">Messages</h2>
-        <button class="btn btn-secondary" onclick="document.getElementById('messages-card').style.display='none'; document.getElementById('messages-body').innerHTML='';" style="font-size:10px;padding:3px 10px;">Close</button>
+        <button class="btn btn-secondary btn-xs" onclick="document.getElementById('messages-card').classList.add('hidden'); document.getElementById('messages-body').innerHTML='';">Close</button>
     </div>
     <div id="messages-body"></div>
 </div>
@@ -25,7 +25,7 @@ async function loadConversations() {
     const key = sessionStorage.getItem('phi_api_key');
     if (!key) {
         document.getElementById('conversations-list').innerHTML =
-            '<p style="font-size:12px;color:var(--text-muted);">Set your API key to view conversations.</p>';
+            '<p class="text-small">Set your API key to view conversations.</p>';
         return;
     }
     try {
@@ -33,7 +33,7 @@ async function loadConversations() {
         const convs = await resp.json();
         if (!Array.isArray(convs) || convs.length === 0) {
             document.getElementById('conversations-list').innerHTML =
-                '<p style="font-size:12px;color:var(--text-muted);">No conversations yet. Create one via POST /v1/memory/conversations</p>';
+                '<p class="text-small">No conversations yet. Create one via POST /v1/memory/conversations</p>';
             return;
         }
         document.getElementById('conversations-list').innerHTML = `
@@ -45,13 +45,13 @@ async function loadConversations() {
                         <td>${c.title || '—'}</td>
                         <td>${new Date(c.created_at).toLocaleString()}</td>
                         <td>${new Date(c.updated_at).toLocaleString()}</td>
-                        <td><button class="btn btn-secondary" style="padding:3px 10px;font-size:10px;" onclick="loadMessages('${c.id}')">View</button></td>
+                        <td><button class="btn btn-secondary btn-xs" onclick="loadMessages('${c.id}')">View</button></td>
                     </tr>
                 `).join('')}</tbody>
             </table>`;
     } catch(e) {
         document.getElementById('conversations-list').innerHTML =
-            '<p style="font-size:12px;color:var(--text-muted);">Failed to load conversations.</p>';
+            '<p class="text-small">Failed to load conversations.</p>';
     }
 }
 
@@ -64,18 +64,18 @@ async function loadMessages(convId) {
         const msgs = await resp.json();
         document.getElementById('messages-body').innerHTML = (msgs || []).map(m => `
             <div style="border-bottom:1px solid var(--border);padding:10px 0;">
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+                <div class="flex-row mb-sm">
                     <span class="badge badge-${m.role === 'assistant' ? 'pro' : 'free'}">${m.role}</span>
-                    <span style="font-size:10px;color:var(--text-subtle);">${new Date(m.created_at).toLocaleString()}</span>
-                    ${m.token_count ? `<span style="font-size:10px;color:var(--text-muted);">${m.token_count} tokens</span>` : ''}
+                    <span class="text-small">${new Date(m.created_at).toLocaleString()}</span>
+                    ${m.token_count ? `<span class="text-small">${m.token_count} tokens</span>` : ''}
                 </div>
-                <p style="font-size:12px;color:var(--text-secondary);white-space:pre-wrap;">${m.content}</p>
+                <p class="text-small" style="white-space:pre-wrap;">${m.content}</p>
             </div>
-        `).join('') || '<p style="font-size:12px;color:var(--text-muted);">No messages.</p>';
-        document.getElementById('messages-card').style.display = 'block';
+        `).join('') || '<p class="text-small">No messages.</p>';
+        document.getElementById('messages-card').classList.remove('hidden');
     } catch(e) {
         document.getElementById('messages-body').innerHTML =
-            '<p style="font-size:12px;color:var(--text-muted);">Failed to load messages.</p>';
+            '<p class="text-small">Failed to load messages.</p>';
     }
 }
 

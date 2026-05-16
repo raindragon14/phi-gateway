@@ -5,32 +5,33 @@
 <h1>API Keys</h1>
 <p class="subtitle">Create, view, and revoke gateway API keys.</p>
 
-<div class="card" style="margin-bottom: 20px;">
+<div class="card card-gap-lg">
     <h2>Create New Key</h2>
-    <form style="display:flex;gap:8px;margin-top:12px;" onsubmit="event.preventDefault(); createKey(this);">
-        <input type="text" name="name" placeholder="Key name (e.g., agent-1, ci-cd)" class="input" style="flex:1;max-width:300px;" required>
+    <div class="flex-row gap-md mt-md">
+        <input type="text" name="name" placeholder="Key name (e.g., agent-1, ci-cd)" class="input input-inline" required>
         <select name="tier" class="input" style="width:100px;">
             <option value="free">free</option>
             <option value="pro">pro</option>
             <option value="team">team</option>
             <option value="admin">admin</option>
         </select>
-        <button type="submit" class="btn btn-primary">Create</button>
-    </form>
-    <div id="new-key-result" style="margin-top:12px;"></div>
+        <button type="submit" class="btn btn-primary" onclick="createKey(this)">Create</button>
+    </div>
+    <div id="new-key-result" class="mt-md"></div>
 </div>
 
 <div class="card">
     <h2>Your Keys</h2>
-    <div id="keys-table" style="margin-top:12px;">
-        <p style="font-size:12px;color:var(--text-muted);">Loading...</p>
+    <div id="keys-table" class="mt-md">
+        <p class="text-small">Loading...</p>
     </div>
 </div>
 
 <script>
-async function createKey(form) {
-    const name = form.name.value;
-    const tier = form.tier.value;
+async function createKey(btn) {
+    const form = btn.parentElement;
+    const name = form.querySelector('input[name="name"]').value;
+    const tier = form.querySelector('select[name="tier"]').value;
     const key = sessionStorage.getItem('phi_api_key');
     if (!key) { showResult('Set your API key in sessionStorage.phi_api_key first.', true); return; }
 
@@ -43,10 +44,10 @@ async function createKey(form) {
         const data = await resp.json();
         if (resp.ok) {
             document.getElementById('new-key-result').innerHTML =
-                `<div style="background:var(--bg);border:1px solid var(--ok);border-radius:2px;padding:12px;margin-top:8px;">
+                `<div class="success-box">
                     <p style="font-size:12px;color:var(--ok);margin-bottom:6px;">Key created — save it now</p>
                     <pre class="code" style="margin:0;">${data.key}</pre>
-                    <p style="font-size:10px;color:var(--text-muted);margin-top:6px;">This key will not be shown again.</p>
+                    <p class="text-small mt-sm">This key will not be shown again.</p>
                 </div>`;
             loadKeys();
         } else {
@@ -55,17 +56,22 @@ async function createKey(form) {
     } catch(e) { showResult(e.message, true); }
 }
 
+function showResult(msg, isError) {
+    document.getElementById('new-key-result').innerHTML =
+        `<p class="text-small" style="color:${isError ? '#ef4444' : 'var(--text-secondary)'};">${msg}</p>`;
+}
+
 async function loadKeys() {
     const key = sessionStorage.getItem('phi_api_key');
     if (!key) {
-        document.getElementById('keys-table').innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Set your API key in sessionStorage.phi_api_key to manage keys.</p>';
+        document.getElementById('keys-table').innerHTML = '<p class="text-small">Set your API key in sessionStorage.phi_api_key to manage keys.</p>';
         return;
     }
     try {
         const resp = await fetch('/v1/keys', { headers: { 'Authorization': `Bearer ${key}` }});
         const keys = await resp.json();
         if (!Array.isArray(keys) || keys.length === 0) {
-            document.getElementById('keys-table').innerHTML = '<p style="font-size:12px;color:var(--text-muted);">No keys yet. Create one above.</p>';
+            document.getElementById('keys-table').innerHTML = '<p class="text-small">No keys yet. Create one above.</p>';
             return;
         }
         document.getElementById('keys-table').innerHTML = `
@@ -78,12 +84,12 @@ async function loadKeys() {
                         <td><span class="badge badge-${k.tier}">${k.tier}</span></td>
                         <td>${new Date(k.created_at).toLocaleDateString()}</td>
                         <td>${k.last_used_at ? new Date(k.last_used_at).toLocaleString() : '—'}</td>
-                        <td><button class="btn btn-danger" style="padding:3px 8px;font-size:10px;" onclick="revokeKey('${k.id}', this)">Revoke</button></td>
+                        <td><button class="btn btn-danger btn-xs" onclick="revokeKey('${k.id}', this)">Revoke</button></td>
                     </tr>
                 `).join('')}</tbody>
             </table>`;
     } catch(e) {
-        document.getElementById('keys-table').innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Failed to load keys.</p>';
+        document.getElementById('keys-table').innerHTML = '<p class="text-small">Failed to load keys.</p>';
     }
 }
 

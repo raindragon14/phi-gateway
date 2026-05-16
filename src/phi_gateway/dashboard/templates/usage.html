@@ -5,24 +5,24 @@
 <h1>Usage</h1>
 <p class="subtitle">Token consumption and cost broken down by provider and model.</p>
 
-<div class="card" style="margin-bottom: 20px;">
+<div class="card card-gap-lg">
     <h2>Summary</h2>
-    <div id="usage-summary" style="margin-top:12px;">
-        <p style="font-size:12px;color:var(--text-muted);">Loading...</p>
+    <div id="usage-summary" class="mt-md">
+        <p class="text-small">Loading...</p>
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+<div class="grid-2">
     <div class="card">
         <h2>By Provider</h2>
         <div id="usage-by-provider">
-            <p style="font-size:12px;color:var(--text-muted);">Loading...</p>
+            <p class="text-small">Loading...</p>
         </div>
     </div>
     <div class="card">
         <h2>By Model</h2>
         <div id="usage-by-model">
-            <p style="font-size:12px;color:var(--text-muted);">Loading...</p>
+            <p class="text-small">Loading...</p>
         </div>
     </div>
 </div>
@@ -32,7 +32,7 @@ async function loadUsage() {
     const key = sessionStorage.getItem('phi_api_key');
     if (!key) {
         document.querySelectorAll('[id^="usage-"]').forEach(el =>
-            el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Set your API key to view usage.</p>');
+            el.innerHTML = '<p class="text-small">Set your API key to view usage.</p>');
         return;
     }
     try {
@@ -51,17 +51,17 @@ async function loadUsage() {
         document.getElementById('usage-by-provider').innerHTML = byProvider.length
             ? `<table><thead><tr><th>Provider</th><th>Requests</th><th>Cost (USD)</th></tr></thead>
                <tbody>${byProvider.map(p => `<tr><td>${p.provider}</td><td>${p.requests.toLocaleString()}</td><td>$${p.cost_usd.toFixed(6)}</td></tr>`).join('')}</tbody></table>`
-            : '<p style="font-size:12px;color:var(--text-muted);">No data yet.</p>';
+            : '<p class="text-small">No data yet.</p>';
 
         const byModel = data.by_model || [];
         document.getElementById('usage-by-model').innerHTML = byModel.length
             ? `<table><thead><tr><th>Model</th><th>Requests</th><th>Cost (USD)</th></tr></thead>
                <tbody>${byModel.map(m => `<tr><td class="mono">${m.model}</td><td>${m.requests.toLocaleString()}</td><td>$${m.cost_usd.toFixed(6)}</td></tr>`).join('')}</tbody></table>`
-            : '<p style="font-size:12px;color:var(--text-muted);">No data yet.</p>';
+            : '<p class="text-small">No data yet.</p>';
 
     } catch(e) {
         document.getElementById('usage-summary').innerHTML =
-            '<p style="font-size:12px;color:var(--text-muted);">Failed to load usage data.</p>';
+            '<p class="text-small">Failed to load usage data.</p>';
     }
 }
 loadUsage();
