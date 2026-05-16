@@ -88,7 +88,7 @@ def create_app() -> FastAPI:
         return JSONResponse({
             "service": "PhiGateway",
             "version": __version__,
-            "description": "Production-grade self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory.",
+            "description": "Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory.",
             "docs": "/docs",
             "openapi": "/openapi.json",
             "health": "/health",
