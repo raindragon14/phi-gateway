@@ -1,8 +1,8 @@
-"""HTMX dashboard routes — serve the admin UI.
+"""
+HTMX dashboard routes — serve the admin UI.
 
 Requires admin-tier or pro-tier API key for access.
-Open source users: these endpoints are for self-service admin.
-Phi Consulting Cloud: these are behind the hosted management UI.
+All endpoints are for self-service admin.
 """
 
 from pathlib import Path

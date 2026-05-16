@@ -1,3 +1,3 @@
-"""Phi AI Gateway — Agent-First API Platform."""
+"""Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory."""
 
 __version__ = "0.1.0"

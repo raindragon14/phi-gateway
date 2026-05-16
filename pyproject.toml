@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "phi-gateway"
 version = "0.1.0"
-description = "Phi AI Gateway — Agent-First API Platform"
+description = "Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory"
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
-    {name = "Phi Consulting", email = "hello@phiconsulting.biz.id"},
+    {name = "Muhammad Reihan Pandanarang", email = "mreihanpandanarang@gmail.com"},
 ]
 keywords = ["llm", "ai", "gateway", "api", "openai", "anthropic", "mcp", "rag", "agent"]
 classifiers = [
@@ -38,8 +38,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://phiconsulting.biz.id"
-Documentation = "https://phiconsulting.biz.id/docs"
+Documentation = "https://github.com/raindragon14/phi-gateway"
 Repository = "https://github.com/raindragon14/phi-gateway"
 Issues = "https://github.com/raindragon14/phi-gateway/issues"
 

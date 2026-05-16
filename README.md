@@ -6,7 +6,7 @@
   <a href="https://github.com/raindragon14/phi-gateway/actions/workflows/ci.yml"><img src="https://github.com/raindragon14/phi-gateway/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
-**One API for AI agents.** LLM proxy, tool registry, knowledge base, and agent memory in a single container.
+**Self-hosted AI gateway.** LLM proxy, MCP tool registry, RAG knowledge base, agent memory — one API.
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
@@ -20,7 +20,7 @@
 
 ## What is PhiGateway?
 
-When building an AI agent, you need four things: a way to call LLMs, tools the agent can use, a place to store knowledge, and memory across conversations. PhiGateway provides all four behind a single OpenAI-compatible API. Run it on your own server or use a hosted instance.
+When building an AI agent, you need four things: a way to call LLMs, tools the agent can use, a place to store knowledge, and memory across conversations. PhiGateway provides all four behind a single OpenAI-compatible API. Self-hosted, open source, no strings attached.
 
 | Primitive | What it does |
 |---|---|
@@ -163,20 +163,7 @@ Paragraph-aware chunking, embeddings via OpenAI, cosine similarity search. Falls
 
 Full CRUD for conversations with pagination and context window management. The gateway automatically trims oldest messages when token count exceeds the model's context limit, returning an `X-Context-Truncated` header so your agent can react.
 
-## Self-Hosting vs Hosted
-
-PhiGateway is open source (MIT). You have two deployment options:
-
-| | Self-Hosted | Hosted Instance |
-|---|---|---|
-| **Infrastructure** | Your server (>= 1GB RAM) | Managed for you |
-| **Provider keys** | You bring your own | Platform provisions |
-| **SSL / domain** | You configure | Included |
-| **Updates** | You apply | Automatic |
-| **Rate limits** | You control per tier | Platform enforces |
-| **Cost** | Your server + provider bills | Free tier available |
-
-### Self-Hosting
+## Self-Hosting
 
 ```bash
 # Requirements: Docker, a domain (for SSL), provider API keys
@@ -187,14 +174,6 @@ docker compose up -d
 ```
 
 The `.env.example` file documents every provider key you need. The gateway does **not** ship with any keys — you bring your own and pay your own provider bills. Rate limits are configurable per API key tier in the database.
-
-### Hosted Instance
-
-A managed deployment is available for those who prefer not to operate infrastructure. It includes provider key management, automatic SSL, and a free tier for evaluation.
-
-Visit **[phiconsulting.biz.id](https://phiconsulting.biz.id)** for details.
-
-**The open-source project and the hosted service are separate:** the hosted instance uses the same codebase with additional operational layers (key pool, billing, monitoring) that are not part of this repository. Nothing in this repo requires the hosted service.
 
 ## Architecture
 
@@ -241,7 +220,6 @@ phi-gateway/
 │   ├── database.py           # Async SQLAlchemy engine
 │   ├── dependencies.py       # Dependency injection (auth + rate limiting)
 │   └── main.py               # App factory + lifespan
-├── srv/landing/              # Landing page
 ├── tests/                    # pytest suite (unit + integration)
 ├── docker-compose.yml        # Local dev (Caddy + API)
 ├── Dockerfile                # Production build

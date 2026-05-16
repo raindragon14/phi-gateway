@@ -1,9 +1,13 @@
+"""Main application factory for PhiGateway.
+
+The gateway is self-hosted and fully open source (MIT).
+"""
+
 import logging
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
@@ -13,18 +17,6 @@ from phi_gateway.database import engine
 from phi_gateway.models import Base
 
 logger = logging.getLogger(__name__)
-
-LANDING_DESC = (
-    "One API for AI agents. "
-    "LLM Proxy + Tool Registry + Knowledge Base + Agent Memory."
-)
-LONG_DESC = (
-    "LLM Proxy (OpenAI, Anthropic, Groq, OpenRouter) + "
-    "Tool Registry (MCP-native, JSON-RPC 2.0) + "
-    "Knowledge Base (RAG with embeddings, cosine similarity) + "
-    "Agent Memory (conversation storage, context window management). "
-    "Self-host for free or use a managed instance."
-)
 
 SCALAR_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -61,17 +53,11 @@ async def lifespan(app: FastAPI):
     logger.info("Engine disposed")
 
 
-def _get_landing_html() -> str:
-    app_root = Path(os.environ.get("APP_ROOT", Path(__file__).resolve().parent.parent.parent))
-    landing_path = app_root / "srv" / "landing" / "index.html"
-    return landing_path.read_text(encoding="utf-8")
-
-
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title="PhiGateway",
-        description=LONG_DESC,
+        description="LLM proxy + MCP tool registry + RAG knowledge base + agent memory. Self-hosted, open source.",
         version=__version__,
         docs_url=None,
         redoc_url=None,
@@ -99,41 +85,21 @@ def create_app() -> FastAPI:
         return {"status": "ok", "version": __version__}
 
     @app.get("/", include_in_schema=False)
-    async def root(request: Request):
-        host = request.headers.get("host", "")
-        if host.startswith("api."):
-            return _api_root_response(host)
-        return HTMLResponse(content=_get_landing_html())
+    async def root():
+        return JSONResponse({
+            "service": "PhiGateway",
+            "version": __version__,
+            "description": "Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory.",
+            "docs": "/docs",
+            "openapi": "/openapi.json",
+            "health": "/health",
+        })
 
     @app.get("/docs", include_in_schema=False)
     async def api_docs():
         return HTMLResponse(content=SCALAR_HTML)
 
     return app
-
-
-def _api_root_response(host: str) -> JSONResponse:
-    scheme = "https" if "localhost" not in host and ":" not in host else "http"
-    base = f"{scheme}://{host.replace("api.", "")}"
-    return JSONResponse(content={
-        "name": "PhiGateway",
-        "version": __version__,
-        "description": LANDING_DESC,
-        "docs": f"{base}/docs",
-        "openapi": f"{base}/openapi.json",
-        "health": "/health",
-        "endpoints": {
-            "chat": "/v1/chat/completions",
-            "models": "/v1/models",
-            "embeddings": "/v1/embeddings",
-            "tools": "/v1/tools",
-            "knowledge_base": "/v1/kb",
-            "memory": "/v1/memory",
-            "keys": "/v1/keys",
-            "usage": "/v1/usage",
-            "mcp": "/mcp",
-        },
-    })
 
 
 app = create_app()
