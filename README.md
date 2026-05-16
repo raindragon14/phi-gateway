@@ -191,7 +191,7 @@ Caddy (reverse proxy, auto SSL)
               └── SQLite (single file)
 ```
 
-Idle RAM: approximately 800 MB on a 4 GB VPS.
+Idle RAM: approximately 250 MB.
 
 ## Design Decisions
 
