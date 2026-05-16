@@ -119,7 +119,6 @@ async def agent_workflow():
         print(f"Cost so far: ${usage['total_cost_usd']:.4f}")
 ```
 
-
 ## Features
 
 ### LLM Proxy
@@ -186,7 +185,8 @@ Caddy (reverse proxy, auto SSL)
         ├── /v1/keys              →  API key management
         ├── /v1/usage             →  cost analytics
         ├── /mcp                  →  JSON-RPC 2.0 (MCP)
-        └── /dashboard            →  HTMX admin UI
+        ├── /dashboard            →  HTMX admin UI
+        └── /docs                 →  interactive API ref (Scalar OpenAPI)
               └── SQLite (single file)
 ```
 
