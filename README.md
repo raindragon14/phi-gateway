@@ -103,7 +103,8 @@ async def agent_workflow():
         }, headers=headers)
 
         # 4. Search a knowledge base (after ingesting docs)
-        await c.post("/v1/kb", json={"name": "docs"}, headers=headers)
+        r = await c.post("/v1/kb", json={"name": "docs"}, headers=headers)
+        kb_id = r.json()["id"]
         await c.post(f"/v1/kb/{kb_id}/search", json={
             "query": "deployment guide", "top_k": 5
         }, headers=headers)
