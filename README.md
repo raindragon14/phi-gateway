@@ -119,7 +119,6 @@ async def agent_workflow():
         print(f"Cost so far: ${usage['total_cost_usd']:.4f}")
 ```
 
-A full walkthrough is available on the built-in dashboard at `/dashboard/docs` and in the [Scalar API docs](/docs).
 
 ## Features
 
