@@ -1,5 +1,5 @@
 ---
-# Design tokens for Phi AI Gateway
+# Design tokens for PhiGateway
 # Follows design.md spec: https://github.com/google-labs-code/design.md
 schema: design.md/v1
 
@@ -177,11 +177,11 @@ tokens:
       description: High-density layout capability
 ---
 
-# Phi AI Gateway Design System
+# PhiGateway Design System
 
 ## Overview
 
-Phi AI Gateway employs an ultra-minimalist, high-performance aesthetic designed for professional engineers. It rejects "trendy" SaaS design patterns (like heavy drop shadows, neon gradients, or overly bubbly border radii) in favor of a classic, utilitarian interface. The design feels inherently *fast*, prioritizing high information density, razor-sharp edges, and clinical typography.
+PhiGateway employs an ultra-minimalist, high-performance aesthetic designed for professional engineers. It rejects "trendy" SaaS design patterns in favor of a classic, utilitarian interface. The design feels inherently *fast*, prioritizing high information density, razor-sharp edges, and clinical typography.
 
 ## Visual Identity
 

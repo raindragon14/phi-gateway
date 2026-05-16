@@ -1,6 +1,6 @@
-# Contributing to Phi AI Gateway
+# Contributing to PhiGateway
 
-We welcome contributions! Here's how to get started.
+We welcome contributions. Here's how to get started.
 
 ## Development Setup
 
@@ -74,4 +74,4 @@ src/phi_gateway/
 
 ## Architecture Decisions
 
-Architecture Decision Records (ADRs) are available at [phiconsulting.biz.id/docs](https://phiconsulting.biz.id/docs).
+Architecture Decision Records (ADRs) are maintained in the [docs](./docs) directory.
