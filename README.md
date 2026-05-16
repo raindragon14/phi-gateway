@@ -5,7 +5,7 @@
   <a href="https://github.com/raindragon14/phi-gateway/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License"></a>
 </p>
 
-**Self-hosted AI gateway.** LLM proxy, MCP tool registry, RAG knowledge base, agent memory — one API.
+**Production-grade self-hosted AI gateway.** LLM proxy, MCP tool registry, RAG knowledge base, agent memory — one API.
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
