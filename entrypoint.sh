@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "Phi AI Gateway — starting up"
+echo "PhiGateway — starting up"
 
 # Run database migrations
 echo "Running Alembic migrations..."

@@ -8,7 +8,6 @@ COPY src/ src/
 RUN pip install --no-cache-dir . && rm -rf /root/.cache
 
 # Copy runtime files
-COPY srv/ /app/srv/
 COPY alembic.ini /app/
 COPY alembic/ /app/alembic/
 COPY entrypoint.sh /app/entrypoint.sh
