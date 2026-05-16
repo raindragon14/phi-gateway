@@ -56,7 +56,7 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title="PhiGateway",
-        description="LLM proxy + MCP tool registry + RAG knowledge base + agent memory. Self-hosted, open source.",
+        description="LLM proxy + MCP tool registry + RAG knowledge base + agent memory. One API, zero lock-in.",
         version=__version__,
         docs_url=None,
         redoc_url=None,

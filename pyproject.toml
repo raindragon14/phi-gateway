@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "phi-gateway"
 version = "0.1.0"
-description = "Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory"
+description = "Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, agent memory. One API, zero lock-in."
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
-    {name = "Muhammad Reihan Pandanarang", email = "mreihanpandanarang@gmail.com"},
+    {name = "Muhammad Reihan Pandanarang", email = "mrpandanarang@gmail.com"},
 ]
 keywords = ["llm", "ai", "gateway", "api", "openai", "anthropic", "mcp", "rag", "agent"]
 classifiers = [
