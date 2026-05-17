@@ -60,6 +60,7 @@ KNOWN_MODELS: list[ModelInfo] = [
     {"id": "openrouter/openai/gpt-5-mini", "provider": "openrouter", "pricing": "$0.25/$2.00", "context_window": 400_000},  # noqa: E501
     {"id": "openrouter/google/gemini-2.5-flash", "provider": "openrouter", "pricing": "$0.15/$0.60", "context_window": 1_000_000},  # noqa: E501
     {"id": "openrouter/deepseek/deepseek-r1", "provider": "openrouter", "pricing": "$0.55/$2.19", "context_window": 128_000},  # noqa: E501
+    {"id": "openrouter/poolside/laguna-m.1:free", "provider": "openrouter", "pricing": "free", "context_window": 128_000},  # noqa: E501
 ]
 
 _MODEL_TO_PROVIDER: dict[str, str] = {m["id"]: m["provider"] for m in KNOWN_MODELS}

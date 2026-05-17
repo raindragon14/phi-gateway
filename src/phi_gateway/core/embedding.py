@@ -6,19 +6,26 @@ from phi_gateway.config import settings
 
 logger = logging.getLogger(__name__)
 
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
 
 async def generate_embedding(text: str, model: str = "text-embedding-3-small") -> list[float]:
-    """Generate an embedding vector for the given text using OpenAI.
+    """Generate an embedding vector using OpenRouter.
 
+    Uses OPENROUTER_API_KEY from .env (no separate OpenAI key needed).
     Returns a list of floats (the embedding vector).
-    Raises RuntimeError if OpenAI is not configured.
+    Raises RuntimeError if OpenRouter is not configured.
     """
-    if not settings.OPENAI_API_KEY:
+    if not settings.OPENROUTER_API_KEY:
         raise RuntimeError(
-            "OpenAI API key is not configured. Set OPENAI_API_KEY in .env to use embeddings."
+            "OpenRouter API key is not configured. "
+            "Set OPENROUTER_API_KEY in .env to use embeddings."
         )
 
-    client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    client = openai.AsyncOpenAI(
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url=OPENROUTER_BASE_URL,
+    )
     try:
         response = await client.embeddings.create(
             model=model,
@@ -34,13 +41,17 @@ async def generate_embeddings_batch(
     texts: list[str],
     model: str = "text-embedding-3-small",
 ) -> list[list[float]]:
-    """Generate embeddings for a batch of texts."""
-    if not settings.OPENAI_API_KEY:
+    """Generate embeddings for a batch of texts via OpenRouter."""
+    if not settings.OPENROUTER_API_KEY:
         raise RuntimeError(
-            "OpenAI API key is not configured. Set OPENAI_API_KEY in .env to use embeddings."
+            "OpenRouter API key is not configured. "
+            "Set OPENROUTER_API_KEY in .env to use embeddings."
         )
 
-    client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    client = openai.AsyncOpenAI(
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url=OPENROUTER_BASE_URL,
+    )
     try:
         response = await client.embeddings.create(
             model=model,
