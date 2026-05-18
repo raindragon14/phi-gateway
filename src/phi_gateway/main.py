@@ -8,15 +8,16 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway import __version__
 from phi_gateway.api.router import api_router
 from phi_gateway.config import settings
-from phi_gateway.database import async_session, engine
+from phi_gateway.database import engine, get_db
 from phi_gateway.log_config import setup_logging
 from phi_gateway.models import Base
 
@@ -133,13 +134,12 @@ def create_app() -> FastAPI:
         return Response(content=FAVICON_SVG, media_type="image/svg+xml")
 
     @app.get("/health", include_in_schema=False)
-    async def health_check():
+    async def health_check(db: AsyncSession = Depends(get_db)):
         """Health check endpoint with database connectivity probe."""
         uptime_seconds = time.time() - START_TIME
         db_status = "ok"
         try:
-            async with async_session() as session:
-                await session.execute(text("SELECT 1"))
+            await db.execute(text("SELECT 1"))
         except Exception:
             db_status = "degraded"
 
