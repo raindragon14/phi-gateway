@@ -79,6 +79,6 @@ async def get_api_key(
 
     # Update last_used_at in background (don't fail the request on write error)
     api_key.last_used_at = utc_now
-    await db.flush()
+    await db.commit()
 
     return api_key
