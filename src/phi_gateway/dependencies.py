@@ -14,30 +14,36 @@ async def get_api_key(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> ApiKey:
-    """Extract and verify the API key from the Authorization header.
+    """Extract and verify the API key from the Authorization header or cookie.
 
-    Expected format: ``Authorization: Bearer ***
+    **Priority order:**
+    1. ``Authorization: Bearer <key>`` header (API clients)
+    2. ``phi_api_key`` cookie (dashboard / browser users after login)
 
     Returns the ApiKey model instance on success.
     Raises HTTPException(401) on missing/invalid/expired key.
     On success, stores rate-limit headers on ``request.state.rate_limit_headers``
     so middleware or the endpoint can include them in the response.
     """
+    api_key_str: str | None = None
+
     auth = request.headers.get("Authorization")
-    if not auth:
+    if auth:
+        parts = auth.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            api_key_str = parts[1]
+    else:
+        # Fallback to cookie (browser users after login)
+        cookie_key = request.cookies.get("phi_api_key")
+        if cookie_key:
+            api_key_str = cookie_key
+
+    if not api_key_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing Authorization header. Use: Bearer <api_key>",
         )
 
-    parts = auth.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Authorization header format. Use: Bearer <api_key>",
-        )
-
-    api_key_str = parts[1]
     prefix = api_key_str[:12]
 
     # Look up by prefix (constant-time prefix comparison doesn't matter here;
