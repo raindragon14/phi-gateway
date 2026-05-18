@@ -1,4 +1,4 @@
-# PhiGateway
+<h1 align="center">Phi Gateway</h1>
 
 <p align="center">
   <em>Self-hosted AI gateway — LLM proxy, tool registry, RAG knowledge base, and agent memory behind one API.</em>
@@ -93,20 +93,25 @@ curl -s http://localhost:8000/v1/chat/completions \
 
 Single endpoint (`/v1/chat/completions`) routes to multiple providers. Model string determines the backend — your agent code never changes. Streaming (SSE) and cost tracking included.
 
-Available on the live instance:
+| Model | Provider | Context | Pricing (in/out per 1M) |
+|-------|----------|---------|-------------------------|
+| `gpt-5-nano` | OpenAI | 400k | $0.05/$0.40 |
+| `gpt-5-mini` | OpenAI | 400k | $0.25/$2.00 |
+| `gpt-5.2` | OpenAI | 400k | $1.75/$14.00 |
+| `gpt-4.1` | OpenAI | 1M | $2.00/$8.00 |
+| `gpt-4.1-nano` | OpenAI | 1M | $0.10/$0.40 |
+| `claude-haiku-4.5` | Anthropic | 200k | $1.00/$5.00 |
+| `claude-sonnet-4.6` | Anthropic | 200k | $3.00/$15.00 |
+| `claude-opus-4.6` | Anthropic | 200k | $5.00/$25.00 |
+| `groq/llama-3.3-70b` | Groq | 128k | free |
+| `groq/llama-4-scout` | Groq | 128k | free |
+| `groq/deepseek-r1-distill-llama-70b` | Groq | 128k | free |
+| `openrouter/google/gemini-2.5-flash` | OpenRouter | 1M | $0.15/$0.60 |
+| `openrouter/deepseek/deepseek-r1` | OpenRouter | 128k | $0.55/$2.19 |
+| `openrouter/mistralai/mistral-medium-3-5` | OpenRouter | 256k | $2.00/$6.00 |
+| `openrouter/poolside/laguna-m.1:free` | OpenRouter | 128k | free |
 
-| Model | Provider | Context |
-|-------|----------|---------|
-| `gpt-5-nano` | OpenAI | 400k |
-| `gpt-5.2` | OpenAI | 400k |
-| `claude-sonnet-4.6` | Anthropic | 200k |
-| `groq/llama-3.3-70b` | Groq | 128k |
-| `google/gemini-2.5-flash` | OpenRouter | 1M |
-| `google/gemini-2.5-pro` | OpenRouter | 1M |
-| `openai/gpt-oss-120b` | OpenRouter | varies |
-| `anthropic/claude-sonnet-4` | OpenRouter | 200k |
-
-Full model list available at `/v1/models`.
+Full model list available at `/v1/models`. Supports provider filtering (`?provider=groq`) and search (`?q=llama`).
 
 ### Tool Registry (MCP-native)
 
@@ -269,7 +274,18 @@ ruff check src/ tests/
 - [x] Cross-platform CI (6-job matrix: lint, test 3.12/3.13, smoke, packaging, build)
 - [x] 100-test suite (49 unit + 37 integration + 4 production smoke)
 
-### v0.3.0 — Scalability & Observability
+### v0.3.0 — Major Refactor ✅
+
+- [x] Unified model catalog (`models_catalog.py`) — single source of truth for models + pricing
+- [x] Provider filtering and search on `/v1/models` endpoint
+- [x] Rate limiter optimization — `deque` for O(1) popleft
+- [x] Rate limit headers wired into all API responses
+- [x] Dead code removal — unused stubs, duplicate pricing dictionaries
+- [x] Test-driven development workflow — 105 passing tests, 73% coverage
+- [x] Separate coverage CI job (70% gate on full suite, not per-subset)
+- [x] `ruff` lint clean across entire codebase
+
+### v0.4.0 — Scalability & Observability
 
 **Security**
 - [ ] API key rotation procedure documented [#1](https://github.com/raindragon14/phi-gateway/issues/1)
@@ -290,7 +306,7 @@ ruff check src/ tests/
 - [ ] Document ingestion API (upload PDFs/markdown directly)
 - [ ] Support for Ollama / local models
 
-### v0.4.0 — Advanced Agent Features
+### v0.5.0 — Advanced Agent Features
 
 - [ ] Webhook integration for tool execution callbacks
 - [ ] Streaming tool execution (SSE for real-time tool output)

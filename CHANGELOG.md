@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-05-18
+
+### Added
+
+- **Unified model catalog** (`models_catalog.py`) — single source of truth for model IDs, providers, pricing, and context windows
+- **Provider filtering** on `/v1/models` — `?provider=groq` to filter by provider
+- **Model search** on `/v1/models` — `?q=llama` to search model names
+- **Rate limit headers** — `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` on all API responses
+- **v0.3.0 roadmap** in README — Major Refactor milestone
+
+### Changed
+
+- README header: centered `<h1>` with "Phi Gateway" branding
+- README model table: expanded to 15 models with pricing, covers OpenAI/Anthropic/Groq/OpenRouter
+- README roadmap: v0.3.0 = Major Refactor (done), v0.4.0 = Scalability & Observability, v0.5.0 = Advanced Agent Features
+- Rate limiter: `deque` for O(1) popleft (was list with O(n) pop(0))
+- `COST_PER_1M_TOKENS` and `KNOWN_MODELS` now derived from `models_catalog.MODELS` — no more duplicate dicts
+
+### Removed
+
+- Dead `CONTEXT_LIMITS` entries from `memory_service.py` (redundant with `models_catalog`)
+- Unused `JsonRpcResponse` from `schemas/mcp.py`
+- Duplicate pricing dictionaries from `cost_tracker.py` (now imports from `models_catalog`)
+
+### Fixed
+
+- CI: separate coverage job — 70% gate runs on full suite, not per-test-subset
+- `.coverage` file added to `.gitignore`
+
 ## [0.2.0] — 2026-05-18
 
 ### Added
