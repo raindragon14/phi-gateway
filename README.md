@@ -111,7 +111,7 @@ Single endpoint (`/v1/chat/completions`) routes to multiple providers. Model str
 | `openrouter/mistralai/mistral-medium-3-5` | OpenRouter | 256k | $2.00/$6.00 |
 | `openrouter/poolside/laguna-m.1:free` | OpenRouter | 128k | free |
 
-Full model list available at `/v1/models`. Supports provider filtering (`?provider=groq`) and search (`?q=llama`).
+Full model list available at `/v1/models`. Supports provider filtering (`?provider=groq`) and search (`?search=llama`).
 
 ### Tool Registry (MCP-native)
 
