@@ -5,7 +5,7 @@ import re
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, text
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway.core.embedding import generate_embedding, generate_embeddings_batch
@@ -86,8 +86,8 @@ async def create_kb(
 async def delete_kb(kb_id: UUID, api_key: ApiKey, db: AsyncSession) -> None:
     """Delete a knowledge base and all its documents."""
     await _get_owned_kb(kb_id, api_key, db)
-    await db.execute(text("DELETE FROM documents WHERE kb_id = :kb_id"), {"kb_id": str(kb_id)})
-    await db.execute(text("DELETE FROM knowledge_bases WHERE id = :kb_id"), {"kb_id": str(kb_id)})
+    await db.execute(delete(Document).where(Document.kb_id == kb_id))
+    await db.execute(delete(KnowledgeBase).where(KnowledgeBase.id == kb_id))
     await db.commit()
 
 

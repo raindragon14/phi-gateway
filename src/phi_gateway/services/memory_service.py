@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, text
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway.models.api_key import ApiKey
@@ -129,8 +129,7 @@ async def delete_conversation(
 
     # Delete messages first
     await db.execute(
-        text("DELETE FROM messages WHERE conversation_id = :cid"),
-        {"cid": str(conversation_id)},
+        delete(Message).where(Message.conversation_id == conversation_id),
     )
     await db.delete(conv)
     await db.commit()
