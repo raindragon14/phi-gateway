@@ -78,3 +78,9 @@ phi_gateway = ["dashboard/templates/*.html"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "unit: Unit tests (fast, no external deps)",
+    "integration: Integration tests (DB, real HTTP)",
+    "production: Production smoke tests",
+]
+addopts = "-ra -q --strict-markers --cov=phi_gateway --cov-report=term-missing --cov-fail-under=70"

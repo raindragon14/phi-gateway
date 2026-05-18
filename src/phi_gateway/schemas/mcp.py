@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -8,10 +8,3 @@ class JsonRpcRequest(BaseModel):
     method: str
     params: dict[str, Any] = {}
     id: str | int = "1"
-
-
-class JsonRpcResponse(BaseModel):
-    jsonrpc: str = "2.0"
-    result: Any = None
-    error: Optional[dict] = None
-    id: str | int | None = None
