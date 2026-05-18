@@ -5,33 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.1] — 2026-05-18
+## [0.2.0] — 2026-05-18
 
 ### Added
 
-- Connection pooling configuration for SQLAlchemy (`pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`)
-- Structured JSON logging via `phi_gateway.log_config` — outputs JSON lines with `timestamp`, `level`, `logger`, `message`, and extra fields
-- Uvicorn access logger overridden to JSON format with request context (`request_id`, `method`, `path`, `status_code`, `duration_ms`)
-- `X-Request-ID` middleware — correlates logs across requests, accepts incoming header or auto-generates UUID
-- `OPS.md` — operations runbook with restart, logs, backup, health check, scale, upgrade procedures
-- `scripts/backup-db.sh` — automated SQLite backup with 30-day retention and syslog logging
-- `CHANGELOG.md` — this file
-- Security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`)
-- Request body size limit middleware (configurable via `MAX_REQUEST_BODY_SIZE`)
-- Health check endpoint enhanced with database connectivity probe and uptime metric
-- CORS origin config — `ALLOWED_ORIGINS` environment variable with comma-separated support
+- **PRODUCTION.md** — full production checklist (6 tiers, 30+ items)
+- **Security hardening:** CORS config-driven via `ALLOWED_ORIGINS` env var, security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`), request body size limit (`MAX_REQUEST_BODY_SIZE`)
+- **Health endpoint** with DB connectivity probe — returns version, uptime, db_status
+- **Docker HEALTHCHECK** — curl to /health, interval 30s
+- **Provider fallback chain** — auto-retry across model fallbacks (anthropic→openai→groq→openrouter) with logging at each step
+- **Connection pooling** — SQLAlchemy engine tuned (pool_size=10, max_overflow=20, pool_pre_ping=True)
+- **Structured JSON logging** via `log_config.py` — request ID middleware, JSON access logs
+- **OPS.md** — operations runbook (restart, logs, backup, upgrade, troubleshooting)
+- **Backup script** (`scripts/backup-db.sh`) — timestamped SQLite backup, 30-day retention
+- **CHANGELOG.md** — this file
+- **100-test suite:** 49 unit + 37 integration + 4 production smoke + 10 existing
+  - Unit: log_config (5), fallback chain (16), rate limiter (7), config (6)
+  - Integration: health (5), security headers (3), request ID (3), body limit (2)
+  - Production: wheel build, CLI entry point, version consistency, import verification
+- Cross-platform: 46 source files scanned — zero platform-specific code
+- PyPI classifiers: Python 3.13, FastAPI, OS Independent
 
 ### Changed
 
-- Database engine initialization now uses explicit pool parameters for production readiness
-- Application logging switched from plain-text to structured JSON format
-- Uvicorn access logs emit structured JSON for log aggregator compatibility
+- CI workflow: 6-job matrix (lint, unit-test 3.12/3.13, integration-test 3.12/3.13, smoke-test, packaging, build)
+- Health endpoint uses `Depends(get_db)` instead of module-level `async_session` (works with test DB overrides)
+- Body limit returns `JSONResponse(413)` directly (not `HTTPException` — leaked through Starlette middleware)
 
 ### Fixed
 
-- Database connection reuse improved with `pool_pre_ping=True` to detect stale connections
+- `uvicorn[standard]` → `uvicorn` (uvloop & httptools Linux-only, broke Windows `pip install`)
+- Health endpoint `data/` path dependency in CI (now uses injected DB session)
 
-## [0.1.0] — 2026-04-22
+## [0.1.1] — 2026-05-18
+
+### Fixed
+
+- `uvicorn[standard]` → `uvicorn` (uvloop & httptools Linux-only, broke Windows pip install)
+
+## [0.1.0] — 2026-05-18
 
 ### Added
 
