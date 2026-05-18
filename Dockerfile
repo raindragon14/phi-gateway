@@ -13,6 +13,11 @@ COPY alembic/ /app/alembic/
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Install curl for healthcheck
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create data directory and non-root user
 RUN mkdir -p /app/data && \
     groupadd -r appuser && \
@@ -21,5 +26,8 @@ RUN mkdir -p /app/data && \
 
 USER appuser
 EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]

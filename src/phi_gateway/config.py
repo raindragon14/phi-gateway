@@ -21,5 +21,9 @@ class Settings(BaseSettings):
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
 
+    # Security
+    ALLOWED_ORIGINS: str = "*"  # comma-separated list or "*" for all
+    MAX_REQUEST_BODY_SIZE: int = 10 * 1024 * 1024  # 10 MB default
+
 
 settings = Settings()

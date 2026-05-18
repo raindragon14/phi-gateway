@@ -1,13 +1,28 @@
 import json
+import logging
 from collections.abc import AsyncGenerator
 
+import httpx
+from anthropic import APIError as AnthropicAPIError
 from anthropic import AsyncAnthropic
 from groq import AsyncGroq
+from openai import APIError as OpenAIAPIError
 from openai import AsyncOpenAI
 
 from phi_gateway.config import settings
 
 # ── Provider registry ──────────────────────────────────────────────
+
+logger = logging.getLogger(__name__)
+
+# ── Fallback chain ─────────────────────────────────────────────────
+
+FALLBACK_CHAIN: dict[str, list[str]] = {
+    "anthropic/": ["openai/gpt-5.2", "groq/llama-3.3-70b"],
+    "openai/": ["groq/llama-3.3-70b", "openrouter/mistral-medium-3-5"],
+    "groq/": ["openai/gpt-5-mini", "openrouter/gemini-2.5-flash"],
+    "openrouter/": ["openai/gpt-5.2", "anthropic/claude-sonnet-4.6"],
+}
 
 ModelInfo = dict  # {"id": str, "provider": str, ...}
 
@@ -138,50 +153,94 @@ async def route_chat(
 
     Returns a dict matching OpenAI's ``ChatCompletionResponse`` shape.
     Handles non-streaming only (streaming is handled by a separate generator).
+    On provider failure, automatically falls back to alternative models
+    defined in FALLBACK_CHAIN.
     """
-    provider, model_name = _parse_model(model)
-    client = _get_client(provider)
+    # Build ordered list of models to try (primary + fallbacks)
+    fallbacks: list[str] = []
+    for prefix, alt_models in FALLBACK_CHAIN.items():
+        if model.startswith(prefix):
+            fallbacks = alt_models
+            break
 
-    kwargs: dict = {
-        "model": model_name,
-        "temperature": temperature,
-    }
+    models_to_try = [model] + fallbacks
+    last_error: Exception | None = None
 
-    if stream:
-        kwargs["stream"] = True
+    for attempt_idx, candidate_model in enumerate(models_to_try):
+        try:
+            provider, model_name = _parse_model(candidate_model)
+            client = _get_client(provider)
 
-    if max_tokens:
-        kwargs["max_tokens"] = max_tokens
+            kwargs: dict = {
+                "model": model_name,
+                "temperature": temperature,
+            }
 
-    # Per-provider adaptations
-    if provider == "anthropic":
-        msg_kwargs = _anthropic_messages(messages)
-        kwargs.update(msg_kwargs)
-    elif provider == "openai":
-        msg_kwargs = _openai_messages(messages)
-        kwargs.update(msg_kwargs)
-    else:
-        # Groq uses OpenAI-compatible format
-        msg_kwargs = _openai_messages(messages)
-        kwargs.update(msg_kwargs)
+            if stream:
+                kwargs["stream"] = True
 
-    # Tools passthrough (all providers)
-    if tools:
-        if provider == "anthropic":
-            kwargs["tools"] = [
-                {"name": t["function"]["name"], "description": t["function"].get("description", ""),
-                 "input_schema": t["function"]["parameters"]}
-                for t in tools
-            ]
-        else:
-            kwargs["tools"] = tools
+            if max_tokens:
+                kwargs["max_tokens"] = max_tokens
 
-    response = await client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
+            # Per-provider adaptations
+            if provider == "anthropic":
+                msg_kwargs = _anthropic_messages(messages)
+                kwargs.update(msg_kwargs)
+            elif provider == "openai":
+                msg_kwargs = _openai_messages(messages)
+                kwargs.update(msg_kwargs)
+            else:
+                # Groq uses OpenAI-compatible format
+                msg_kwargs = _openai_messages(messages)
+                kwargs.update(msg_kwargs)
 
-    if provider == "anthropic":
-        return _anthropic_to_openai(response, model, provider)
-    else:
-        return _openai_to_openai(response, model, provider)
+            # Tools passthrough (all providers)
+            if tools:
+                if provider == "anthropic":
+                    kwargs["tools"] = [
+                        {"name": t["function"]["name"], "description": t["function"].get("description", ""),
+                         "input_schema": t["function"]["parameters"]}
+                        for t in tools
+                    ]
+                else:
+                    kwargs["tools"] = tools
+
+            response = await client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
+
+            if provider == "anthropic":
+                return _anthropic_to_openai(response, candidate_model, provider)
+            return _openai_to_openai(response, candidate_model, provider)
+
+        except (
+            httpx.HTTPStatusError,
+            httpx.TimeoutException,
+            httpx.ConnectError,
+            OpenAIAPIError,
+            AnthropicAPIError,
+        ) as exc:
+            last_error = exc
+            next_model = (
+                models_to_try[attempt_idx + 1]
+                if attempt_idx + 1 < len(models_to_try)
+                else None
+            )
+            if next_model:
+                logger.warning(
+                    'Provider %s failed (%s), falling back to %s',
+                    candidate_model,
+                    exc,
+                    next_model,
+                )
+            else:
+                logger.warning(
+                    'Provider %s failed (%s), no more fallbacks',
+                    candidate_model,
+                    exc,
+                )
+            continue
+
+    # All attempts failed — raise the last error
+    raise last_error  # type: ignore[misc]
 
 
 def _openai_messages(messages: list[dict]) -> dict:

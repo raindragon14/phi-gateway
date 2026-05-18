@@ -4,18 +4,25 @@ The gateway is self-hosted and fully open source (MIT).
 """
 
 import logging
+import time
+import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
+from sqlalchemy import text
 
 from phi_gateway import __version__
 from phi_gateway.api.router import api_router
-from phi_gateway.database import engine
+from phi_gateway.config import settings
+from phi_gateway.database import async_session, engine
+from phi_gateway.log_config import setup_logging
 from phi_gateway.models import Base
 
 logger = logging.getLogger(__name__)
+
+START_TIME = time.time()
 
 SCALAR_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -54,6 +61,9 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
+    # Apply structured JSON logging config before any loggers are used
+    setup_logging()
+
     app = FastAPI(
         title="PhiGateway",
         description="LLM proxy + MCP tool registry + RAG knowledge base + agent memory. One API, zero lock-in.",
@@ -64,14 +74,55 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Inject unique request_id into each request for log correlation
+    @app.middleware("http")
+    async def add_request_id(request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+    # Parse allowed origins from config
+    allowed_origins = (
+        ["*"]
+        if settings.ALLOWED_ORIGINS == "*"
+        else [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
+    )
+
     # CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Security headers middleware
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+    # Request body size limit middleware
+    @app.middleware("http")
+    async def limit_request_body_size(request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                if int(content_length) > settings.MAX_REQUEST_BODY_SIZE:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"Request body too large. Max size: {settings.MAX_REQUEST_BODY_SIZE} bytes",
+                    )
+            except ValueError:
+                pass
+        response = await call_next(request)
+        return response
 
     app.include_router(api_router)
 
@@ -81,7 +132,25 @@ def create_app() -> FastAPI:
 
     @app.get("/health", include_in_schema=False)
     async def health_check():
-        return {"status": "ok", "version": __version__}
+        """Health check endpoint with database connectivity probe."""
+        uptime_seconds = time.time() - START_TIME
+        db_status = "ok"
+        try:
+            async with async_session() as session:
+                await session.execute(text("SELECT 1"))
+        except Exception:
+            db_status = "degraded"
+
+        status_code = 200 if db_status == "ok" else 503
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                "status": "ok" if db_status == "ok" else "degraded",
+                "version": __version__,
+                "db_status": db_status,
+                "uptime": round(uptime_seconds, 2),
+            },
+        )
 
     @app.get("/", include_in_schema=False)
     async def root():
