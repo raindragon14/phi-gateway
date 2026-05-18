@@ -1,14 +1,18 @@
 import json
 import logging
+import time
+import uuid
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from phi_gateway.core.cost_tracker import calculate_cost
 from phi_gateway.core.llm_proxy import route_chat_stream
 from phi_gateway.database import get_db
 from phi_gateway.dependencies import get_api_key
 from phi_gateway.models.api_key import ApiKey
+from phi_gateway.models.llm_request import LLMRequest
 from phi_gateway.schemas.chat import ChatCompletionRequest
 from phi_gateway.services.llm_service import chat_completion
 
@@ -40,9 +44,42 @@ async def _stream_chat(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> StreamingResponse:
-    """Handle streaming chat completion via Server-Sent Events."""
+    """Handle streaming chat completion via Server-Sent Events.
+
+    Tracks token usage from SSE events and persists cost/usage
+    logging when the stream completes.
+    """
+
+    async def _log_stream_result(
+        input_tokens: int,
+        output_tokens: int,
+        latency_ms: int,
+        status: str,
+        error_message: str | None = None,
+    ) -> None:
+        """Write an LLMRequest log entry for the stream."""
+        cost_micro = calculate_cost(body.model, input_tokens, output_tokens)
+        log_entry = LLMRequest(
+            id=uuid.uuid4(),
+            api_key_id=api_key.id,
+            provider="unknown",
+            model=body.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cost_usd_micro=cost_micro,
+            latency_ms=latency_ms,
+            status=status,
+            error_message=error_message,
+        )
+        db.add(log_entry)
+        await db.commit()
 
     async def event_generator():
+        input_tokens = 0
+        output_tokens = 0
+        start = time.perf_counter()
+        error_message: str | None = None
+
         try:
             async for sse_event in route_chat_stream(
                 model=body.model,
@@ -52,13 +89,35 @@ async def _stream_chat(
                 tools=body.tools,
             ):
                 if sse_event:
+                    # Extract token usage from SSE events (OpenAI
+                    # sends usage as the final chunk when
+                    # stream_options={"include_usage": True})
+                    if sse_event.startswith("data: ") and not sse_event.startswith("data: [DONE]"):
+                        try:
+                            data = json.loads(sse_event.removeprefix("data: ").strip())
+                            usage = data.get("usage")
+                            if usage:
+                                input_tokens = usage.get("prompt_tokens", input_tokens) or input_tokens
+                                output_tokens = usage.get("completion_tokens", output_tokens) or output_tokens
+                        except (json.JSONDecodeError, KeyError):
+                            pass
                     yield sse_event
-            # The stream is finished by route_chat_stream sending data: [DONE]
         except ValueError as e:
+            error_message = str(e)
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
         except Exception as e:
             logger.exception("Streaming error")
+            error_message = str(e)
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        finally:
+            latency_ms = int((time.perf_counter() - start) * 1000)
+            await _log_stream_result(
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                latency_ms=latency_ms,
+                status="error" if error_message else "success",
+                error_message=error_message,
+            )
 
     return StreamingResponse(
         event_generator(),

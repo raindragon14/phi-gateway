@@ -329,6 +329,7 @@ async def route_chat_stream(
             kwargs["system"] = system
     else:
         kwargs["messages"] = [_to_openai_message(m) for m in messages]
+        kwargs["stream_options"] = {"include_usage": True}
 
     if tools:
         kwargs["tools"] = tools
@@ -340,14 +341,33 @@ async def route_chat_stream(
             yield _anthropic_stream_event(event)
     else:
         async for chunk in stream:
-            yield _openai_stream_chunk(chunk, model, provider)
+            event = _openai_stream_chunk(chunk, model, provider)
+            if event:
+                yield event
 
     # Signal stream completion
     yield "data: [DONE]\n\n"
 
 
 def _openai_stream_chunk(chunk, model: str, provider: str) -> str:
-    """Format an OpenAI streaming chunk as SSE."""
+    """Format an OpenAI streaming chunk as SSE.
+
+    When ``stream_options={"include_usage": True}`` is set, the
+    final chunk carries usage data with empty choices.
+    """
+    # Usage-only chunk (final chunk with stream_options)
+    if not chunk.choices and chunk.usage:
+        data = {
+            "object": "chat.completion.chunk",
+            "model": model,
+            "usage": {
+                "prompt_tokens": chunk.usage.prompt_tokens,
+                "completion_tokens": chunk.usage.completion_tokens,
+                "total_tokens": chunk.usage.total_tokens,
+            },
+        }
+        return f"data: {json.dumps(data)}\n\n"
+
     choice = chunk.choices[0] if chunk.choices else None
     if choice is None:
         return ""
