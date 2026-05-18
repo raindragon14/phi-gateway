@@ -1,20 +1,44 @@
 # PhiGateway
 
 <p align="center">
-  <a href="https://github.com/raindragon14/phi-gateway/actions"><img src="https://img.shields.io/github/actions/workflow/status/raindragon14/phi-gateway/ci.yml?branch=main&label=CI&logo=github&style=flat" alt="CI"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python 3.12+"></a>
-  <a href="https://github.com/raindragon14/phi-gateway/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License"></a>
-  <a href="https://phiconsulting.biz.id"><img src="https://img.shields.io/website?url=https%3A%2F%2Fphiconsulting.biz.id&label=live%20demo&style=flat" alt="Live Demo"></a>
+  <em>Self-hosted AI gateway — LLM proxy, tool registry, RAG knowledge base, and agent memory behind one API.</em>
 </p>
 
-**Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG knowledge base, and agent memory behind a single API. Docker up in under a minute, zero SaaS lock-in.**
+<p align="center">
+  <a href="https://github.com/raindragon14/phi-gateway/actions"><img src="https://img.shields.io/github/actions/workflow/status/raindragon14/phi-gateway/ci.yml?branch=main&label=CI&logo=github&style=flat-square" alt="CI"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg?style=flat-square" alt="Python 3.12+"></a>
+  <a href="https://pypi.org/project/phi-gateway/"><img src="https://img.shields.io/pypi/v/phi-gateway?style=flat-square&logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://github.com/raindragon14/phi-gateway/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg?style=flat-square" alt="MIT License"></a>
+  <a href="https://hub.docker.com/r/raindragon14/phi-gateway"><img src="https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker&logoColor=white" alt="Docker"></a>
+</p>
+
+---
+
+**Docker up in under a minute. Zero SaaS lock-in.** Route LLM requests to any provider, register tools via MCP, search a built-in knowledge base, and track agent memory — all through a single OpenAI-compatible endpoint.
+
+```bash
+pip install phi-gateway
+# or: docker compose up -d
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="phi-sk-...")
+response = client.chat.completions.create(
+    model="groq/llama-3.3-70b",
+    messages=[{"role": "user", "content": "Summarize my last conversation"}],
+)
+# Routes to Groq, searches memory, returns answer + logs cost
+```
 
 <p align="center">
   <a href="#what-is-phigateway">What is it?</a> ·
   <a href="#quick-start">Quick Start</a> ·
-  <a href="#use-cases">Use Cases</a> ·
+  <a href="#features">Features</a> ·
   <a href="#screenshots">Screenshots</a> ·
-  <a href="#roadmap">Roadmap</a>
+  <a href="#roadmap">Roadmap</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
 ---
@@ -23,29 +47,12 @@
 
 Every AI agent needs an LLM, tools, knowledge, and memory. PhiGateway puts all four behind **one OpenAI-compatible endpoint**:
 
-```bash
-curl https://phiconsulting.biz.id/v1/chat/completions \
-  -H "Authorization: Bearer $PHI_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "google/gemini-2.5-flash",
-    "messages": [{"role": "user", "content": "Summarize my last conversation"}]
-  }'
-# → routes to provider, searches memory, returns answer + logs cost
-```
-
 | Primitive | What it does | Why it matters |
 |-----------|-------------|----------------|
 | **LLM Proxy** | Route chat to OpenAI / Anthropic / Groq / OpenRouter. Streaming, cost tracking, logging. | Switch providers, free tiers, fallback — without changing agent code. |
 | **Tool Registry** | Register tools with JSON Schema. Agents discover + call via REST or MCP (JSON-RPC 2.0). | One registry for every tool. MCP-native, compatible with any MCP client. |
 | **Knowledge Base** | Chunk, embed, and search documents. Cosine similarity + keyword fallback. No external vector DB. | Ship a knowledge base inside a single SQLite file. Zero ops, zero new infra. |
 | **Agent Memory** | Store conversations, paginate history, auto-trim context. Returns `X-Context-Truncated` header. | Agent remembers past turns. Trimming keeps token costs under control. |
-
-## Screenshots
-
-| Interactive API Reference (Scalar) | Admin Dashboard (HTMX) |
-|:-:|:-:|
-| ![API Docs](assets/api-docs.png) | ![Dashboard](assets/dashboard.png) |
 
 ## Quick Start
 
@@ -67,50 +74,18 @@ curl -sX POST http://localhost:8000/v1/keys \
 
 # 2. Chat through the gateway
 curl -s http://localhost:8000/v1/chat/completions \
-  -H "Authorization: Bearer phi-sk-YOUR_KEY" \
+  -H "Authorization: Bearer phi-sk-..." \
   -H "Content-Type: application/json" \
   -d '{"model":"groq/llama-3.3-70b","messages":[{"role":"user","content":"Hello"}]}'
 ```
 
 **Live instance:** <https://phiconsulting.biz.id> — the same gateway, deployed with Caddy + Docker.
 
-## Business Impact
+## Screenshots
 
-### Cost Comparison
-
-| Approach | Monthly Cost (10K req/day) | Ops Overhead | Lock-in |
-|----------|----------------------------|--------------|---------|
-| **PhiGateway (self-hosted)** | **~$80–250** (your provider bills only) | Docker + SQLite | None |
-| Managed gateway (Portkey, Helicone) | $500–2,000 + provider bills | Low | Medium |
-| Build from scratch | Dev time: 2–4 weeks | High | Yours |
-| Direct API per service | Same provider cost, no routing/fallback | Low | High |
-
-PhiGateway doesn't charge per-request, per-seat, or per-feature. You pay your own LLM provider bills — the gateway is free and open source.
-
-### Time to Value
-
-| Task | Without PhiGateway | With PhiGateway |
-|------|-------------------|-----------------|
-| Set up agent with tools + RAG + memory | 2–4 weeks | **5 minutes** (`docker compose up`) |
-| Add a new LLM provider | Rewrite provider client | **Zero** — just change model name |
-| Add a tool for your agent | Build webhook + auth + validation | **1 curl** — register with JSON Schema |
-| Deploy a knowledge base | Spin up vector DB, embedding pipeline | **Zero new infra** — SQLite + built-in embeddings |
-
-### Security
-
-- **No data leaves your infrastructure** — your keys, logs, and usage data stay on your server.
-- **API-key-only auth** — simple, auditable, no OAuth complexity.
-- **BYO keys** — the gateway ships with zero provider keys. You bring your own and control rate limits per tier.
-
-## Use Cases
-
-**Internal AI Assistant** — Deploy behind your VPN. Give your team a company-wide AI agent with access to internal docs, codebases, and tools — no data sent to third-party gateways.
-
-**Customer Support Bot** — Register tools to look up orders, check statuses, and escalate. Use RAG to ground answers in your knowledge base. Track every conversation via agent memory.
-
-**Documentation QA** — Ingest product docs into the knowledge base. Users ask natural-language questions and get grounded answers with source citations.
-
-**Multi-Provider Fallback** — Route `gpt-5-nano` to OpenAI, `claude-sonnet-4.6` to Anthropic, `groq/llama-3.3-70b` to Groq. If one provider is down, switch models — your agent code never changes.
+| Interactive API Reference (Scalar) | Admin Dashboard (HTMX) |
+|:-:|:-:|
+| ![API Docs](assets/api-docs.png) | ![Dashboard](assets/dashboard.png) |
 
 ## Features
 
@@ -140,13 +115,13 @@ Register external capabilities with JSON Schema contracts. The gateway validates
 ```bash
 # Register a tool
 curl -sX POST http://localhost:8000/v1/tools \
-  -H "Authorization: Bearer phi-sk-YOUR_KEY" \
+  -H "Authorization: Bearer phi-sk-..." \
   -H "Content-Type: application/json" \
   -d '{"name":"search","description":"Web search","json_schema":{...},"endpoint":"https://..."}'
 
 # Discover via MCP
 curl -sX POST http://localhost:8000/mcp \
-  -H "Authorization: Bearer phi-sk-YOUR_KEY" \
+  -H "Authorization: Bearer phi-sk-..." \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":"1"}'
 ```
@@ -158,13 +133,13 @@ Paragraph-aware chunking, embeddings via OpenAI, cosine similarity search. Falls
 ```bash
 # Create a knowledge base
 curl -sX POST http://localhost:8000/v1/kb \
-  -H "Authorization: Bearer phi-sk-YOUR_KEY" \
+  -H "Authorization: Bearer phi-sk-..." \
   -H "Content-Type: application/json" \
   -d '{"name":"product-docs"}'
 
 # Search it
 curl -sX POST http://localhost:8000/v1/kb/{id}/search \
-  -H "Authorization: Bearer phi-sk-YOUR_KEY" \
+  -H "Authorization: Bearer phi-sk-..." \
   -H "Content-Type: application/json" \
   -d '{"query":"deployment guide","top_k":5}'
 ```
@@ -173,65 +148,34 @@ curl -sX POST http://localhost:8000/v1/kb/{id}/search \
 
 Full CRUD for conversations with pagination and context window management. Auto-trims oldest messages when token count exceeds the model's context limit, returning `X-Context-Truncated`.
 
-## Agent Workflow
+## Use Cases
 
-```
-┌─ Agent ─────────────────────────────────────────────────┐
-│                                                           │
-│  1. Authenticate  →  POST /v1/keys  →  get phi-sk-...    │
-│  2. Think          →  POST /v1/chat/completions  →  LLM  │
-│  3. Use tools      →  POST /v1/tools         →  execute  │
-│  4. Search docs    →  POST /v1/kb/*/search   →  RAG      │
-│  5. Remember       →  POST /v1/memory/*      →  history  │
-│  6. Monitor        →  GET  /v1/usage         →  cost     │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-```
+**Internal AI Assistant** — Deploy behind your VPN. Give your team a company-wide AI agent with access to internal docs, codebases, and tools — no data sent to third-party gateways.
 
-### Python Example
+**Customer Support Bot** — Register tools to look up orders, check statuses, and escalate. Use RAG to ground answers in your knowledge base. Track every conversation via agent memory.
 
-```python
-import httpx
+**Documentation QA** — Ingest product docs into the knowledge base. Users ask natural-language questions and get grounded answers with source citations.
 
-async def agent_workflow():
-    async with httpx.AsyncClient(base_url="http://localhost:8000") as c:
-        # 1. Create a key (do this once)
-        r = await c.post("/v1/keys", json={"name": "agent", "tier": "free"})
-        key = r.json()["key"]
-        headers = {"Authorization": f"Bearer {key}"}
+**Multi-Provider Fallback** — Route `gpt-5-nano` to OpenAI, `claude-sonnet-4.6` to Anthropic, `groq/llama-3.3-70b` to Groq. If one provider is down, switch models — your agent code never changes.
 
-        # 2. Chat
-        r = await c.post("/v1/chat/completions", json={
-            "model": "groq/llama-3.3-70b",
-            "messages": [{"role": "user", "content": "What tools do I have?"}]
-        }, headers=headers)
-        print(r.json()["choices"][0]["message"]["content"])
+## Business Impact
 
-        # 3. Register a tool
-        await c.post("/v1/tools", json={
-            "name": "calculator",
-            "description": "Evaluate math expressions",
-            "json_schema": {
-                "type": "object",
-                "properties": {"expr": {"type": "string"}},
-                "required": ["expr"]
-            },
-            "endpoint": "https://api.mathjs.org/v4/"
-        }, headers=headers)
+### Cost Comparison
 
-        # 4. Create a knowledge base and search
-        r = await c.post("/v1/kb", json={"name": "docs"}, headers=headers)
-        kb_id = r.json()["id"]
+| Approach | Monthly Cost (10K req/day) | Ops Overhead | Lock-in |
+|----------|----------------------------|--------------|---------|
+| **PhiGateway (self-hosted)** | **~$80–250** (your provider bills only) | Docker + SQLite | None |
+| Managed gateway (Portkey, Helicone) | $500–2,000 + provider bills | Low | Medium |
+| Build from scratch | Dev time: 2–4 weeks | High | Yours |
+| Direct API per service | Same provider cost, no routing/fallback | Low | High |
 
-        # 5. Store conversation
-        await c.post("/v1/memory/conversations", json={
-            "session_id": "session-42", "title": "User inquiry"
-        }, headers=headers)
+PhiGateway doesn't charge per-request, per-seat, or per-feature. You pay your own LLM provider bills — the gateway is free and open source.
 
-        # 6. Check usage
-        r = await c.get("/v1/usage", headers=headers)
-        print(f"Cost: ${r.json()['total_cost_usd']:.4f}")
-```
+### Security
+
+- **No data leaves your infrastructure** — your keys, logs, and usage data stay on your server.
+- **API-key-only auth** — simple, auditable, no OAuth complexity.
+- **BYO keys** — the gateway ships with zero provider keys. You bring your own and control rate limits per tier.
 
 ## Self-Hosting
 
@@ -274,7 +218,7 @@ Caddy (reverse proxy, auto TLS)
 
 Idle RAM: **~250 MB**.
 
-## Design Decisions
+### Design Decisions
 
 | Decision | Rationale |
 |----------|-----------|
@@ -285,29 +229,6 @@ Idle RAM: **~250 MB**.
 | MCP from day one | JSON-RPC 2.0, de facto standard for agent-tool communication |
 | API-key-only auth | Simple, developer-familiar, no OAuth complexity |
 | In-memory rate limiter | Adequate for single-worker; Redis-ready for multi-worker |
-
-## Project Structure
-
-```
-phi-gateway/
-├── src/phi_gateway/
-│   ├── api/                  # FastAPI routes (10 modules)
-│   ├── core/                 # LLM proxy, auth, cost, embeddings, rate limiter
-│   ├── dashboard/templates/  # HTMX admin UI
-│   ├── models/               # SQLAlchemy ORM (6 tables)
-│   ├── schemas/              # Pydantic request/response schemas
-│   ├── services/             # Business logic orchestration
-│   ├── config.py             # Environment configuration
-│   ├── database.py           # Async SQLAlchemy engine
-│   ├── dependencies.py       # Dependency injection (auth + rate limiting)
-│   └── main.py               # App factory + lifespan
-├── tests/                    # pytest suite (41 passed, 6 xfail)
-│   ├── unit/                 # cost tracker, security
-│   └── integration/          # chat, keys, KB, memory, tools, MCP, usage
-├── docker-compose.yml        # Local dev (Caddy + API)
-├── Dockerfile                # Production build
-└── pyproject.toml            # Package metadata
-```
 
 ## Testing
 
@@ -330,28 +251,58 @@ ruff check src/ tests/
 
 ## Roadmap
 
-> PhiGateway is actively being built. These are the next milestones.
+> PhiGateway is actively being built. Below are the next milestones, organized by version.
 
-**Q2 2026**
+### v0.2.0 — Production Hardening ✅
+
 - [x] Multi-provider LLM proxy (OpenAI, Anthropic, Groq, OpenRouter)
 - [x] MCP-native tool registry with discovery and execution
 - [x] RAG knowledge base with SQLite embeddings
 - [x] Agent memory with auto context trimming
 - [x] HTMX admin dashboard
-- [ ] API key tiers with granular rate limits (done in code, pending admin UI)
-- [ ] Document ingestion API (upload PDFs/markdown directly)
+- [x] CORS config-driven via `ALLOWED_ORIGINS` env var
+- [x] Security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`)
+- [x] Request body size limit (`MAX_REQUEST_BODY_SIZE`)
+- [x] Health endpoint with DB connectivity probe + Docker HEALTHCHECK
+- [x] Provider fallback chain with logging
+- [x] Structured JSON logging with request IDs
+- [x] Cross-platform CI (6-job matrix: lint, test 3.12/3.13, smoke, packaging, build)
+- [x] 100-test suite (49 unit + 37 integration + 4 production smoke)
 
-**Q3 2026**
-- [ ] Support for Ollama / local models
-- [ ] Webhook integration for tool execution callbacks
-- [ ] Redis-backed rate limiting for multi-worker deployments
+### v0.3.0 — Scalability & Observability
+
+**Security**
+- [ ] API key rotation procedure documented [#1](https://github.com/raindragon14/phi-gateway/issues/1)
+- [ ] Protect `/v1/keys` endpoint from unauthorized creation [#1](https://github.com/raindragon14/phi-gateway/issues/1)
+
+**Infrastructure**
+- [ ] PostgreSQL support — switch from SQLite to asyncpg [#5](https://github.com/raindragon14/phi-gateway/issues/5)
+- [ ] Redis-backed rate limiting for multi-worker deployments [#6](https://github.com/raindragon14/phi-gateway/issues/6)
+- [ ] Multiple uvicorn workers (depends on PostgreSQL + Redis)
+- [ ] API key tiers with granular rate limits (admin UI)
+
+**Observability**
+- [ ] OpenTelemetry tracing + Prometheus metrics endpoint [#7](https://github.com/raindragon14/phi-gateway/issues/7)
 - [ ] Usage analytics charting in dashboard
-- [ ] OpenTelemetry tracing
+- [ ] Alert rules defined (5xx rate, provider key exhaustion, p99 latency)
 
-**Future**
-- [ ] Plugin system for custom authentication backends
+**Features**
+- [ ] Document ingestion API (upload PDFs/markdown directly)
+- [ ] Support for Ollama / local models
+
+### v0.4.0 — Advanced Agent Features
+
+- [ ] Webhook integration for tool execution callbacks
 - [ ] Streaming tool execution (SSE for real-time tool output)
+- [ ] Plugin system for custom authentication backends
 - [ ] Multi-user workspace with team management
+- [ ] Load test baseline established (`hey` / `locust`)
+
+---
+
+## Contributing
+
+We welcome contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, code style, and PR process.
 
 ## License
 

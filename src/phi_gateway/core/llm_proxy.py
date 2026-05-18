@@ -10,6 +10,7 @@ from openai import APIError as OpenAIAPIError
 from openai import AsyncOpenAI
 
 from phi_gateway.config import settings
+from phi_gateway.models_catalog import _MODEL_TO_PROVIDER, KNOWN_MODELS
 
 # ── Provider registry ──────────────────────────────────────────────
 
@@ -50,35 +51,6 @@ def _get_client(provider: str):
     if base_url:
         return client_cls(api_key=api_key, base_url=base_url)
     return client_cls(api_key=api_key)
-
-
-# ── Known models ───────────────────────────────────────────────────
-
-KNOWN_MODELS: list[ModelInfo] = [
-    # OpenAI
-    {"id": "gpt-5-nano", "provider": "openai", "pricing": "$0.05/$0.40", "context_window": 400_000},
-    {"id": "gpt-5-mini", "provider": "openai", "pricing": "$0.25/$2.00", "context_window": 400_000},
-    {"id": "gpt-5.2", "provider": "openai", "pricing": "$1.75/$14.00", "context_window": 400_000},
-    {"id": "gpt-4.1", "provider": "openai", "pricing": "$2.00/$8.00", "context_window": 1_000_000},
-    # Anthropic
-    {"id": "claude-haiku-4.5", "provider": "anthropic", "pricing": "$1.00/$5.00", "context_window": 200_000},
-    {"id": "claude-sonnet-4.6", "provider": "anthropic", "pricing": "$3.00/$15.00", "context_window": 200_000},
-    {"id": "claude-opus-4.6", "provider": "anthropic", "pricing": "$5.00/$25.00", "context_window": 200_000},
-    # Groq
-    {"id": "groq/llama-3.3-70b", "provider": "groq", "pricing": "free", "context_window": 128_000},
-    {"id": "groq/llama-4-scout", "provider": "groq", "pricing": "free", "context_window": 128_000},
-    {"id": "groq/deepseek-r1-distill-llama-70b", "provider": "groq", "pricing": "free", "context_window": 128_000},
-    # OpenRouter (300+ models — key ones listed)
-    {"id": "openrouter/mistralai/mistral-medium-3-5", "provider": "openrouter", "pricing": "$2.00/$6.00", "context_window": 256_000},  # noqa: E501
-    {"id": "openrouter/mistralai/mistral-large-3", "provider": "openrouter", "pricing": "$2.00/$6.00", "context_window": 256_000},  # noqa: E501
-    {"id": "openrouter/anthropic/claude-sonnet-4.6", "provider": "openrouter", "pricing": "$3.00/$15.00", "context_window": 200_000},  # noqa: E501
-    {"id": "openrouter/openai/gpt-5-mini", "provider": "openrouter", "pricing": "$0.25/$2.00", "context_window": 400_000},  # noqa: E501
-    {"id": "openrouter/google/gemini-2.5-flash", "provider": "openrouter", "pricing": "$0.15/$0.60", "context_window": 1_000_000},  # noqa: E501
-    {"id": "openrouter/deepseek/deepseek-r1", "provider": "openrouter", "pricing": "$0.55/$2.19", "context_window": 128_000},  # noqa: E501
-    {"id": "openrouter/poolside/laguna-m.1:free", "provider": "openrouter", "pricing": "free", "context_window": 128_000},  # noqa: E501
-]
-
-_MODEL_TO_PROVIDER: dict[str, str] = {m["id"]: m["provider"] for m in KNOWN_MODELS}
 
 
 # ── Request translation helpers ─────────────────────────────────────
