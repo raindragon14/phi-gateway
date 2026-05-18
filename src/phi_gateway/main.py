@@ -50,7 +50,7 @@ FAVICON_SVG = (
     '</svg>'
 )
 
-LANDING_HTML = """<!DOCTYPE html>
+LANDING_HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
