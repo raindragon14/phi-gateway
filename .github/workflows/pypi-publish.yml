@@ -32,7 +32,4 @@ jobs:
         run: twine check dist/*
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          trusted-publishing: never
+        run: twine upload dist/* -u __token__ -p "${{ secrets.PYPI_API_TOKEN }}" --non-interactive
