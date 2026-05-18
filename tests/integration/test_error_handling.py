@@ -110,7 +110,8 @@ async def test_error_responses_are_json(async_client: AsyncClient):
         else:
             response = await async_client.post(path, json={"name": "x", "description": "x"})
 
-        assert response.status_code == expected_status, f"{method} {path}: expected {expected_status}, got {response.status_code}"
+        msg = f"{method} {path}: expected {expected_status}, got {response.status_code}"
+        assert response.status_code == expected_status, msg
         data = response.json()
         assert "detail" in data, f"{method} {path}: missing 'detail' in {data}"
         assert isinstance(data["detail"], str), f"{method} {path}: 'detail' should be a string"

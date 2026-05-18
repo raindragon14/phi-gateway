@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from phi_gateway.core.rate_limiter import enforce_rate_limit
+from phi_gateway.core.rate_limiter import enforce_rate_limit, get_rate_limit_headers
 from phi_gateway.core.security import verify_api_key
 from phi_gateway.database import get_db
 from phi_gateway.models.api_key import ApiKey
@@ -16,10 +16,12 @@ async def get_api_key(
 ) -> ApiKey:
     """Extract and verify the API key from the Authorization header.
 
-    Expected format: ``Authorization: Bearer <api_key>``
+    Expected format: ``Authorization: Bearer ***
 
     Returns the ApiKey model instance on success.
     Raises HTTPException(401) on missing/invalid/expired key.
+    On success, stores rate-limit headers on ``request.state.rate_limit_headers``
+    so middleware or the endpoint can include them in the response.
     """
     auth = request.headers.get("Authorization")
     if not auth:
@@ -72,9 +74,11 @@ async def get_api_key(
     # Enforce rate limits (sliding window)
     enforce_rate_limit(api_key)
 
+    # Store rate-limit headers on request.state for downstream use
+    request.state.rate_limit_headers = get_rate_limit_headers(api_key)
+
     # Update last_used_at in background (don't fail the request on write error)
     api_key.last_used_at = utc_now
     await db.flush()
 
     return api_key
-

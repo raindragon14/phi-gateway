@@ -107,6 +107,11 @@ def create_app() -> FastAPI:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Attach rate-limit headers if set by dependencies.get_api_key()
+        rate_headers = getattr(request.state, "rate_limit_headers", None)
+        if rate_headers:
+            for k, v in rate_headers.items():
+                response.headers[k] = v
         return response
 
     # Request body size limit middleware
