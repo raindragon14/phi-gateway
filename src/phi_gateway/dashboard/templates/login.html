@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhiGateway — Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Geist', 'Helvetica Neue', -apple-system, sans-serif;
+            background: #000000;
+            color: #ededed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+        .login-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 4px;
+            padding: 40px;
+            width: 380px;
+            max-width: 90vw;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .logo svg { width: 28px; height: 28px; }
+        .logo-text { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; color: #fff; }
+        h1 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        p.sub {
+            font-size: 12px;
+            color: #71717a;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .input {
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 2px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #ededed;
+            font-family: 'Geist Mono', 'SF Mono', monospace;
+            width: 100%;
+            outline: none;
+            transition: border-color 120ms cubic-bezier(0.2, 0, 0, 1);
+        }
+        .input:focus { border-color: #ededed; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label {
+            display: block;
+            font-size: 10px;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 120ms cubic-bezier(0.2, 0, 0, 1);
+            border: 1px solid #222;
+            width: 100%;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: #ededed;
+            color: #000;
+            border-color: #ededed;
+        }
+        .btn-primary:hover { background: #fff; border-color: #fff; }
+        .error {
+            background: #1f0808;
+            border: 1px solid #7f1d1d;
+            border-radius: 2px;
+            padding: 10px 14px;
+            font-size: 11px;
+            color: #ef4444;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .hint {
+            font-size: 10px;
+            color: #3f3f46;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .hint a { color: #71717a; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#0a0a0a" stroke="#222" stroke-width="1"/><text x="16" y="22" text-anchor="middle" font-size="19" font-family="Georgia,serif" font-weight="700" fill="#ededed" font-style="italic">&phi;</text></svg>
+            <span class="logo-text">PhiGateway</span>
+        </div>
+        <h1>Dashboard Access</h1>
+        <p class="sub">Enter an admin or pro-tier API key to access the dashboard.</p>
+        <div class="error" id="error-msg">Invalid API key</div>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="key">API Key</label>
+                <input type="password" id="key" class="input" placeholder="phi-sk-..." autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-primary">Sign In</button>
+        </form>
+        <div class="hint">
+            Need a key? Create one via <a href="/docs">API docs</a> or set <code style="color:#52525b">INITIAL_ADMIN_KEY</code>.
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const key = document.getElementById('key').value.trim();
+            const errorEl = document.getElementById('error-msg');
+
+            if (!key.startsWith('phi-sk-')) {
+                errorEl.textContent = 'Invalid key format. Keys start with phi-sk-';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            // Verify the key by hitting the dashboard overview
+            try {
+                const resp = await fetch('/dashboard', {
+                    headers: { 'Authorization': `Bearer ${key}` }
+                });
+                if (resp.status === 401 || resp.status === 403) {
+                    errorEl.textContent = 'Invalid or unauthorized API key';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                if (!resp.ok) {
+                    errorEl.textContent = `Server error (${resp.status})`;
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                // Store in both sessionStorage and cookie (for server-side auth)
+                sessionStorage.setItem('phi_api_key', key);
+                document.cookie = `phi_api_key=${encodeURIComponent(key)}; path=/; SameSite=Lax; Max-Age=86400`;
+
+                // Redirect to dashboard
+                window.location.href = '/dashboard';
+            } catch (err) {
+                errorEl.textContent = 'Network error: ' + err.message;
+                errorEl.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

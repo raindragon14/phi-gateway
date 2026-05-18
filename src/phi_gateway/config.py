@@ -28,5 +28,8 @@ class Settings(BaseSettings):
     # Bootstrap admin API key (set on first deploy to seed the first key)
     INITIAL_ADMIN_KEY: str | None = None
 
+    # Session secret for cookie-based dashboard auth
+    SESSION_SECRET: str = "change-me-in-production"
+
 
 settings = Settings()

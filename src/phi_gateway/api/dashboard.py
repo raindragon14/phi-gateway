@@ -1,13 +1,13 @@
-"""
-HTMX dashboard routes — serve the admin UI.
+"""HTMX dashboard routes — serve the admin UI.
 
-Requires admin-tier or pro-tier API key for access.
-All endpoints are for self-service admin.
+Supports both Bearer token (API clients) and cookie-based
+authentication (browser users after login).
 """
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from phi_gateway.dependencies import get_api_key
@@ -31,6 +31,20 @@ async def _require_admin(api_key: ApiKey = Depends(get_api_key)) -> ApiKey:
 
 
 # ── Routes ────────────────────────────────────────────────────────
+
+@router.get("/login")
+async def login_page(request: Request):
+    """Render the login page for dashboard access."""
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@router.get("/logout")
+async def logout():
+    """Clear the session cookie and redirect to login."""
+    response = RedirectResponse(url="/login")
+    response.delete_cookie("phi_api_key", path="/")
+    return response
+
 
 @router.get("/dashboard")
 async def dashboard_overview(
