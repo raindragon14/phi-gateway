@@ -2,6 +2,7 @@
 
 The gateway is self-hosted and fully open source (MIT).
 """
+# ruff: noqa: E501 — long lines are HTML/CSS strings that can't be broken
 
 import logging
 import time
