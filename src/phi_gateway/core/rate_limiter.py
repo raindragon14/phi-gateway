@@ -4,7 +4,7 @@ Uses an in-memory store (dict) for MVP. Replace with Redis for multi-worker depl
 """
 
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from fastapi import HTTPException, status
 
@@ -12,15 +12,17 @@ from phi_gateway.models.api_key import ApiKey
 
 # ── In-memory stores (replace with Redis in production) ────────────
 
-# minute_counts: {key_id: [timestamp, ...]}
-_minute_buckets: dict[str, list[float]] = defaultdict(list)
-_day_buckets: dict[str, list[float]] = defaultdict(list)
+# minute_counts: {key_id: deque([timestamp, ...])}
+_minute_buckets: dict[str, deque[float]] = defaultdict(deque)
+_day_buckets: dict[str, deque[float]] = defaultdict(deque)
 
 
-def _prune(bucket: list[float], cutoff: float) -> list[float]:
-    """Remove timestamps older than cutoff."""
+def _prune(bucket: deque[float] | list[float], cutoff: float) -> deque[float]:
+    """Remove timestamps older than cutoff — O(1) per pop."""
+    if isinstance(bucket, list):
+        bucket = deque(bucket)
     while bucket and bucket[0] < cutoff:
-        bucket.pop(0)
+        bucket.popleft()
     return bucket
 
 
