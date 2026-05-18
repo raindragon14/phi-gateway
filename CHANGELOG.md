@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **PRODUCTION.md** — full production checklist (6 tiers, 30+ items)
+- **CONTRIBUTING.md** — comprehensive contributor guide (dev setup, testing, code style, adding providers/endpoints, PR process)
 - **Security hardening:** CORS config-driven via `ALLOWED_ORIGINS` env var, security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`), request body size limit (`MAX_REQUEST_BODY_SIZE`)
 - **Health endpoint** with DB connectivity probe — returns version, uptime, db_status
 - **Docker HEALTHCHECK** — curl to /health, interval 30s
@@ -31,6 +32,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow: 6-job matrix (lint, unit-test 3.12/3.13, integration-test 3.12/3.13, smoke-test, packaging, build)
 - Health endpoint uses `Depends(get_db)` instead of module-level `async_session` (works with test DB overrides)
 - Body limit returns `JSONResponse(413)` directly (not `HTTPException` — leaked through Starlette middleware)
+- README.md: improved header with badges, quick-start code example, and organized roadmap by version
+- Pricing data consolidated into `cost_tracker.py` — single source of truth for all provider costs
+- Test suite rewritten: 49 unit + 37 integration + 4 production smoke (up from 10 tests)
+
+### Removed
+
+- **OPS.md** — operations info merged into README.md's Self-Hosting section and PRODUCTION.md
+- Dead code: removed unused provider stubs and duplicate pricing dictionaries
 
 ### Fixed
 

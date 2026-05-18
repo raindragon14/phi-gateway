@@ -122,14 +122,6 @@
 
 ## Tier 6: Documentation & Runbooks
 
-- [ ] **One-page ops runbook** (OPS.md):
-  ```markdown
-  # Quick reference for the on-call engineer
-  ## Restart: docker compose restart api
-  ## Logs:   docker compose logs -f api
-  ## Backup: docker compose exec api cp /app/data/phi.db /app/data/backups/
-  ## Scale:  docker compose up -d --scale api=3   (requires PostgreSQL + Redis)
-  ```
 - [ ] **`.env.example` kept in sync** with actual config keys. Every deployable config key documented with its default and purpose.
 - [ ] **CHANGELOG.md** — every version bump includes a human-readable diff. Automated via `git-cliff` or manual.
 

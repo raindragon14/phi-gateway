@@ -14,14 +14,9 @@ from phi_gateway.schemas.memory import (
     MessageResponse,
 )
 
-# Context window limits per model (approximate — Phase 3 improvement: use provider-specific values)
-CONTEXT_LIMITS = {
-    "default": 128_000,
-    "gpt-5-nano": 400_000,
-    "gpt-5-mini": 400_000,
-    "claude-haiku-4.5": 200_000,
-    "groq/llama-3.3-70b": 128_000,
-}
+# Context window limit — single default value.
+# Per-model limits can be derived from models_catalog.CONTEXT_WINDOW_BY_ID if needed later.
+CONTEXT_LIMIT_DEFAULT = 128_000
 
 TRUNCATION_WARNING = "X-Context-Truncated"
 
@@ -172,7 +167,7 @@ async def _trim_if_needed(conv: Conversation, db: AsyncSession) -> bool:
     messages = result.scalars().all()
 
     total_tokens = sum(m.token_count or 0 for m in messages)
-    limit = CONTEXT_LIMITS.get("default", 128_000)
+    limit = CONTEXT_LIMIT_DEFAULT
 
     if total_tokens <= limit:
         return False
