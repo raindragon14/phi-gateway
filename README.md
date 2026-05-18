@@ -253,6 +253,8 @@ Internet → Caddy (auto TLS) → phi-gateway:8000
 
 See `docker-compose.yml` and `Caddyfile` for the reference setup.
 
+> **Production readiness:** See [PRODUCTION.md](PRODUCTION.md) for the full production checklist — security hardening, scaling, backups, monitoring, and operational runbooks.
+
 ## Architecture
 
 ```
