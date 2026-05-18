@@ -11,15 +11,18 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+import bcrypt
 
 from phi_gateway import __version__
 from phi_gateway.api.router import api_router
 from phi_gateway.config import settings
-from phi_gateway.database import engine, get_db
+from phi_gateway.database import async_session, engine, get_db
 from phi_gateway.log_config import setup_logging
 from phi_gateway.models import Base
+from phi_gateway.models.api_key import ApiKey
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +54,39 @@ FAVICON_SVG = (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: create tables on startup, dispose engine on shutdown."""
+    """Application lifespan: create tables on startup, dispose engine on shutdown.
+
+    If ``INITIAL_ADMIN_KEY`` is configured in the environment, seed an admin
+    API key on first startup so ``/v1/keys`` can be protected from
+    unauthenticated access.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Bootstrap initial admin key if configured
+    if settings.INITIAL_ADMIN_KEY:
+        async with async_session() as session:
+            result = await session.execute(
+                select(ApiKey).where(ApiKey.prefix == settings.INITIAL_ADMIN_KEY[:12])
+            )
+            existing = result.scalar_one_or_none()
+            if not existing:
+                full_key = settings.INITIAL_ADMIN_KEY
+                hashed = bcrypt.hashpw(full_key.encode(), bcrypt.gensalt()).decode()
+                admin_key = ApiKey(
+                    key_hash=hashed,
+                    prefix=full_key[:12],
+                    name="initial-admin",
+                    tier="admin",
+                    rate_limit_per_min=1000,
+                    rate_limit_per_day=500000,
+                )
+                session.add(admin_key)
+                await session.commit()
+                logger.info("Seeded initial admin API key from INITIAL_ADMIN_KEY")
+            else:
+                logger.debug("Initial admin API key already exists, skipping seed")
+
     logger.info("Database tables verified/created")
     yield
     await engine.dispose()

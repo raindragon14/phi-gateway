@@ -1,6 +1,11 @@
+"""API key management endpoints — create, list, and revoke gateway keys.
+
+Protected against unauthorized creation after initial bootstrap.
+"""
+
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,12 +18,49 @@ from phi_gateway.schemas.keys import ApiKeyCreatedResponse, ApiKeyResponse, Crea
 router = APIRouter(prefix="/v1/keys", tags=["API Keys"])
 
 
+async def _require_auth_or_bootstrap(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> ApiKey | None:
+    """Require auth for key creation if any admin key already exists.
+
+    On a fresh deploy with zero admin keys, this allows unauthenticated
+    creation (bootstrapping). Once at least one admin key is present,
+    valid admin/pro credentials are required.
+    """
+    result = await db.execute(
+        select(ApiKey).where(
+            ApiKey.tier == "admin",
+            ApiKey.is_active.is_(True),
+        )
+    )
+    admin_exists = result.first() is not None
+
+    if not admin_exists:
+        return None  # bootstrapping — no auth needed
+
+    # Admin key exists — delegate to standard auth (raises 401 on failure)
+    return await get_api_key(request, db)
+
+
 @router.post("", response_model=ApiKeyCreatedResponse, status_code=status.HTTP_201_CREATED)
 async def create_api_key(
     body: CreateApiKeyRequest,
     db: AsyncSession = Depends(get_db),
+    auth: ApiKey | None = Depends(_require_auth_or_bootstrap),
 ):
-    """Create a new API key. Returns the full key only once."""
+    """Create a new API key.
+
+    **Bootstrapping:** When no admin keys exist yet, this endpoint can be called
+    without authentication (first-deploy scenario). After at least one admin key
+    has been created, an admin or pro API key is required to create new keys.
+    """
+    if auth and auth.tier not in ("admin", "pro"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin or pro tier keys can create new API keys",
+        )
+
     full_key, prefix, hashed = generate_api_key()
 
     # Map tier to rate limits
@@ -30,7 +72,7 @@ async def create_api_key(
     }
     rpm, rpd = rate_limits.get(body.tier, (10, 10000))
 
-    api_key = ApiKey(
+    api_key_obj = ApiKey(
         key_hash=hashed,
         prefix=prefix,
         name=body.name,
@@ -38,18 +80,18 @@ async def create_api_key(
         rate_limit_per_min=rpm,
         rate_limit_per_day=rpd,
     )
-    db.add(api_key)
+    db.add(api_key_obj)
     await db.commit()
-    await db.refresh(api_key)
+    await db.refresh(api_key_obj)
 
     return ApiKeyCreatedResponse(
-        id=api_key.id,
+        id=api_key_obj.id,
         key=full_key,
         prefix=prefix,
-        name=api_key.name,
-        tier=api_key.tier,
-        is_active=api_key.is_active,
-        created_at=api_key.created_at,
+        name=api_key_obj.name,
+        tier=api_key_obj.tier,
+        is_active=api_key_obj.is_active,
+        created_at=api_key_obj.created_at,
     )
 
 
