@@ -8,7 +8,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from sqlalchemy import text
@@ -115,9 +115,11 @@ def create_app() -> FastAPI:
         if content_length is not None:
             try:
                 if int(content_length) > settings.MAX_REQUEST_BODY_SIZE:
-                    raise HTTPException(
+                    return JSONResponse(
                         status_code=413,
-                        detail=f"Request body too large. Max size: {settings.MAX_REQUEST_BODY_SIZE} bytes",
+                        content={
+                            "detail": f"Request body too large. Max size: {settings.MAX_REQUEST_BODY_SIZE} bytes",
+                        },
                     )
             except ValueError:
                 pass
