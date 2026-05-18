@@ -23,7 +23,11 @@ def serve(args: argparse.Namespace) -> None:
     )
 
 
-def main() -> None:
+def build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser with subcommands.
+
+    Returns the parser for testing convenience.
+    """
     parser = argparse.ArgumentParser(
         prog="phi-gateway",
         description="Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG, agent memory.",
@@ -53,11 +57,19 @@ def main() -> None:
         choices=["debug", "info", "warning", "error", "critical"],
         help="Logging level (default: info)",
     )
+    serve_parser.set_defaults(func=serve)
 
+    return parser
+
+
+def main() -> None:
+    parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "serve" or args.command is None:
-        serve(args)
+    # When no subcommand is given, args.command is None and args.func
+    # is not set (set_defaults only fires when the subparser is selected).
+    if hasattr(args, "func"):
+        args.func(args)
     else:
         parser.print_help()
         sys.exit(1)
