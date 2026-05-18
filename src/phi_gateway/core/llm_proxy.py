@@ -189,6 +189,7 @@ async def route_chat(
             httpx.ConnectError,
             OpenAIAPIError,
             AnthropicAPIError,
+            ValueError,
         ) as exc:
             last_error = exc
             next_model = (
@@ -329,7 +330,8 @@ async def route_chat_stream(
             kwargs["system"] = system
     else:
         kwargs["messages"] = [_to_openai_message(m) for m in messages]
-        kwargs["stream_options"] = {"include_usage": True}
+        if provider in ("openai", "openrouter"):
+            kwargs["stream_options"] = {"include_usage": True}
 
     if tools:
         kwargs["tools"] = tools
