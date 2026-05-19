@@ -6,10 +6,9 @@
 
 ## Tier 1: Security (gating items — skip these and you *will* regret it)
 
-- [ ] **Caddy auto TLS verified.** `https://your.domain` loads with a valid Let's Encrypt cert. No self-signed, no HTTP-only.
-- [ ] **Secrets out of git.** `.env` in `.gitignore` (already done). All API keys + `PYPI_API_TOKEN` are **environment variables or a secrets manager**, never in the repo.
-- [ ] **Default API key tiers configured.** `ApiKey.tier` maps to rate limits (free/pro/team). Create your admin key, then define per-tier limits in code or DB seed.
-- [ ] **CORS restricted.** `app.add_middleware(CORSMiddleware, allow_origins=["*"])` → change to explicit origins (`["https://your.app", "https://admin.your.domain"]`).
+- [x] **Caddy auto TLS verified.** `https://your.domain` loads with a valid Let's Encrypt cert. No self-signed, no HTTP-only.
+- [x] **Secrets out of git.** `.env` in `.gitignore` (already done). All API keys + `PYPI_API_TOKEN` are **environment variables or a secrets manager**, never in the repo.
+- [x] **Default API key tiers configured.** `ApiKey.tier` maps to rate limits (free/pro/team). Create your admin key, then define per-tier limits in code or DB seed.
 - [x] **CORS restricted.** `app.add_middleware(CORSMiddleware, allow_origins=["*"])` → change to config-driven via `ALLOWED_ORIGINS` env var (comma-separated or `*`).
 - [x] **Security headers.** Added FastAPI middleware for `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
 - [x] **Request body size limit.** Configurable via `MAX_REQUEST_BODY_SIZE` env var (default 10 MB). Returns HTTP 413 when exceeded.
@@ -88,8 +87,8 @@
 # See src/phi_gateway/database.py
   ```
 - [ ] **Idempotent API key creation.** `POST /v1/keys` with idempotency key prevents dupes on retry.
-- [ ] **Docker restart policy.** Already `restart: unless-stopped` in compose files. Add `--restart always` for systemd/gateway deployments.
-- [ ] **Resource limits.** `mem_limit: 1g` in compose is a start. Add CPU limits:
+- [x] **Docker restart policy.** Already `restart: unless-stopped` in compose files. Add `--restart always` for systemd/gateway deployments.
+- [x] **Resource limits.** `mem_limit: 1g` in compose is a start. Add CPU limits:
   ```yaml
   deploy:
     resources:
@@ -104,7 +103,7 @@
 
 - [ ] **Load test baseline.** `hey` or `locust` or `wrk` against `/v1/chat/completions`:
   ```bash
-  hey -n 1000 -c 20 -H "Authorization: Bearer $KEY" \
+  hey -n 1000 -c 20 -H "Authorization: Bearer *** " \
     -m POST \
     -d '{"model":"groq/llama-3.3-70b","messages":[{"role":"user","content":"hi"}],"max_tokens":5}' \
     http://localhost:8000/v1/chat/completions
@@ -115,15 +114,15 @@
   - Revoke all provider keys → graceful 502 with clear message
   - `docker stop` the container → pending requests drain within timeout
 - [ ] **Staging environment.** Mirror prod with fake provider keys or a mock LLM server.
-- [ ] **GitHub Actions CI passes.** Current CI (ruff + pytest + Docker build) runs per push.
-- [ ] **Semantic versioning.** `vMAJOR.MINOR.PATCH` on PyPI + git tags. Publish workflow triggers on `v*` tags.
+- [x] **GitHub Actions CI passes.** Current CI (ruff + pytest + Docker build) runs per push.
+- [x] **Semantic versioning.** `vMAJOR.MINOR.PATCH` on PyPI + git tags. Publish workflow triggers on `v*` tags.
 
 ---
 
 ## Tier 6: Documentation & Runbooks
 
-- [ ] **`.env.example` kept in sync** with actual config keys. Every deployable config key documented with its default and purpose.
-- [ ] **CHANGELOG.md** — every version bump includes a human-readable diff. Automated via `git-cliff` or manual.
+- [x] **`.env.example` kept in sync** with actual config keys. Every deployable config key documented with its default and purpose.
+- [x] **CHANGELOG.md** — every version bump includes a human-readable diff. Automated via `git-cliff` or manual.
 
 ---
 
