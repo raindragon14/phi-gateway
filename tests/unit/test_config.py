@@ -10,9 +10,9 @@ class TestSettingsDefaults:
         assert "sqlite" in s.DATABASE_URL
 
     def test_default_app_host(self):
-        """APP_HOST defaults to 0.0.0.0."""
+        """APP_HOST defaults to 127.0.0.1 (safe for local dev; Docker overrides via compose)."""
         s = Settings(_env_file=None)
-        assert s.APP_HOST == "0.0.0.0"
+        assert s.APP_HOST == "127.0.0.1"
 
     def test_default_app_port(self):
         """APP_PORT defaults to 8000."""
