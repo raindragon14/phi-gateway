@@ -37,8 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
     serve_parser = sub.add_parser("serve", help="Start the PhiGateway server")
     serve_parser.add_argument(
         "--host",
-        default="0.0.0.0",
-        help="Bind address (default: 0.0.0.0)",
+        default="127.0.0.1",
+        help="Bind address (default: 127.0.0.1)",
     )
     serve_parser.add_argument(
         "--port",

@@ -18,7 +18,7 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - APP_ROOT=/app
-      - APP_HOST=0.0.0.0
+      - APP_HOST=127.0.0.1
       - APP_PORT=8000
     volumes:
       - phi_data:/app/data
