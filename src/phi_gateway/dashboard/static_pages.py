@@ -25,7 +25,7 @@ FAVICON_SVG = (
     '<rect width="32" height="32" rx="4" fill="#0a0a0a" stroke="#222" stroke-width="1"/>'
     '<text x="16" y="22" text-anchor="middle" font-size="19" '
     'font-family="Georgia,serif" font-weight="700" fill="#ededed" font-style="italic">&phi;</text>'
-    '</svg>'
+    "</svg>"
 )
 
 LANDING_HTML = r"""<!DOCTYPE html>

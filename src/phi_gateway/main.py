@@ -56,9 +56,7 @@ async def lifespan(app: FastAPI):
     # Bootstrap initial admin key if configured
     if settings.INITIAL_ADMIN_KEY:
         async with async_session() as session:
-            result = await session.execute(
-                select(ApiKey).where(ApiKey.prefix == settings.INITIAL_ADMIN_KEY[:12])
-            )
+            result = await session.execute(select(ApiKey).where(ApiKey.prefix == settings.INITIAL_ADMIN_KEY[:12]))
             existing = result.scalar_one_or_none()
             if not existing:
                 full_key = settings.INITIAL_ADMIN_KEY
@@ -80,14 +78,10 @@ async def lifespan(app: FastAPI):
     # ── Config validation warnings ──
     if not settings.ALLOWED_ORIGINS:
         logger.warning(
-            "ALLOWED_ORIGINS is empty : CORS is disabled. "
-            "Set ALLOWED_ORIGINS in .env to enable cross-origin requests."
+            "ALLOWED_ORIGINS is empty : CORS is disabled. Set ALLOWED_ORIGINS in .env to enable cross-origin requests."
         )
     if settings.SESSION_SECRET in ("", "change-me-in-production"):
-        logger.warning(
-            "SESSION_SECRET is set to a default value. "
-            "Set a strong random value in .env for production."
-        )
+        logger.warning("SESSION_SECRET is set to a default value. Set a strong random value in .env for production.")
 
     logger.info("Database tables verified/created")
     yield

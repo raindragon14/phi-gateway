@@ -25,6 +25,7 @@ _require_admin = RequireApiKey(required_tiers=("admin", "pro"))
 
 # ── Routes ────────────────────────────────────────────────────────
 
+
 @router.get("/login")
 async def login_page(request: Request):
     """Render the login page for dashboard access."""

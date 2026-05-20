@@ -104,9 +104,7 @@ async def mcp_endpoint(
 
         elif body.method == "resources/list":
             # Query all knowledge bases as MCP resources
-            result = await db.execute(
-                select(KnowledgeBase).order_by(KnowledgeBase.created_at)
-            )
+            result = await db.execute(select(KnowledgeBase).order_by(KnowledgeBase.created_at))
             kbs = result.scalars().all()
             resources = [
                 {
@@ -144,11 +142,7 @@ async def mcp_endpoint(
                     "id": body.id,
                 }
 
-            result = await db.execute(
-                select(Document).where(
-                    Document.kb_id == kb_uuid
-                ).limit(20)
-            )
+            result = await db.execute(select(Document).where(Document.kb_id == kb_uuid).limit(20))
             docs = result.scalars().all()
             contents = [
                 {

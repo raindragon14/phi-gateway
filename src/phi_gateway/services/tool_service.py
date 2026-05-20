@@ -50,9 +50,7 @@ async def create_tool(
         raise ValidationError(f"Invalid endpoint URL: {e}")
 
     # Check name uniqueness
-    existing = await db.execute(
-        select(ToolDefinition).where(ToolDefinition.name == body.name)
-    )
+    existing = await db.execute(select(ToolDefinition).where(ToolDefinition.name == body.name))
     if existing.scalar_one_or_none():
         raise ConflictError("Tool", body.name)
 

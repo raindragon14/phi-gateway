@@ -68,9 +68,7 @@ async def list_conversations(
         updated first.
     """
     result = await db.execute(
-        select(Conversation)
-        .where(Conversation.api_key_id == api_key.id)
-        .order_by(Conversation.updated_at.desc())
+        select(Conversation).where(Conversation.api_key_id == api_key.id).order_by(Conversation.updated_at.desc())
     )
     convs = result.scalars().all()
     return [ConversationResponse.model_validate(c) for c in convs]
@@ -151,12 +149,7 @@ async def get_messages(
     """
     conv = await _get_owned_conversation(conversation_id, api_key, db)
 
-    query = (
-        select(Message)
-        .where(Message.conversation_id == conv.id)
-        .order_by(Message.created_at.desc())
-        .limit(limit)
-    )
+    query = select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at.desc()).limit(limit)
 
     if before_id:
         result = await db.execute(query)
@@ -250,9 +243,7 @@ async def _trim_if_needed(conv: Conversation, db: AsyncSession) -> bool:
         ``True`` if any messages were removed.
     """
     result = await db.execute(
-        select(Message)
-        .where(Message.conversation_id == conv.id)
-        .order_by(Message.created_at.asc())
+        select(Message).where(Message.conversation_id == conv.id).order_by(Message.created_at.asc())
     )
     messages = result.scalars().all()
 

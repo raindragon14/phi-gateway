@@ -100,9 +100,15 @@ async def chat_completion(
             error_message: Description of the failure.
         """
         await _log_request(
-            db=db, api_key=api_key, model=request.model,
-            provider=provider, input_tokens=0, output_tokens=0,
-            latency_ms=_elapsed_ms(), status="error", error_message=error_message,
+            db=db,
+            api_key=api_key,
+            model=request.model,
+            provider=provider,
+            input_tokens=0,
+            output_tokens=0,
+            latency_ms=_elapsed_ms(),
+            status="error",
+            error_message=error_message,
         )
 
     try:

@@ -111,11 +111,7 @@ async def test_mcp_resources_read(async_client: AsyncClient):
     # Ingest a document
     await async_client.post(
         f"/v1/kb/{kb_id}/documents",
-        json={
-            "documents": [
-                {"title": "Readme", "content": "This is a test document.", "metadata": {}}
-            ]
-        },
+        json={"documents": [{"title": "Readme", "content": "This is a test document.", "metadata": {}}]},
         headers=headers,
     )
 

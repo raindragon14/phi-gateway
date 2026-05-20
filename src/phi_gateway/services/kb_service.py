@@ -181,10 +181,7 @@ async def ingest_documents(
     except RuntimeError as e:
         logger.warning("Embeddings unavailable, storing without vectors: %s", e)
         embeddings = [[] for _ in all_chunks]
-        warnings.append(
-            "Embeddings unavailable : documents stored without vectors, "
-            "search will use keyword fallback"
-        )
+        warnings.append("Embeddings unavailable : documents stored without vectors, search will use keyword fallback")
 
     # Store chunks
     for (title, chunk_text, chunk_idx, metadata), embedding in zip(chunk_map, embeddings):
@@ -238,9 +235,7 @@ async def search_kb(
         return await _keyword_search(db, kb_id, query, top_k)
 
     # Fetch all documents for this KB (size-limited for MVP)
-    result = await db.execute(
-        select(Document).where(Document.kb_id == kb_id)
-    )
+    result = await db.execute(select(Document).where(Document.kb_id == kb_id))
     docs = result.scalars().all()
 
     # Score by cosine similarity
@@ -286,15 +281,10 @@ async def _keyword_search(
         List of ``SearchResultItem`` with score set to 1.0.
     """
     result = await db.execute(
-        select(Document)
-        .where(Document.kb_id == kb_id, Document.content.ilike(f"%{query}%"))
-        .limit(top_k)
+        select(Document).where(Document.kb_id == kb_id, Document.content.ilike(f"%{query}%")).limit(top_k)
     )
     docs = result.scalars().all()
-    return [
-        SearchResultItem(content=doc.content, score=1.0, metadata=doc.doc_metadata)
-        for doc in docs
-    ]
+    return [SearchResultItem(content=doc.content, score=1.0, metadata=doc.doc_metadata) for doc in docs]
 
 
 async def _get_owned_kb(kb_id: UUID, api_key: ApiKey, db: AsyncSession) -> KnowledgeBase:

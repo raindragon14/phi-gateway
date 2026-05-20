@@ -215,14 +215,10 @@ class TestFallbackBehaviour:
         call_log = []  # track which providers were called
 
         mock_client_fail = AsyncMock()
-        mock_client_fail.chat.completions.create = AsyncMock(
-            side_effect=httpx.ConnectError("connection refused")
-        )
+        mock_client_fail.chat.completions.create = AsyncMock(side_effect=httpx.ConnectError("connection refused"))
 
         mock_client_ok = AsyncMock()
-        mock_client_ok.chat.completions.create = AsyncMock(
-            return_value=_make_mock_response()
-        )
+        mock_client_ok.chat.completions.create = AsyncMock(return_value=_make_mock_response())
 
         def fake_get_client(provider):
             call_log.append(provider)
@@ -245,9 +241,7 @@ class TestFallbackBehaviour:
     async def test_fallback_exhausted_raises_last_error(self):
         """When ALL models in the chain fail, the last error is raised."""
         mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(
-            side_effect=httpx.ConnectError("all down")
-        )
+        mock_client.chat.completions.create = AsyncMock(side_effect=httpx.ConnectError("all down"))
 
         with patch("phi_gateway.core.llm_proxy._get_client", return_value=mock_client):
             with pytest.raises(httpx.ConnectError, match="all down"):

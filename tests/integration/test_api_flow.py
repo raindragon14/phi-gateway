@@ -41,17 +41,19 @@ async def test_full_api_key_lifecycle(async_client: AsyncClient, test_db: AsyncS
     # 4. Simulate some usage by inserting LLM request records
     key_uuid = uuid.UUID(key_id)
     for i in range(3):
-        test_db.add(LLMRequest(
-            id=uuid.uuid4(),
-            api_key_id=key_uuid,
-            provider="groq",
-            model="llama-3.3-70b",
-            input_tokens=100 * (i + 1),
-            output_tokens=50 * (i + 1),
-            cost_usd_micro=10 * (i + 1),
-            latency_ms=100,
-            status="success",
-        ))
+        test_db.add(
+            LLMRequest(
+                id=uuid.uuid4(),
+                api_key_id=key_uuid,
+                provider="groq",
+                model="llama-3.3-70b",
+                input_tokens=100 * (i + 1),
+                output_tokens=50 * (i + 1),
+                cost_usd_micro=10 * (i + 1),
+                latency_ms=100,
+                status="success",
+            )
+        )
     await test_db.commit()
 
     # 5. Verify usage reflects the inserted records

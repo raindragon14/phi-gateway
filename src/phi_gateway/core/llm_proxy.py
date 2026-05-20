@@ -58,10 +58,7 @@ def _get_client(provider: str):
     client_cls, env_key, base_url = entry
     api_key = getattr(settings, env_key, None)
     if not api_key:
-        raise RuntimeError(
-            f"Provider '{provider}' is not configured. "
-            f"Set {env_key} in your .env file."
-        )
+        raise RuntimeError(f"Provider '{provider}' is not configured. Set {env_key} in your .env file.")
 
     if base_url:
         return client_cls(api_key=api_key, base_url=base_url)
@@ -69,6 +66,7 @@ def _get_client(provider: str):
 
 
 # ── Request translation helpers ─────────────────────────────────────
+
 
 def _parse_model(model_str: str) -> tuple[str, str]:
     """Parse a model string into (provider, model_name).
@@ -103,9 +101,7 @@ def _parse_model(model_str: str) -> tuple[str, str]:
     # Validate provider is one we know about
     known_providers = {"openai", "anthropic", "groq", "openrouter"}
     if provider not in known_providers:
-        raise ValueError(
-            f"Unknown provider '{provider}'. Valid providers: {', '.join(sorted(known_providers))}"
-        )
+        raise ValueError(f"Unknown provider '{provider}'. Valid providers: {', '.join(sorted(known_providers))}")
 
     return provider, model_name
 
@@ -153,6 +149,7 @@ def _to_openai_message(msg: dict) -> dict:
 
 
 # ── Chat completion ────────────────────────────────────────────────
+
 
 async def route_chat(
     model: str,
@@ -230,8 +227,11 @@ async def route_chat(
             if tools:
                 if provider == "anthropic":
                     kwargs["tools"] = [
-                        {"name": t["function"]["name"], "description": t["function"].get("description", ""),
-                         "input_schema": t["function"]["parameters"]}
+                        {
+                            "name": t["function"]["name"],
+                            "description": t["function"].get("description", ""),
+                            "input_schema": t["function"]["parameters"],
+                        }
                         for t in tools
                     ]
                 else:
@@ -252,21 +252,17 @@ async def route_chat(
             ValueError,
         ) as exc:
             last_error = exc
-            next_model = (
-                models_to_try[attempt_idx + 1]
-                if attempt_idx + 1 < len(models_to_try)
-                else None
-            )
+            next_model = models_to_try[attempt_idx + 1] if attempt_idx + 1 < len(models_to_try) else None
             if next_model:
                 logger.warning(
-                    'Provider %s failed (%s), falling back to %s',
+                    "Provider %s failed (%s), falling back to %s",
                     candidate_model,
                     exc,
                     next_model,
                 )
             else:
                 logger.warning(
-                    'Provider %s failed (%s), no more fallbacks',
+                    "Provider %s failed (%s), no more fallbacks",
                     candidate_model,
                     exc,
                 )
@@ -310,6 +306,7 @@ def _anthropic_messages(messages: list[dict]) -> dict:
 
 
 # ── Response translation ───────────────────────────────────────────
+
 
 def _openai_to_openai(response, model: str, provider: str) -> dict:
     """Normalize an OpenAI-compatible response to our standard format.
@@ -391,6 +388,7 @@ def _anthropic_to_openai(response, model: str, provider: str) -> dict:
 
 
 # ── Streaming ──────────────────────────────────────────────────────
+
 
 async def route_chat_stream(
     model: str,
@@ -556,6 +554,7 @@ def _anthropic_stream_event(event) -> str:
 
 
 # ── Model listing ──────────────────────────────────────────────────
+
 
 def list_models() -> list[ModelInfo]:
     """Return all known models regardless of whether providers are configured.

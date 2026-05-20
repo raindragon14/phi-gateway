@@ -27,10 +27,7 @@ async def generate_embedding(text: str, model: str = "text-embedding-3-small") -
             the API call fails.
     """
     if not settings.OPENROUTER_API_KEY:
-        raise RuntimeError(
-            "OpenRouter API key is not configured. "
-            "Set OPENROUTER_API_KEY in .env to use embeddings."
-        )
+        raise RuntimeError("OpenRouter API key is not configured. Set OPENROUTER_API_KEY in .env to use embeddings.")
 
     client = openai.AsyncOpenAI(
         api_key=settings.OPENROUTER_API_KEY,
@@ -66,10 +63,7 @@ async def generate_embeddings_batch(
             the API call fails.
     """
     if not settings.OPENROUTER_API_KEY:
-        raise RuntimeError(
-            "OpenRouter API key is not configured. "
-            "Set OPENROUTER_API_KEY in .env to use embeddings."
-        )
+        raise RuntimeError("OpenRouter API key is not configured. Set OPENROUTER_API_KEY in .env to use embeddings.")
 
     client = openai.AsyncOpenAI(
         api_key=settings.OPENROUTER_API_KEY,

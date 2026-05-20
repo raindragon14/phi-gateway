@@ -60,6 +60,7 @@ class TestJSONLogFormatter:
             raise RuntimeError("boom")
         except RuntimeError:
             import sys
+
             exc_info = sys.exc_info()
 
         record = self._make_record(msg="error occurred", exc_info=exc_info)

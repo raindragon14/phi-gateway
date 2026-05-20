@@ -39,11 +39,29 @@ class JSONLogFormatter(logging.Formatter):
         # Include extra fields passed via the `extra` parameter
         for key, value in record.__dict__.items():
             if key not in (
-                "args", "asctime", "created", "exc_info", "exc_text",
-                "filename", "funcName", "id", "levelname", "levelno",
-                "lineno", "module", "msecs", "message", "msg", "name",
-                "pathname", "process", "processName", "relativeCreated",
-                "stack_info", "thread", "threadName",
+                "args",
+                "asctime",
+                "created",
+                "exc_info",
+                "exc_text",
+                "filename",
+                "funcName",
+                "id",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "message",
+                "msg",
+                "name",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "thread",
+                "threadName",
             ):
                 log_entry[key] = value
 
