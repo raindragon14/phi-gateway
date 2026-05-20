@@ -18,6 +18,10 @@ from phi_gateway.models_catalog import _MODEL_TO_PROVIDER, KNOWN_MODELS
 
 logger = logging.getLogger(__name__)
 
+# ── Client cache (reuse connection pools across requests) ──────────
+
+_client_cache: dict[str, AsyncOpenAI | AsyncAnthropic | AsyncGroq] = {}
+
 # ── Fallback chain ─────────────────────────────────────────────────
 
 FALLBACK_CHAIN: dict[str, list[str]] = {
@@ -30,21 +34,26 @@ FALLBACK_CHAIN: dict[str, list[str]] = {
 ModelInfo = dict  # {"id": str, "provider": str, ...}
 
 
-def _get_client(provider: str):
-    """Return the async SDK client for the given provider.
+# ── Client management ──────────────────────────────────────────────
+
+
+def _get_client(provider: str) -> AsyncOpenAI | AsyncAnthropic | AsyncGroq:
+    """Return (or create and cache) the async SDK client for a provider.
 
     Args:
         provider: Provider slug (``"openai"``, ``"anthropic"``,
             ``"groq"``, or ``"openrouter"``).
 
     Returns:
-        An async client instance (``AsyncOpenAI``, ``AsyncAnthropic``,
-        or ``AsyncGroq``).
+        An async client instance.
 
     Raises:
         ValueError: If the provider is not recognized.
         RuntimeError: If the provider's API key is not configured.
     """
+    if provider in _client_cache:
+        return _client_cache[provider]
+
     registry: dict[str, tuple[type, str, str | None]] = {
         "openai": (AsyncOpenAI, "OPENAI_API_KEY", "https://api.openai.com/v1"),
         "anthropic": (AsyncAnthropic, "ANTHROPIC_API_KEY", None),
@@ -61,8 +70,12 @@ def _get_client(provider: str):
         raise RuntimeError(f"Provider '{provider}' is not configured. Set {env_key} in your .env file.")
 
     if base_url:
-        return client_cls(api_key=api_key, base_url=base_url)
-    return client_cls(api_key=api_key)
+        client = client_cls(api_key=api_key, base_url=base_url)
+    else:
+        client = client_cls(api_key=api_key)
+
+    _client_cache[provider] = client
+    return client
 
 
 # ── Request translation helpers ─────────────────────────────────────
@@ -72,8 +85,8 @@ def _parse_model(model_str: str) -> tuple[str, str]:
     """Parse a model string into (provider, model_name).
 
     Accepts formats:
-        - ``groq/llama-3.3-70b`` → ``("groq", "llama-3.3-70b")``
-        - ``gpt-5-mini`` → ``("openai", "gpt-5-mini")`` (lookup)
+        - ``groq/llama-3.3-70b`` -> ``("groq", "llama-3.3-70b")``
+        - ``gpt-5-mini`` -> ``("openai", "gpt-5-mini")`` (lookup)
 
     Args:
         model_str: Model identifier in ``provider/name`` or bare name
@@ -98,7 +111,6 @@ def _parse_model(model_str: str) -> tuple[str, str]:
             )
         model_name = model_str
 
-    # Validate provider is one we know about
     known_providers = {"openai", "anthropic", "groq", "openrouter"}
     if provider not in known_providers:
         raise ValueError(f"Unknown provider '{provider}'. Valid providers: {', '.join(sorted(known_providers))}")
@@ -148,128 +160,69 @@ def _to_openai_message(msg: dict) -> dict:
     return msg
 
 
-# ── Chat completion ────────────────────────────────────────────────
+# ── Request building ────────────────────────────────────────────────
 
 
-async def route_chat(
-    model: str,
-    messages: list[dict],
-    temperature: float = 0.7,
-    max_tokens: int | None = None,
-    stream: bool = False,
-    tools: list[dict] | None = None,
-) -> dict:
-    """Route a chat completion request to the appropriate LLM provider.
-
-    Returns a dict matching OpenAI's ``ChatCompletionResponse`` shape.
-    Handles non-streaming only (streaming is handled by a separate
-    generator). On provider failure, automatically falls back to
-    alternative models defined in ``FALLBACK_CHAIN``.
+def _get_fallbacks(model: str) -> list[str]:
+    """Get fallback models for a given primary model.
 
     Args:
-        model: Full model identifier (e.g. ``"groq/llama-3.3-70b"``).
-        messages: List of message dicts in OpenAI format.
-        temperature: Sampling temperature (0-2, default 0.7).
-        max_tokens: Optional cap on completion tokens.
-        stream: Whether to stream the response (not used here; see
-            ``route_chat_stream``).
-        tools: Optional list of tool/function definitions in OpenAI
-            format.
+        model: The primary model identifier.
 
     Returns:
-        A dict with keys ``id``, ``object``, ``created``, ``model``,
-        ``choices``, ``usage``, and ``provider``.
-
-    Raises:
-        ValueError: If the model/provider is not recognized.
-        RuntimeError: If the provider's API key is not configured.
-        httpx.HTTPStatusError: If all fallback attempts fail.
+        List of fallback model identifiers (empty if none configured).
     """
-    # Build ordered list of models to try (primary + fallbacks)
-    fallbacks: list[str] = []
     for prefix, alt_models in FALLBACK_CHAIN.items():
         if model.startswith(prefix):
-            fallbacks = alt_models
-            break
+            return alt_models
+    return []
 
-    models_to_try = [model] + fallbacks
-    last_error: Exception | None = None
 
-    for attempt_idx, candidate_model in enumerate(models_to_try):
-        try:
-            provider, model_name = _parse_model(candidate_model)
-            client = _get_client(provider)
+def _build_request_kwargs(
+    provider: str,
+    messages: list[dict],
+    temperature: float,
+    max_tokens: int | None,
+    tools: list[dict] | None,
+) -> dict:
+    """Build provider-specific kwargs for chat.completions.create().
 
-            kwargs: dict = {
-                "model": model_name,
-                "temperature": temperature,
-            }
+    Args:
+        provider: Provider slug.
+        messages: Message list in OpenAI format.
+        temperature: Sampling temperature.
+        max_tokens: Optional token cap.
+        tools: Optional tool definitions.
 
-            if stream:
-                kwargs["stream"] = True
+    Returns:
+        Dict ready to unpack into ``client.chat.completions.create()``.
+    """
+    kwargs: dict = {"temperature": temperature}
 
-            if max_tokens:
-                kwargs["max_tokens"] = max_tokens
+    if max_tokens:
+        kwargs["max_tokens"] = max_tokens
 
-            # Per-provider adaptations
-            if provider == "anthropic":
-                msg_kwargs = _anthropic_messages(messages)
-                kwargs.update(msg_kwargs)
-            elif provider == "openai":
-                msg_kwargs = _openai_messages(messages)
-                kwargs.update(msg_kwargs)
-            else:
-                # Groq uses OpenAI-compatible format
-                msg_kwargs = _openai_messages(messages)
-                kwargs.update(msg_kwargs)
+    # Message format
+    if provider == "anthropic":
+        kwargs.update(_anthropic_messages(messages))
+    else:
+        kwargs.update(_openai_messages(messages))
 
-            # Tools passthrough (all providers)
-            if tools:
-                if provider == "anthropic":
-                    kwargs["tools"] = [
-                        {
-                            "name": t["function"]["name"],
-                            "description": t["function"].get("description", ""),
-                            "input_schema": t["function"]["parameters"],
-                        }
-                        for t in tools
-                    ]
-                else:
-                    kwargs["tools"] = tools
+    # Tool format
+    if tools:
+        if provider == "anthropic":
+            kwargs["tools"] = [
+                {
+                    "name": t["function"]["name"],
+                    "description": t["function"].get("description", ""),
+                    "input_schema": t["function"]["parameters"],
+                }
+                for t in tools
+            ]
+        else:
+            kwargs["tools"] = tools
 
-            response = await client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
-
-            if provider == "anthropic":
-                return _anthropic_to_openai(response, candidate_model, provider)
-            return _openai_to_openai(response, candidate_model, provider)
-
-        except (
-            httpx.HTTPStatusError,
-            httpx.TimeoutException,
-            httpx.ConnectError,
-            OpenAIAPIError,
-            AnthropicAPIError,
-            ValueError,
-        ) as exc:
-            last_error = exc
-            next_model = models_to_try[attempt_idx + 1] if attempt_idx + 1 < len(models_to_try) else None
-            if next_model:
-                logger.warning(
-                    "Provider %s failed (%s), falling back to %s",
-                    candidate_model,
-                    exc,
-                    next_model,
-                )
-            else:
-                logger.warning(
-                    "Provider %s failed (%s), no more fallbacks",
-                    candidate_model,
-                    exc,
-                )
-            continue
-
-    # All attempts failed : raise the last error
-    raise last_error  # type: ignore[misc]
+    return kwargs
 
 
 def _openai_messages(messages: list[dict]) -> dict:
@@ -286,7 +239,7 @@ def _openai_messages(messages: list[dict]) -> dict:
 
 
 def _anthropic_messages(messages: list[dict]) -> dict:
-    """Prepare messages for Anthropic : separate system param, max_tokens required.
+    """Prepare messages for Anthropic: separate system param, max_tokens required.
 
     Args:
         messages: List of message dicts in OpenAI format.
@@ -298,7 +251,7 @@ def _anthropic_messages(messages: list[dict]) -> dict:
     system, non_system = _split_system_message(messages)
     result: dict = {
         "messages": non_system,
-        "max_tokens": 4096,  # required by Anthropic, will be overridden if caller provides
+        "max_tokens": 4096,
     }
     if system:
         result["system"] = system
@@ -306,6 +259,22 @@ def _anthropic_messages(messages: list[dict]) -> dict:
 
 
 # ── Response translation ───────────────────────────────────────────
+
+
+def _translate_response(response, model: str, provider: str) -> dict:
+    """Translate any provider response to our standard OpenAI format.
+
+    Args:
+        response: Raw SDK response object.
+        model: The model identifier string used for the request.
+        provider: The provider slug.
+
+    Returns:
+        A dict matching the standard ``ChatCompletionResponse`` shape.
+    """
+    if provider == "anthropic":
+        return _anthropic_to_openai(response, model, provider)
+    return _openai_to_openai(response, model, provider)
 
 
 def _openai_to_openai(response, model: str, provider: str) -> dict:
@@ -366,7 +335,7 @@ def _anthropic_to_openai(response, model: str, provider: str) -> dict:
     return {
         "id": response.id,
         "object": "chat.completion",
-        "created": 0,  # Anthropic doesn't return a Unix timestamp
+        "created": 0,
         "model": model,
         "choices": [
             {
@@ -385,6 +354,71 @@ def _anthropic_to_openai(response, model: str, provider: str) -> dict:
         },
         "provider": provider,
     }
+
+
+# ── Chat completion ────────────────────────────────────────────────
+
+
+async def route_chat(
+    model: str,
+    messages: list[dict],
+    temperature: float = 0.7,
+    max_tokens: int | None = None,
+    tools: list[dict] | None = None,
+) -> dict:
+    """Route a chat completion request to the appropriate LLM provider.
+
+    Returns a dict matching OpenAI's ``ChatCompletionResponse`` shape.
+    On provider failure, automatically falls back to alternative
+    models defined in ``FALLBACK_CHAIN``.
+
+    Args:
+        model: Full model identifier (e.g. ``"groq/llama-3.3-70b"``).
+        messages: List of message dicts in OpenAI format.
+        temperature: Sampling temperature (0-2, default 0.7).
+        max_tokens: Optional cap on completion tokens.
+        tools: Optional list of tool/function definitions in OpenAI
+            format.
+
+    Returns:
+        A dict with keys ``id``, ``object``, ``created``, ``model``,
+        ``choices``, ``usage``, and ``provider``.
+
+    Raises:
+        ValueError: If the model/provider is not recognized.
+        RuntimeError: If the provider's API key is not configured.
+        httpx.HTTPStatusError: If all fallback attempts fail.
+    """
+    models_to_try = [model] + _get_fallbacks(model)
+    last_error: Exception | None = None
+
+    for attempt_idx, candidate_model in enumerate(models_to_try):
+        try:
+            provider, model_name = _parse_model(candidate_model)
+            client = _get_client(provider)
+            kwargs = _build_request_kwargs(provider, messages, temperature, max_tokens, tools)
+            kwargs["model"] = model_name
+
+            response = await client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
+            return _translate_response(response, candidate_model, provider)
+
+        except (
+            httpx.HTTPStatusError,
+            httpx.TimeoutException,
+            httpx.ConnectError,
+            OpenAIAPIError,
+            AnthropicAPIError,
+            ValueError,
+        ) as exc:
+            last_error = exc
+            next_model = models_to_try[attempt_idx + 1] if attempt_idx + 1 < len(models_to_try) else None
+            if next_model:
+                logger.warning("Provider %s failed (%s), falling back to %s", candidate_model, exc, next_model)
+            else:
+                logger.warning("Provider %s failed (%s), no more fallbacks", candidate_model, exc)
+            continue
+
+    raise last_error  # type: ignore[misc]
 
 
 # ── Streaming ──────────────────────────────────────────────────────
@@ -450,7 +484,6 @@ async def route_chat_stream(
             if event:
                 yield event
 
-    # Signal stream completion
     yield "data: [DONE]\n\n"
 
 
@@ -469,7 +502,6 @@ def _openai_stream_chunk(chunk, model: str, provider: str) -> str:
         An SSE-formatted string, or an empty string if the chunk
         has no content.
     """
-    # Usage-only chunk (final chunk with stream_options)
     if not chunk.choices and chunk.usage:
         data = {
             "object": "chat.completion.chunk",

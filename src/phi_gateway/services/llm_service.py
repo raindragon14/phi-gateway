@@ -117,7 +117,6 @@ async def chat_completion(
             messages=[m.model_dump() for m in request.messages],
             temperature=request.temperature,
             max_tokens=request.max_tokens,
-            stream=False,
             tools=request.tools,
         )
     except ValueError as e:
