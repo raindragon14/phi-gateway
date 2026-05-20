@@ -67,7 +67,7 @@ target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W"]
+select = ["E", "F", "I", "N", "W", "D100", "D103", "D107"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/phi_gateway/dashboard/static_pages.py" = ["E501"]

@@ -1,2 +1,2 @@
-"""Service layer — data access, business logic, and provider orchestration."""
+"""Service layer : data access, business logic, and provider orchestration."""
 

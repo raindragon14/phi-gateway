@@ -1,3 +1,5 @@
+"""Chat completion endpoint : streaming and non-streaming."""
+
 import json
 import logging
 import time

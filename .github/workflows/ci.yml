@@ -32,6 +32,16 @@ jobs:
       - name: ruff check
         run: ruff check src/ tests/
 
+      - name: Google-style docstring check
+        run: python scripts/check_docstrings.py
+
+      - name: em dash check (AGENTS.md convention)
+        run: |
+          if grep -rn '—' src/phi_gateway/ --include='*.py' | grep -v 'static_pages.py' | grep -v '# noqa'; then
+            echo "ERROR: Em dashes found in source code. Use colons, parens, or bullets instead."
+            exit 1
+          fi
+
       - name: mypy (info only)
         run: mypy src/phi_gateway/ --ignore-missing-imports || true
 

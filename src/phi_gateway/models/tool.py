@@ -24,7 +24,7 @@ class ToolDefinition(Base):
         description: Human-readable description sent to the LLM.
         json_schema: JSON Schema dict defining the tool's parameters.
         endpoint: HTTP(S) URL invoked when the tool is called.
-        auth_type: Authentication method — ``"none"``, ``"bearer"``,
+        auth_type: Authentication method : ``"none"``, ``"bearer"``,
             or ``"api_key"``.
         is_active: Whether the tool can be used in requests.
         owner_api_key_id: Optional foreign key to the owning API key.

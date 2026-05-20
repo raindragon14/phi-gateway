@@ -1,3 +1,5 @@
+"""Multi-provider LLM routing with fallback chains."""
+
 import json
 import logging
 from collections.abc import AsyncGenerator
@@ -270,7 +272,7 @@ async def route_chat(
                 )
             continue
 
-    # All attempts failed — raise the last error
+    # All attempts failed : raise the last error
     raise last_error  # type: ignore[misc]
 
 
@@ -288,7 +290,7 @@ def _openai_messages(messages: list[dict]) -> dict:
 
 
 def _anthropic_messages(messages: list[dict]) -> dict:
-    """Prepare messages for Anthropic — separate system param, max_tokens required.
+    """Prepare messages for Anthropic : separate system param, max_tokens required.
 
     Args:
         messages: List of message dicts in OpenAI format.

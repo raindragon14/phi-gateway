@@ -34,10 +34,10 @@ async def mcp_endpoint(
     """Model Context Protocol endpoint (JSON-RPC 2.0).
 
     Supports:
-      - ``tools/list`` — list available tools
-      - ``tools/call`` — execute a tool (requires auth)
-      - ``resources/list`` — list available KBs
-      - ``resources/read`` — search a KB
+      - ``tools/list`` : list available tools
+      - ``tools/call`` : execute a tool (requires auth)
+      - ``resources/list`` : list available KBs
+      - ``resources/read`` : search a KB
 
     Args:
         body: JSON-RPC 2.0 request with method and params.
@@ -62,7 +62,7 @@ async def mcp_endpoint(
             return {"jsonrpc": "2.0", "result": result, "id": body.id}
 
         elif body.method == "tools/call":
-            # Requires auth — pass through to /v1/tools/{name}/call logic
+            # Requires auth : pass through to /v1/tools/{name}/call logic
             tool_name = body.params.get("name", "")
             arguments = body.params.get("arguments", {})
 

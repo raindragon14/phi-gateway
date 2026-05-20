@@ -74,19 +74,19 @@ LOGGING_CONFIG: dict[str, Any] = {
         },
     },
     "loggers": {
-        # Application logger — JSON output
+        # Application logger : JSON output
         "phi_gateway": {
             "handlers": ["console_json"],
             "level": "INFO",
             "propagate": False,
         },
-        # Uvicorn access log — JSON output with request context fields
+        # Uvicorn access log : JSON output with request context fields
         "uvicorn.access": {
             "handlers": ["console_json"],
             "level": "INFO",
             "propagate": False,
         },
-        # Uvicorn error log — JSON output
+        # Uvicorn error log : JSON output
         "uvicorn": {
             "handlers": ["console_json"],
             "level": "INFO",

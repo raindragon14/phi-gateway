@@ -1,4 +1,4 @@
-"""API router assembly — aggregates all resource routers into a single v1 prefix.
+"""API router assembly : aggregates all resource routers into a single v1 prefix.
 
 Every sub-router is mounted under ``/v1`` so all endpoints share
 a consistent versioned base path.

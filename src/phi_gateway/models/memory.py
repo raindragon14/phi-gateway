@@ -1,4 +1,4 @@
-"""Agent memory models — conversations and messages for persistent chat sessions.
+"""Agent memory models : conversations and messages for persistent chat sessions.
 
 Provides structured storage for multi-turn agent conversations with
 tool call history and token tracking.
@@ -58,7 +58,7 @@ class Message(Base):
     Attributes:
         id: UUID primary key.
         conversation_id: Foreign key to the parent conversation.
-        role: Message role — ``"user"``, ``"assistant"``, ``"system"``,
+        role: Message role : ``"user"``, ``"assistant"``, ``"system"``,
             or ``"tool"``.
         content: Message body text.
         tool_calls: Optional JSON array of tool call objects.

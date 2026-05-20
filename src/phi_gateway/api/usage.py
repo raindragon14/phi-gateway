@@ -1,4 +1,4 @@
-"""Usage analytics API — token counts, cost breakdowns by provider and model."""
+"""Usage analytics API : token counts, cost breakdowns by provider and model."""
 
 from typing import Optional
 

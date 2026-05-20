@@ -140,7 +140,7 @@ class RequireApiKey:
         api_key.last_used_at = utc_now
         await db.commit()
 
-        # Tier gate — reject if the key's tier is not in the allowed set
+        # Tier gate : reject if the key's tier is not in the allowed set
         if self.required_tiers is not None and api_key.tier not in self.required_tiers:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -150,5 +150,5 @@ class RequireApiKey:
         return api_key
 
 
-# Default instance — any tier, no gating. Used by most endpoints.
+# Default instance : any tier, no gating. Used by most endpoints.
 get_api_key = RequireApiKey()

@@ -1,4 +1,4 @@
-"""Rate limiting with sliding window — enforced per API key.
+"""Rate limiting with sliding window : enforced per API key.
 
 Uses an in-memory store (dict) for MVP. Replace with Redis for
 multi-worker deployments.

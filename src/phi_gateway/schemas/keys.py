@@ -1,4 +1,4 @@
-"""Pydantic schemas for API key management — creation, listing, and responses."""
+"""Pydantic schemas for API key management : creation, listing, and responses."""
 
 from datetime import datetime
 from typing import Optional
@@ -12,7 +12,7 @@ class CreateApiKeyRequest(BaseModel):
 
     Attributes:
         name: Human-readable label for the key.
-        tier: Rate-limiting tier — ``"free"``, ``"pro"``, ``"team"``,
+        tier: Rate-limiting tier : ``"free"``, ``"pro"``, ``"team"``,
             or ``"admin"``. Defaults to ``"free"``.
     """
 
@@ -53,7 +53,7 @@ class ApiKeyResponse(BaseModel):
 
 
 class ApiKeyCreatedResponse(BaseModel):
-    """Response when a new key is created — includes the raw key shown once.
+    """Response when a new key is created : includes the raw key shown once.
 
     Attributes:
         id: UUID of the new key.

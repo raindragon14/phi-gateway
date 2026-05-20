@@ -1,4 +1,4 @@
-"""API key management endpoints — create, list, and revoke gateway keys.
+"""API key management endpoints : create, list, and revoke gateway keys.
 
 Protected against unauthorized creation after initial bootstrap.
 """
@@ -45,9 +45,9 @@ async def _require_auth_or_bootstrap(
     admin_exists = result.first() is not None
 
     if not admin_exists:
-        return None  # bootstrapping — no auth needed
+        return None  # bootstrapping : no auth needed
 
-    # Admin key exists — delegate to standard auth (raises 401 on failure)
+    # Admin key exists : delegate to standard auth (raises 401 on failure)
     return await get_api_key(request, db)
 
 

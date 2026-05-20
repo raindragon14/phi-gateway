@@ -182,7 +182,7 @@ async def ingest_documents(
         logger.warning("Embeddings unavailable, storing without vectors: %s", e)
         embeddings = [[] for _ in all_chunks]
         warnings.append(
-            "Embeddings unavailable — documents stored without vectors, "
+            "Embeddings unavailable : documents stored without vectors, "
             "search will use keyword fallback"
         )
 

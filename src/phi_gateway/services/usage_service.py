@@ -1,4 +1,4 @@
-"""Usage analytics — aggregate queries grouped by provider and model."""
+"""Usage analytics : aggregate queries grouped by provider and model."""
 
 import logging
 
@@ -34,7 +34,7 @@ async def get_usage_stats(
         A ``UsageResponse`` with totals and per-provider/model
         breakdowns.
     """
-    # SQLite stores UUIDs without dashes — normalize the key ID
+    # SQLite stores UUIDs without dashes : normalize the key ID
     db_key_id = api_key_id.replace("-", "")
     params: dict = {"api_key_id": db_key_id}
 

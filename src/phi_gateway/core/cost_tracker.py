@@ -1,3 +1,5 @@
+"""Per-request cost calculation using the unified model catalog."""
+
 import logging
 
 from phi_gateway.models_catalog import COST_PER_1M_TOKENS
@@ -48,7 +50,7 @@ def calculate_cost(
     prices = _lookup_model(model)
 
     if prices is None:
-        logger.warning("Unknown model '%s' for cost calculation — returning 0", model)
+        logger.warning("Unknown model '%s' for cost calculation : returning 0", model)
         return 0
 
     input_price, output_price = prices

@@ -1,4 +1,4 @@
-"""HTMX dashboard routes — serve the admin UI.
+"""HTMX dashboard routes : serve the admin UI.
 
 Supports both Bearer token (API clients) and cookie-based
 authentication (browser users after login).
@@ -19,7 +19,7 @@ TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "dashboard" / "template
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
-# ── Dashboard dependency — admin/pro tier required ────────────────
+# ── Dashboard dependency : admin/pro tier required ────────────────
 _require_admin = RequireApiKey(required_tiers=("admin", "pro"))
 
 

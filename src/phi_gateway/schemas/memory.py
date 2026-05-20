@@ -1,4 +1,4 @@
-"""Pydantic schemas for agent memory — conversations and messages."""
+"""Pydantic schemas for agent memory : conversations and messages."""
 
 from datetime import datetime
 from typing import Optional

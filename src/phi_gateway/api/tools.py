@@ -1,4 +1,4 @@
-"""External tool registry API — register, discovery, schema, and invocation.
+"""External tool registry API : register, discovery, schema, and invocation.
 
 Tools are registered with JSON Schema definitions and invoked
 via HTTP proxy to their configured endpoints.

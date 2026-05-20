@@ -133,7 +133,7 @@ async def call_tool(
     """
     tool = await _get_active_tool(tool_id, db)
 
-    # Validate endpoint URL (SSRF prevention — also checks tools
+    # Validate endpoint URL (SSRF prevention : also checks tools
     # registered before this validation existed)
     try:
         validate_endpoint_url(tool.endpoint)
@@ -188,7 +188,7 @@ async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
 
 
 def _validate_params(params: dict, schema: dict) -> None:
-    """Validate params against JSON Schema (basic — checks required fields only).
+    """Validate params against JSON Schema (basic : checks required fields only).
 
     Args:
         params: Parameters provided by the caller.

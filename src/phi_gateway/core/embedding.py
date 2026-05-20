@@ -1,3 +1,5 @@
+"""Embedding generation via OpenRouter."""
+
 import logging
 
 import openai

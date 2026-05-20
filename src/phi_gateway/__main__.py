@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="phi-gateway",
-        description="Self-hosted AI gateway — LLM proxy, MCP tool registry, RAG, agent memory.",
+        description="Self-hosted AI gateway : LLM proxy, MCP tool registry, RAG, agent memory.",
     )
     sub = parser.add_subparsers(dest="command")
 
@@ -63,6 +63,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """CLI entry point for phi-gateway."""
     parser = build_parser()
     args = parser.parse_args()
 

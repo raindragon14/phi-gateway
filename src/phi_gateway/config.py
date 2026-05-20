@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///data/phi.db"
 
-    # LLM Providers (optional — only configure the ones you use)
+    # LLM Providers (optional : only configure the ones you use)
     OPENAI_API_KEY: str | None = None
     ANTHROPIC_API_KEY: str | None = None
     GROQ_API_KEY: str | None = None

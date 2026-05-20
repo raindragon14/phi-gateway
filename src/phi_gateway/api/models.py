@@ -1,3 +1,5 @@
+"""Model listing endpoint : returns available LLM models with pricing."""
+
 from fastapi import APIRouter, Query
 
 from phi_gateway.core.llm_proxy import list_models

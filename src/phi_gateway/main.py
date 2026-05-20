@@ -36,7 +36,7 @@ from phi_gateway.schemas.errors import ErrorDetail
 
 logger = logging.getLogger(__name__)
 
-START_TIME = time.time()  # App start timestamp — used by /health for uptime
+START_TIME = time.time()  # App start timestamp : used by /health for uptime
 
 
 # ── Lifecycle
@@ -80,7 +80,7 @@ async def lifespan(app: FastAPI):
     # ── Config validation warnings ──
     if not settings.ALLOWED_ORIGINS:
         logger.warning(
-            "ALLOWED_ORIGINS is empty — CORS is disabled. "
+            "ALLOWED_ORIGINS is empty : CORS is disabled. "
             "Set ALLOWED_ORIGINS in .env to enable cross-origin requests."
         )
     if settings.SESSION_SECRET in ("", "change-me-in-production"):
@@ -143,7 +143,7 @@ def create_app() -> FastAPI:
         else [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
     )
 
-    # CORS — only register if origins are explicitly configured
+    # CORS : only register if origins are explicitly configured
     if allowed_origins:
         app.add_middleware(
             CORSMiddleware,

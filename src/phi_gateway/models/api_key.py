@@ -1,4 +1,4 @@
-"""API key model — authentication, rate limits, and tier management."""
+"""API key model : authentication, rate limits, and tier management."""
 
 import uuid
 from datetime import datetime
@@ -15,7 +15,7 @@ class ApiKey(Base):
 
     Each key has a tier (free, pro, team, admin) that controls rate
     limits, and can optionally expire. Keys are stored as bcrypt
-    hashes — the raw value is never persisted beyond creation.
+    hashes : the raw value is never persisted beyond creation.
 
     Attributes:
         id: UUID primary key.
@@ -23,7 +23,7 @@ class ApiKey(Base):
         prefix: First 12 characters of the key (for lookup/display).
         name: Human-readable label for the key.
         user_id: Arbitrary user identifier (defaults to ``"default"``).
-        tier: Rate-limiting tier — ``"free"``, ``"pro"``, ``"team"``,
+        tier: Rate-limiting tier : ``"free"``, ``"pro"``, ``"team"``,
             or ``"admin"``.
         rate_limit_per_min: Maximum requests allowed per minute.
         rate_limit_per_day: Maximum requests allowed per day.

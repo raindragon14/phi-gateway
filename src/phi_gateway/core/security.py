@@ -1,3 +1,5 @@
+"""API key generation and bcrypt verification."""
+
 import secrets
 
 import bcrypt

@@ -19,6 +19,7 @@ class NotFoundError(GatewayError):
     """
 
     def __init__(self, resource: str, identifier: str | None = None) -> None:
+        """Initialize with resource type and optional identifier."""
         self.resource = resource
         self.identifier = identifier
         msg = f"{resource} not found"
@@ -36,6 +37,7 @@ class ConflictError(GatewayError):
     """
 
     def __init__(self, resource: str, identifier: str) -> None:
+        """Initialize with resource type and conflicting identifier."""
         self.resource = resource
         self.identifier = identifier
         super().__init__(f"{resource} '{identifier}' already exists")
@@ -49,6 +51,7 @@ class ValidationError(GatewayError):
     """
 
     def __init__(self, detail: str) -> None:
+        """Initialize with validation error detail."""
         self.detail = detail
         super().__init__(detail)
 
@@ -63,6 +66,7 @@ class ExternalToolError(GatewayError):
     """
 
     def __init__(self, tool_name: str, status_code: int | None, message: str) -> None:
+        """Initialize with tool name, optional status code, and message."""
         self.tool_name = tool_name
         self.status_code = status_code
         self.message = message
@@ -73,6 +77,7 @@ class ExternalToolTimeoutError(ExternalToolError):
     """Tool endpoint timed out."""
 
     def __init__(self, tool_name: str) -> None:
+        """Initialize with tool name (status=504, 30s timeout)."""
         super().__init__(tool_name, 504, "timed out after 30s")
 
 
@@ -86,6 +91,7 @@ class RateLimitExceededError(GatewayError):
     """
 
     def __init__(self, limit: int, window: str, retry_after: int) -> None:
+        """Initialize with limit, time window, and retry-after seconds."""
         self.limit = limit
         self.window = window
         self.retry_after = retry_after

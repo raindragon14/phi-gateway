@@ -1,4 +1,4 @@
-"""Agent memory API — persistent conversation storage with pagination and auto-trimming.
+"""Agent memory API : persistent conversation storage with pagination and auto-trimming.
 
 Provides CRUD for conversations and messages, cursor-based
 pagination, and context-truncation signalling via headers.
@@ -82,7 +82,7 @@ async def get_messages_endpoint(
         api_key: Authenticated API key (must own the conversation).
         db: Async database session.
         limit: Maximum messages to return (default 50).
-        before_id: Optional cursor — return messages older than this ID.
+        before_id: Optional cursor : return messages older than this ID.
 
     Returns:
         List of ``MessageResponse`` in chronological order.

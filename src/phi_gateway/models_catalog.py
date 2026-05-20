@@ -1,4 +1,4 @@
-"""Unified model and pricing catalog — single source of truth.
+"""Unified model and pricing catalog : single source of truth.
 
 Both ``cost_tracker`` and ``llm_proxy`` import from here so model
 names and pricing never drift apart.

@@ -1,4 +1,4 @@
-"""Conversation memory service — CRUD, pagination, and auto-trimming.
+"""Conversation memory service : CRUD, pagination, and auto-trimming.
 
 Manages persistent multi-turn agent conversations with context
 window enforcement and truncation signalling.
@@ -20,7 +20,7 @@ from phi_gateway.schemas.memory import (
     MessageResponse,
 )
 
-# Context window limit — single default value.
+# Context window limit : single default value.
 # Per-model limits can be derived from models_catalog.MODELS if needed later.
 CONTEXT_LIMIT_DEFAULT = 128_000
 
@@ -139,7 +139,7 @@ async def get_messages(
         api_key: The authenticated API key (must own the conversation).
         db: Async database session.
         limit: Maximum number of messages to return (default 50).
-        before_id: Optional cursor — return messages older than this
+        before_id: Optional cursor : return messages older than this
             message UUID.
 
     Returns:
