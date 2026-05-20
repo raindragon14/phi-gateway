@@ -1,25 +1,11 @@
 services:
-  caddy:
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-    restart: unless-stopped
-
   api:
-    build: .
+    image: phi-gateway:latest
+    container_name: phi-gateway
+    network_mode: host
+    env_file: .env
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///data/phi.db
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - APP_ROOT=/app
-      - APP_HOST=0.0.0.0
-      - APP_PORT=8000
     volumes:
       - phi_data:/app/data
       - ./srv/landing:/app/srv/landing
@@ -27,5 +13,4 @@ services:
     mem_limit: 1g
 
 volumes:
-  caddy_data:
   phi_data:
