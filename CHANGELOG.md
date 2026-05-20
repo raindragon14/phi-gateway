@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-05-20
+
+### Added
+
+- **SSRF protection** (`core/url_safety.py`) — blocks private/metadata IP ranges on tool endpoints
+- **Domain exception hierarchy** (`core/exceptions.py`) — `GatewayError` base with typed subclasses
+- **Standardized error responses** (`schemas/errors.py`) — `{detail, id}` envelope across all endpoints
+- **Global exception handler** — single handler replaces 7 duplicate handlers in `main.py`
+- **MCP endpoint decomposition** — 1 god function split into 4 focused handlers with dispatch table
+- **JSON Schema validation** for MCP tool arguments — validates against registered tool schemas
+- **Unified auth** (`RequireApiKey` class) — replaces `_require_admin` wrapper, supports tier-based access
+- **Google-style docstrings** — enforced across all 52 Python source files via CI
+- **HTML docstrings** — all 8 dashboard templates documented with purpose, blocks, JS functions
+- **CI enforcement** — docstring check script, em dash grep, ruff format check, parallel pytest
+- **jsonschema dependency** — for MCP tool parameter validation
+
+### Changed
+
+- **Error messages sanitized** — LLM proxy errors no longer expose env key names to clients
+- **LLM proxy refactored** — extracted `_build_openai_params`, `_build_anthropic_params`, `_route_single`
+- **docker-compose.yml** — simplified for VPS (host networking, env_file, no embedded Caddy)
+- **CONTRIBUTING.md** — rewritten to match current codebase (CI pipeline, project structure, test structure)
+- **.env.example** — cleaned up, added PostgreSQL example, removed marketing copy
+
+### Removed
+
+- **7 duplicate exception handlers** in `main.py` (replaced by single `_gateway_error_handler`)
+- **`Response=None` anti-pattern** in `api/memory.py`
+- **Inline HTML** from `main.py` (extracted to `dashboard/static_pages.py`)
+- **Unused `CONTEXT_WINDOW_BY_ID`** from `models_catalog.py`
+- **Non-codebase files**: `docs/`, `assets/`, `DESIGN.md`, `PRODUCTION.md`, `docker-compose.vps.yml`, `scripts/backup-db.sh`
+- **Stale `.gitignore` entries** — cleaned up
+
+### Fixed
+
+- **f-string SQL** in `usage_service.py` — replaced with parameterized queries
+- **Embedding degradation warnings** — explicit warnings when embedding service unavailable
+- **N818 naming** — `RateLimitExceeded` renamed to `RateLimitExceededError`
+- **Unused imports** cleaned up (F401)
+
 ## [0.3.0] — 2026-05-18
 
 ### Added
