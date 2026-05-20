@@ -1,3 +1,5 @@
+"""API key model — authentication, rate limits, and tier management."""
+
 import uuid
 from datetime import datetime
 
@@ -9,6 +11,28 @@ from phi_gateway.models.base import Base
 
 
 class ApiKey(Base):
+    """Database model for API keys used to authenticate gateway requests.
+
+    Each key has a tier (free, pro, team, admin) that controls rate
+    limits, and can optionally expire. Keys are stored as bcrypt
+    hashes — the raw value is never persisted beyond creation.
+
+    Attributes:
+        id: UUID primary key.
+        key_hash: bcrypt hash of the full API key string.
+        prefix: First 12 characters of the key (for lookup/display).
+        name: Human-readable label for the key.
+        user_id: Arbitrary user identifier (defaults to ``"default"``).
+        tier: Rate-limiting tier — ``"free"``, ``"pro"``, ``"team"``,
+            or ``"admin"``.
+        rate_limit_per_min: Maximum requests allowed per minute.
+        rate_limit_per_day: Maximum requests allowed per day.
+        is_active: Whether the key is currently usable.
+        created_at: Timestamp of key creation (server default).
+        last_used_at: Optional timestamp of last authenticated request.
+        expires_at: Optional expiration timestamp.
+    """
+
     __tablename__ = "api_keys"
 
     id: Mapped[uuid.UUID] = mapped_column(

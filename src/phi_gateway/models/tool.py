@@ -1,3 +1,5 @@
+"""MCP-compatible tool definitions for external tool registry."""
+
 import uuid
 from datetime import datetime
 
@@ -10,6 +12,25 @@ from phi_gateway.models.base import Base
 
 
 class ToolDefinition(Base):
+    """Registered external tool available for LLM function calling.
+
+    Each tool has a unique name, a JSON Schema describing its
+    parameters, and an HTTP endpoint to invoke it. Tools are
+    owned by an API key and can be globally active or disabled.
+
+    Attributes:
+        id: UUID primary key.
+        name: Unique tool name used as the function name in LLM calls.
+        description: Human-readable description sent to the LLM.
+        json_schema: JSON Schema dict defining the tool's parameters.
+        endpoint: HTTP(S) URL invoked when the tool is called.
+        auth_type: Authentication method — ``"none"``, ``"bearer"``,
+            or ``"api_key"``.
+        is_active: Whether the tool can be used in requests.
+        owner_api_key_id: Optional foreign key to the owning API key.
+        created_at: Timestamp of tool registration (server default).
+    """
+
     __tablename__ = "tool_definitions"
 
     id: Mapped[uuid.UUID] = mapped_column(

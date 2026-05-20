@@ -1,3 +1,9 @@
+"""Agent memory models — conversations and messages for persistent chat sessions.
+
+Provides structured storage for multi-turn agent conversations with
+tool call history and token tracking.
+"""
+
 import uuid
 from datetime import datetime
 
@@ -10,6 +16,21 @@ from phi_gateway.models.base import Base
 
 
 class Conversation(Base):
+    """A named conversation session tied to an API key.
+
+    Conversations group messages together and track a session ID
+    for client-side correlation. Titles can be set manually or
+    auto-generated.
+
+    Attributes:
+        id: UUID primary key.
+        api_key_id: Foreign key to the owning API key.
+        session_id: Client-specified session identifier string.
+        title: Optional human-readable title.
+        created_at: Timestamp of conversation creation (server default).
+        updated_at: Timestamp of last message or metadata change.
+    """
+
     __tablename__ = "conversations"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -29,6 +50,22 @@ class Conversation(Base):
 
 
 class Message(Base):
+    """A single message within a conversation.
+
+    Supports all chat roles (user, assistant, system, tool) and
+    can store tool call JSON and token consumption metadata.
+
+    Attributes:
+        id: UUID primary key.
+        conversation_id: Foreign key to the parent conversation.
+        role: Message role — ``"user"``, ``"assistant"``, ``"system"``,
+            or ``"tool"``.
+        content: Message body text.
+        tool_calls: Optional JSON array of tool call objects.
+        token_count: Number of tokens consumed by this message.
+        created_at: Timestamp of message creation (server default).
+    """
+
     __tablename__ = "messages"
 
     id: Mapped[uuid.UUID] = mapped_column(

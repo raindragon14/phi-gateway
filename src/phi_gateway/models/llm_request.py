@@ -1,3 +1,9 @@
+"""LLM request log model for usage tracking, cost monitoring, and audit.
+
+Every chat completion is logged here with token counts, cost
+(in micro-USD), latency, and provider/model identifiers.
+"""
+
 import uuid
 from datetime import datetime
 
@@ -9,6 +15,27 @@ from phi_gateway.models.base import Base
 
 
 class LLMRequest(Base):
+    """Audit log entry for a single LLM request.
+
+    Records the provider, model, token usage, cost (in micro-USD
+    for precision without floats), latency, and success/error
+    status. Linked to the API key that made the request.
+
+    Attributes:
+        id: UUID primary key.
+        api_key_id: Foreign key to the API key that made the request.
+        provider: Provider slug (``"openai"``, ``"anthropic"``,
+            ``"groq"``, ``"openrouter"``).
+        model: Full model identifier string.
+        input_tokens: Number of prompt tokens consumed.
+        output_tokens: Number of completion tokens generated.
+        cost_usd_micro: Total cost in micro-USD (cents × 10).
+        latency_ms: Round-trip latency in milliseconds.
+        status: ``"success"`` or ``"error"``.
+        error_message: Optional error detail for failed requests.
+        created_at: Timestamp of the request (server default).
+    """
+
     __tablename__ = "llm_requests"
 
     id: Mapped[uuid.UUID] = mapped_column(

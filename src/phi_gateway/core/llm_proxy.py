@@ -29,7 +29,20 @@ ModelInfo = dict  # {"id": str, "provider": str, ...}
 
 
 def _get_client(provider: str):
-    """Return the async client for the given provider."""
+    """Return the async SDK client for the given provider.
+
+    Args:
+        provider: Provider slug (``"openai"``, ``"anthropic"``,
+            ``"groq"``, or ``"openrouter"``).
+
+    Returns:
+        An async client instance (``AsyncOpenAI``, ``AsyncAnthropic``,
+        or ``AsyncGroq``).
+
+    Raises:
+        ValueError: If the provider is not recognized.
+        RuntimeError: If the provider's API key is not configured.
+    """
     registry: dict[str, tuple[type, str, str | None]] = {
         "openai": (AsyncOpenAI, "OPENAI_API_KEY", "https://api.openai.com/v1"),
         "anthropic": (AsyncAnthropic, "ANTHROPIC_API_KEY", None),
@@ -56,13 +69,21 @@ def _get_client(provider: str):
 # ── Request translation helpers ─────────────────────────────────────
 
 def _parse_model(model_str: str) -> tuple[str, str]:
-    """Parse model string into (provider, model_name).
+    """Parse a model string into (provider, model_name).
 
     Accepts formats:
-        - ``groq/llama-3.3-70b`` → (groq, llama-3.3-70b)
-        - ``gpt-5-mini`` → (openai, gpt-5-mini)  [lookup by known model]
+        - ``groq/llama-3.3-70b`` → ``("groq", "llama-3.3-70b")``
+        - ``gpt-5-mini`` → ``("openai", "gpt-5-mini")`` (lookup)
 
-    Raises ValueError if the provider or model is not recognized.
+    Args:
+        model_str: Model identifier in ``provider/name`` or bare name
+            format.
+
+    Returns:
+        Tuple of ``(provider, model_name)``.
+
+    Raises:
+        ValueError: If the provider or model is not recognized.
     """
     if "/" in model_str:
         parts = model_str.split("/", 1)
@@ -88,7 +109,18 @@ def _parse_model(model_str: str) -> tuple[str, str]:
 
 
 def _split_system_message(messages: list[dict]) -> tuple[str | None, list[dict]]:
-    """Extract the last system message (Anthropic uses a separate ``system`` param)."""
+    """Extract the last system message from the message list.
+
+    Anthropic uses a separate ``system`` parameter instead of a
+    system-role message.
+
+    Args:
+        messages: List of message dicts in OpenAI format.
+
+    Returns:
+        Tuple of ``(system_content, non_system_messages)``. The first
+        element is ``None`` if no system message is present.
+    """
     system = None
     non_system = []
     for msg in messages:
@@ -102,7 +134,14 @@ def _split_system_message(messages: list[dict]) -> tuple[str | None, list[dict]]
 def _to_openai_message(msg: dict) -> dict:
     """Normalize a message dict to basic OpenAI format (string content).
 
-    Handles providers that return content as a list of blocks (e.g. Anthropic).
+    Handles providers that return content as a list of blocks
+    (e.g. Anthropic).
+
+    Args:
+        msg: A message dict with ``role`` and ``content`` keys.
+
+    Returns:
+        A new message dict with ``content`` guaranteed to be a string.
     """
     content = msg.get("content", "")
     if isinstance(content, list):
@@ -124,9 +163,28 @@ async def route_chat(
     """Route a chat completion request to the appropriate LLM provider.
 
     Returns a dict matching OpenAI's ``ChatCompletionResponse`` shape.
-    Handles non-streaming only (streaming is handled by a separate generator).
-    On provider failure, automatically falls back to alternative models
-    defined in FALLBACK_CHAIN.
+    Handles non-streaming only (streaming is handled by a separate
+    generator). On provider failure, automatically falls back to
+    alternative models defined in ``FALLBACK_CHAIN``.
+
+    Args:
+        model: Full model identifier (e.g. ``"groq/llama-3.3-70b"``).
+        messages: List of message dicts in OpenAI format.
+        temperature: Sampling temperature (0-2, default 0.7).
+        max_tokens: Optional cap on completion tokens.
+        stream: Whether to stream the response (not used here; see
+            ``route_chat_stream``).
+        tools: Optional list of tool/function definitions in OpenAI
+            format.
+
+    Returns:
+        A dict with keys ``id``, ``object``, ``created``, ``model``,
+        ``choices``, ``usage``, and ``provider``.
+
+    Raises:
+        ValueError: If the model/provider is not recognized.
+        RuntimeError: If the provider's API key is not configured.
+        httpx.HTTPStatusError: If all fallback attempts fail.
     """
     # Build ordered list of models to try (primary + fallbacks)
     fallbacks: list[str] = []
@@ -217,12 +275,28 @@ async def route_chat(
 
 
 def _openai_messages(messages: list[dict]) -> dict:
-    """Prepare messages for OpenAI-compatible providers."""
+    """Prepare messages for OpenAI-compatible providers.
+
+    Args:
+        messages: List of message dicts.
+
+    Returns:
+        Dict with a single ``"messages"`` key suitable for
+        ``client.chat.completions.create(**kwargs)``.
+    """
     return {"messages": [_to_openai_message(m) for m in messages]}
 
 
 def _anthropic_messages(messages: list[dict]) -> dict:
-    """Prepare messages for Anthropic — separate system param, max_tokens required."""
+    """Prepare messages for Anthropic — separate system param, max_tokens required.
+
+    Args:
+        messages: List of message dicts in OpenAI format.
+
+    Returns:
+        Dict with ``"messages"``, ``"max_tokens"``, and optionally
+        ``"system"`` keys for Anthropic's API.
+    """
     system, non_system = _split_system_message(messages)
     result: dict = {
         "messages": non_system,
@@ -236,7 +310,16 @@ def _anthropic_messages(messages: list[dict]) -> dict:
 # ── Response translation ───────────────────────────────────────────
 
 def _openai_to_openai(response, model: str, provider: str) -> dict:
-    """Normalize an OpenAI-compatible response to our format."""
+    """Normalize an OpenAI-compatible response to our standard format.
+
+    Args:
+        response: Raw SDK response object from ``AsyncOpenAI``.
+        model: The model identifier string used for the request.
+        provider: The provider slug.
+
+    Returns:
+        A dict matching the standard ``ChatCompletionResponse`` shape.
+    """
     choice = response.choices[0]
     return {
         "id": response.id,
@@ -263,7 +346,16 @@ def _openai_to_openai(response, model: str, provider: str) -> dict:
 
 
 def _anthropic_to_openai(response, model: str, provider: str) -> dict:
-    """Translate an Anthropic response to OpenAI format."""
+    """Translate an Anthropic response to OpenAI format.
+
+    Args:
+        response: Raw SDK response object from ``AsyncAnthropic``.
+        model: The model identifier string used for the request.
+        provider: The provider slug (``"anthropic"``).
+
+    Returns:
+        A dict matching the standard ``ChatCompletionResponse`` shape.
+    """
     content_text = ""
     for block in response.content:
         if block.type == "text":
@@ -309,6 +401,17 @@ async def route_chat_stream(
 
     Each yield produces a string like ``data: {...}\n\n``, compatible
     with the OpenAI streaming format.
+
+    Args:
+        model: Full model identifier (e.g. ``"groq/llama-3.3-70b"``).
+        messages: List of message dicts in OpenAI format.
+        temperature: Sampling temperature (0-2, default 0.7).
+        max_tokens: Optional cap on completion tokens.
+        tools: Optional list of tool/function definitions.
+
+    Yields:
+        SSE-formatted strings. The final yield is always
+        ``data: [DONE]\n\n``.
     """
     provider, model_name = _parse_model(model)
     client = _get_client(provider)
@@ -356,6 +459,15 @@ def _openai_stream_chunk(chunk, model: str, provider: str) -> str:
 
     When ``stream_options={"include_usage": True}`` is set, the
     final chunk carries usage data with empty choices.
+
+    Args:
+        chunk: A single streaming chunk from the SDK.
+        model: The model identifier string.
+        provider: The provider slug.
+
+    Returns:
+        An SSE-formatted string, or an empty string if the chunk
+        has no content.
     """
     # Usage-only chunk (final chunk with stream_options)
     if not chunk.choices and chunk.usage:
@@ -395,7 +507,15 @@ def _openai_stream_chunk(chunk, model: str, provider: str) -> str:
 
 
 def _anthropic_stream_event(event) -> str:
-    """Format an Anthropic streaming event as OpenAI-compatible SSE."""
+    """Format an Anthropic streaming event as OpenAI-compatible SSE.
+
+    Args:
+        event: A single streaming event from the Anthropic SDK.
+
+    Returns:
+        An SSE-formatted string, or an empty string for events
+        that don't map to content (e.g. ``message_stop``).
+    """
     event_type = event.type
     if event_type == "message_start":
         data = {
@@ -436,5 +556,10 @@ def _anthropic_stream_event(event) -> str:
 # ── Model listing ──────────────────────────────────────────────────
 
 def list_models() -> list[ModelInfo]:
-    """Return all known models regardless of whether providers are configured."""
+    """Return all known models regardless of whether providers are configured.
+
+    Returns:
+        List of model info dicts with keys ``id``, ``provider``,
+        ``pricing``, and ``context_window``.
+    """
     return KNOWN_MODELS

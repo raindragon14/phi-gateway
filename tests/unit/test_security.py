@@ -1,3 +1,5 @@
+"""Unit tests for API key generation and verification."""
+
 from phi_gateway.core.security import generate_api_key, verify_api_key
 
 

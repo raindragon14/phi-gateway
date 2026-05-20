@@ -1,3 +1,5 @@
+"""Integration tests for the knowledge base CRUD + search endpoints."""
+
 import pytest
 from httpx import AsyncClient
 

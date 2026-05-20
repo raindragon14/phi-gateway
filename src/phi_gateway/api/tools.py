@@ -1,3 +1,9 @@
+"""External tool registry API — register, discovery, schema, and invocation.
+
+Tools are registered with JSON Schema definitions and invoked
+via HTTP proxy to their configured endpoints.
+"""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -23,7 +29,20 @@ async def create_tool_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Register a new tool."""
+    """Register a new tool.
+
+    Args:
+        body: Request with name, description, schema, endpoint,
+            and auth type.
+        api_key: Authenticated API key (becomes the tool owner).
+        db: Async database session.
+
+    Returns:
+        The newly created ``ToolResponse``.
+
+    Raises:
+        HTTPException: 409 if a tool with the same name exists.
+    """
     return await create_tool(body, api_key, db)
 
 
@@ -31,7 +50,14 @@ async def create_tool_endpoint(
 async def list_tools_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
-    """List all available tools (agent-discoverable)."""
+    """List all available tools (agent-discoverable).
+
+    Args:
+        db: Async database session.
+
+    Returns:
+        List of ``ToolResponse`` ordered by name.
+    """
     return await list_tools(db)
 
 
@@ -40,7 +66,18 @@ async def get_tool_schema_endpoint(
     tool_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get JSON Schema for a specific tool."""
+    """Get JSON Schema for a specific tool.
+
+    Args:
+        tool_id: UUID of the tool.
+        db: Async database session.
+
+    Returns:
+        The tool's JSON Schema dictionary.
+
+    Raises:
+        HTTPException: 404 if the tool is not found or is inactive.
+    """
     return await get_tool_schema(tool_id, db)
 
 
@@ -51,6 +88,22 @@ async def call_tool_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Execute a tool by proxying to its endpoint."""
+    """Execute a tool by proxying to its endpoint.
+
+    Args:
+        tool_id: UUID of the tool to invoke.
+        body: Request with method and params.
+        api_key: Authenticated API key.
+        db: Async database session.
+
+    Returns:
+        ``ToolCallResponse`` with the tool's result.
+
+    Raises:
+        HTTPException: 400 if required parameters are missing.
+        HTTPException: 404 if the tool is not found or is inactive.
+        HTTPException: 502 if the tool endpoint returns an error.
+        HTTPException: 504 if the tool endpoint times out.
+    """
     response = await call_tool(tool_id, body, api_key, db)
     return ToolCallResponse(result=response)

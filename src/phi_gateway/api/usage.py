@@ -1,3 +1,5 @@
+"""Usage analytics API — token counts, cost breakdowns by provider and model."""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends
@@ -21,6 +23,16 @@ async def get_usage(
 ):
     """Get usage statistics for the current API key.
 
-    Returns token counts, cost breakdown by provider/model.
+    Returns token counts, cost breakdowns by provider and model.
+
+    Args:
+        api_key: Authenticated API key (used to scope results).
+        db: Async database session.
+        from_date: Optional ISO date lower bound (inclusive).
+        to_date: Optional ISO date upper bound (inclusive).
+
+    Returns:
+        ``UsageResponse`` with totals and per-provider/model
+        breakdowns.
     """
     return await get_usage_stats(db, str(api_key.id), from_date, to_date)

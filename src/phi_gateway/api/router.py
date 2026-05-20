@@ -1,3 +1,9 @@
+"""API router assembly — aggregates all resource routers into a single v1 prefix.
+
+Every sub-router is mounted under ``/v1`` so all endpoints share
+a consistent versioned base path.
+"""
+
 from fastapi import APIRouter
 
 from phi_gateway.api.chat import router as chat_router
@@ -12,6 +18,8 @@ from phi_gateway.api.tools import router as tools_router
 from phi_gateway.api.usage import router as usage_router
 
 api_router = APIRouter()
+"""Top-level v1 API router that includes all resource sub-routers."""
+
 api_router.include_router(chat_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(embeddings_router)

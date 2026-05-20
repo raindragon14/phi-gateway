@@ -1,3 +1,5 @@
+"""Integration tests for the /v1/tools registry and invocation endpoints."""
+
 import pytest
 from httpx import AsyncClient
 

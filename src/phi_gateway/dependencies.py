@@ -17,13 +17,23 @@ async def get_api_key(
     """Extract and verify the API key from the Authorization header or cookie.
 
     **Priority order:**
-    1. ``Authorization: Bearer <key>`` header (API clients)
+    1. ``Authorization: Bearer ***`` header (API clients)
     2. ``phi_api_key`` cookie (dashboard / browser users after login)
 
-    Returns the ApiKey model instance on success.
-    Raises HTTPException(401) on missing/invalid/expired key.
-    On success, stores rate-limit headers on ``request.state.rate_limit_headers``
-    so middleware or the endpoint can include them in the response.
+    Args:
+        request: The incoming HTTP request.
+        db: Async database session.
+
+    Returns:
+        The ``ApiKey`` model instance on success.
+
+    Raises:
+        HTTPException: 401 if the key is missing, invalid, or expired.
+
+    Note:
+        On success, stores rate-limit headers on
+        ``request.state.rate_limit_headers`` so middleware or the
+        endpoint can include them in the response.
     """
     api_key_str: str | None = None
 

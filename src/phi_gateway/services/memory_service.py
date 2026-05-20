@@ -1,3 +1,9 @@
+"""Conversation memory service — CRUD, pagination, and auto-trimming.
+
+Manages persistent multi-turn agent conversations with context
+window enforcement and truncation signalling.
+"""
+
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -26,7 +32,16 @@ async def create_conversation(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> ConversationResponse:
-    """Create a new conversation."""
+    """Create a new conversation.
+
+    Args:
+        body: Request body with session_id and optional title.
+        api_key: The authenticated API key owning the conversation.
+        db: Async database session.
+
+    Returns:
+        The newly created ``ConversationResponse``.
+    """
     conv = Conversation(
         api_key_id=api_key.id,
         session_id=body.session_id,
@@ -42,7 +57,16 @@ async def list_conversations(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> list[ConversationResponse]:
-    """List all conversations for this API key."""
+    """List all conversations for this API key.
+
+    Args:
+        api_key: The authenticated API key.
+        db: Async database session.
+
+    Returns:
+        List of ``ConversationResponse`` ordered by most recently
+        updated first.
+    """
     result = await db.execute(
         select(Conversation)
         .where(Conversation.api_key_id == api_key.id)
@@ -58,7 +82,26 @@ async def add_message(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> tuple[MessageResponse, bool]:
-    """Add a message to a conversation. Returns (message, was_truncated)."""
+    """Add a message to a conversation.
+
+    Enforces context window limits by trimming oldest messages when
+    total token count exceeds the configured threshold.
+
+    Args:
+        conversation_id: UUID of the target conversation.
+        body: Request body with role, content, and optional metadata.
+        api_key: The authenticated API key (must own the conversation).
+        db: Async database session.
+
+    Returns:
+        Tuple of ``(message_response, was_truncated)``. The second
+        element is ``True`` if oldest messages were trimmed to fit
+        the context window.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     conv = await _get_owned_conversation(conversation_id, api_key, db)
 
     msg = Message(
@@ -89,7 +132,23 @@ async def get_messages(
     limit: int = 50,
     before_id: UUID | None = None,
 ) -> list[MessageResponse]:
-    """Get conversation history with pagination."""
+    """Get conversation history with cursor-based pagination.
+
+    Args:
+        conversation_id: UUID of the conversation.
+        api_key: The authenticated API key (must own the conversation).
+        db: Async database session.
+        limit: Maximum number of messages to return (default 50).
+        before_id: Optional cursor — return messages older than this
+            message UUID.
+
+    Returns:
+        List of ``MessageResponse`` in chronological order.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     conv = await _get_owned_conversation(conversation_id, api_key, db)
 
     query = (
@@ -124,7 +183,17 @@ async def delete_conversation(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> None:
-    """Delete a conversation and all its messages."""
+    """Delete a conversation and all its messages.
+
+    Args:
+        conversation_id: UUID of the conversation to delete.
+        api_key: The authenticated API key (must own the conversation).
+        db: Async database session.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     conv = await _get_owned_conversation(conversation_id, api_key, db)
 
     # Delete messages first
@@ -140,7 +209,20 @@ async def _get_owned_conversation(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> Conversation:
-    """Fetch a conversation by ID, ensuring the caller owns it."""
+    """Fetch a conversation by ID, ensuring the caller owns it.
+
+    Args:
+        conversation_id: UUID of the conversation.
+        api_key: The authenticated API key.
+        db: Async database session.
+
+    Returns:
+        The ``Conversation`` instance.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     result = await db.execute(
         select(Conversation).where(
             Conversation.id == conversation_id,
@@ -156,7 +238,16 @@ async def _get_owned_conversation(
 async def _trim_if_needed(conv: Conversation, db: AsyncSession) -> bool:
     """Trim oldest messages if total token count exceeds context limit.
 
-    Returns True if any messages were truncated.
+    Removes messages from the start of the conversation until usage
+    drops to 80% of the limit. Always preserves the most recent
+    message.
+
+    Args:
+        conv: The conversation to potentially trim.
+        db: Async database session.
+
+    Returns:
+        ``True`` if any messages were removed.
     """
     result = await db.execute(
         select(Message)

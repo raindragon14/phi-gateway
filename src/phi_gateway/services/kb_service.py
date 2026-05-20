@@ -1,3 +1,9 @@
+"""Chunking, embedding, and semantic search for knowledge bases.
+
+Uses OpenRouter embeddings with cosine similarity and a keyword
+fallback when embedding generation is unavailable.
+"""
+
 import json
 import logging
 import math
@@ -24,7 +30,16 @@ CHUNK_OVERLAP = 200
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Compute cosine similarity between two vectors."""
+    """Compute cosine similarity between two vectors.
+
+    Args:
+        a: First vector (list of floats).
+        b: Second vector (list of floats).
+
+    Returns:
+        Cosine similarity in [-1.0, 1.0]. Returns 0.0 if either
+        vector is empty or zero-norm.
+    """
     if not a or not b:
         return 0.0
     dot = sum(x * y for x, y in zip(a, b))
@@ -36,7 +51,16 @@ def _cosine_similarity(a: list[float], b: list[float]) -> float:
 
 
 def _chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
-    """Split text into overlapping chunks by paragraph boundaries."""
+    """Split text into overlapping chunks by paragraph boundaries.
+
+    Args:
+        text: Full document text to split.
+        chunk_size: Maximum characters per chunk.
+        overlap: Character overlap between consecutive chunks.
+
+    Returns:
+        List of text chunks. Returns empty list if ``text`` is empty.
+    """
     if not text:
         return []
 
@@ -71,7 +95,17 @@ async def create_kb(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> KnowledgeBaseResponse:
-    """Create a new knowledge base."""
+    """Create a new knowledge base.
+
+    Args:
+        name: Display name for the knowledge base.
+        description: Free-text description.
+        api_key: The authenticated API key that owns this KB.
+        db: Async database session.
+
+    Returns:
+        The newly created ``KnowledgeBaseResponse``.
+    """
     kb = KnowledgeBase(
         name=name,
         description=description,
@@ -84,7 +118,17 @@ async def create_kb(
 
 
 async def delete_kb(kb_id: UUID, api_key: ApiKey, db: AsyncSession) -> None:
-    """Delete a knowledge base and all its documents."""
+    """Delete a knowledge base and all its documents.
+
+    Args:
+        kb_id: UUID of the knowledge base to delete.
+        api_key: The authenticated API key (must own the KB).
+        db: Async database session.
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     await _get_owned_kb(kb_id, api_key, db)
     await db.execute(delete(Document).where(Document.kb_id == kb_id))
     await db.execute(delete(KnowledgeBase).where(KnowledgeBase.id == kb_id))
@@ -97,7 +141,24 @@ async def ingest_documents(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> int:
-    """Ingest documents: chunk, embed, store."""
+    """Ingest documents into a knowledge base: chunk, embed, store.
+
+    Generates embeddings in a single batch call. Falls back to
+    storing documents without vectors if embedding generation fails.
+
+    Args:
+        kb_id: UUID of the target knowledge base.
+        documents: List of documents to ingest.
+        api_key: The authenticated API key (must own the KB).
+        db: Async database session.
+
+    Returns:
+        Total number of chunks created across all documents.
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     kb = await _get_owned_kb(kb_id, api_key, db)
 
     chunk_map: list[tuple[str, str, int, dict]] = []
@@ -143,7 +204,24 @@ async def search_kb(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> list[SearchResultItem]:
-    """Semantic search: embed query → cosine similarity → return top_k."""
+    """Semantic search: embed query, cosine similarity, return top_k.
+
+    Falls back to keyword (ILIKE) search if embedding generation fails.
+
+    Args:
+        kb_id: UUID of the knowledge base to search.
+        query: Natural language search query.
+        top_k: Number of top results to return.
+        api_key: The authenticated API key (must own the KB).
+        db: Async database session.
+
+    Returns:
+        List of ``SearchResultItem`` ordered by relevance (descending).
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     await _get_owned_kb(kb_id, api_key, db)
 
     # Generate query embedding
@@ -190,7 +268,17 @@ async def _keyword_search(
     query: str,
     top_k: int,
 ) -> list[SearchResultItem]:
-    """Fallback keyword search."""
+    """Fallback keyword search using ILIKE substring matching.
+
+    Args:
+        db: Async database session.
+        kb_id: UUID of the knowledge base to search.
+        query: Search query string.
+        top_k: Maximum number of results to return.
+
+    Returns:
+        List of ``SearchResultItem`` with score set to 1.0.
+    """
     result = await db.execute(
         select(Document)
         .where(Document.kb_id == kb_id, Document.content.ilike(f"%{query}%"))
@@ -204,7 +292,20 @@ async def _keyword_search(
 
 
 async def _get_owned_kb(kb_id: UUID, api_key: ApiKey, db: AsyncSession) -> KnowledgeBase:
-    """Fetch a KB by ID, ensure ownership."""
+    """Fetch a knowledge base by ID, ensuring the caller owns it.
+
+    Args:
+        kb_id: UUID of the knowledge base.
+        api_key: The authenticated API key.
+        db: Async database session.
+
+    Returns:
+        The ``KnowledgeBase`` instance.
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     result = await db.execute(
         select(KnowledgeBase).where(
             KnowledgeBase.id == kb_id,

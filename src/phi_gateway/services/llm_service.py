@@ -1,3 +1,5 @@
+"""Chat completion orchestration — request logging, cost tracking, provider routing."""
+
 import logging
 import time
 import uuid
@@ -31,7 +33,19 @@ async def _log_request(
     status: str,
     error_message: str | None = None,
 ) -> None:
-    """Write an LLMRequest log entry to the database."""
+    """Write an LLMRequest log entry to the database.
+
+    Args:
+        db: Async database session.
+        api_key: The authenticated API key making the request.
+        model: Full model identifier string.
+        provider: Provider slug (``"openai"``, ``"anthropic"``, etc.).
+        input_tokens: Number of prompt tokens consumed.
+        output_tokens: Number of completion tokens generated.
+        latency_ms: Round-trip latency in milliseconds.
+        status: ``"success"`` or ``"error"``.
+        error_message: Optional error detail for failed requests.
+    """
     cost_micro = calculate_cost(model, input_tokens, output_tokens)
     log_entry = LLMRequest(
         id=uuid.uuid4(),
@@ -56,14 +70,35 @@ async def chat_completion(
 ) -> ChatCompletionResponse:
     """Execute a chat completion (non-streaming) and log the request.
 
-    Raises ``HTTPException`` on provider or validation errors.
+    Routes the request to the appropriate LLM provider, extracts
+    token usage, calculates cost, and persists the audit log entry.
+
+    Args:
+        request: Validated chat completion request body.
+        api_key: The authenticated API key making the request.
+        db: Async database session for logging.
+
+    Returns:
+        A ``ChatCompletionResponse`` with choices, usage, provider,
+        and cost metadata.
+
+    Raises:
+        HTTPException: 400 if the model/provider is invalid.
+        HTTPException: 502 if the provider returns an error or is unreachable.
     """
     start = time.perf_counter()
 
     def _elapsed_ms() -> int:
+        """Return elapsed milliseconds since the request started."""
         return int((time.perf_counter() - start) * 1000)
 
     async def _log_error(provider: str, error_message: str) -> None:
+        """Log a failed request to the database.
+
+        Args:
+            provider: Provider slug (usually ``"unknown"`` on error).
+            error_message: Description of the failure.
+        """
         await _log_request(
             db=db, api_key=api_key, model=request.model,
             provider=provider, input_tokens=0, output_tokens=0,

@@ -1,3 +1,5 @@
+"""Integration tests for the /v1/chat/completions endpoint."""
+
 import pytest
 from httpx import AsyncClient
 

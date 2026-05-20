@@ -10,11 +10,19 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 
 async def generate_embedding(text: str, model: str = "text-embedding-3-small") -> list[float]:
-    """Generate an embedding vector using OpenRouter.
+    """Generate an embedding vector for a single text using OpenRouter.
 
-    Uses OPENROUTER_API_KEY from .env (no separate OpenAI key needed).
-    Returns a list of floats (the embedding vector).
-    Raises RuntimeError if OpenRouter is not configured.
+    Args:
+        text: The text to embed.
+        model: Embedding model identifier (default
+            ``"text-embedding-3-small"``).
+
+    Returns:
+        A list of floats representing the embedding vector.
+
+    Raises:
+        RuntimeError: If ``OPENROUTER_API_KEY`` is not configured or
+            the API call fails.
     """
     if not settings.OPENROUTER_API_KEY:
         raise RuntimeError(
@@ -41,7 +49,20 @@ async def generate_embeddings_batch(
     texts: list[str],
     model: str = "text-embedding-3-small",
 ) -> list[list[float]]:
-    """Generate embeddings for a batch of texts via OpenRouter."""
+    """Generate embeddings for a batch of texts via OpenRouter.
+
+    Args:
+        texts: List of texts to embed.
+        model: Embedding model identifier (default
+            ``"text-embedding-3-small"``).
+
+    Returns:
+        List of embedding vectors in the same order as ``texts``.
+
+    Raises:
+        RuntimeError: If ``OPENROUTER_API_KEY`` is not configured or
+            the API call fails.
+    """
     if not settings.OPENROUTER_API_KEY:
         raise RuntimeError(
             "OpenRouter API key is not configured. "

@@ -1,3 +1,5 @@
+"""SQLAlchemy ORM models for all PhiGateway tables."""
+
 from phi_gateway.models.api_key import ApiKey
 from phi_gateway.models.base import Base
 from phi_gateway.models.document import Document, KnowledgeBase

@@ -26,7 +26,7 @@ from phi_gateway.models.api_key import ApiKey
 
 logger = logging.getLogger(__name__)
 
-START_TIME = time.time()
+START_TIME = time.time()  # App start timestamp — used by /health for uptime
 
 SCALAR_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -347,7 +347,15 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    """Create and configure the FastAPI application."""
+    """Create and configure the FastAPI application.
+
+    Sets up middleware stack (request ID, CORS, security headers,
+    body size limits), mounts API routes, and registers landing
+    page, health check, favicon, and API docs endpoints.
+
+    Returns:
+        FastAPI: Fully configured application instance.
+    """
     # Apply structured JSON logging config before any loggers are used
     setup_logging()
 
@@ -364,6 +372,12 @@ def create_app() -> FastAPI:
     # Inject unique request_id into each request for log correlation
     @app.middleware("http")
     async def add_request_id(request: Request, call_next):
+        """Middleware: attach a unique ``X-Request-ID`` to every request/response.
+
+        Reads from ``X-Request-ID`` request header if present,
+        otherwise generates a UUID. Echoes the ID back in the response
+        for client-side correlation.
+        """
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         request.state.request_id = request_id
         response = await call_next(request)
@@ -389,6 +403,12 @@ def create_app() -> FastAPI:
     # Security headers middleware
     @app.middleware("http")
     async def add_security_headers(request: Request, call_next):
+        """Middleware: inject OWASP-recommended security headers.
+
+        Adds ``X-Content-Type-Options``, ``X-Frame-Options``, and
+        ``Referrer-Policy``. Also attaches rate-limit headers if
+        set by ``get_api_key`` on ``request.state``.
+        """
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
@@ -403,6 +423,11 @@ def create_app() -> FastAPI:
     # Request body size limit middleware
     @app.middleware("http")
     async def limit_request_body_size(request: Request, call_next):
+        """Middleware: reject requests exceeding ``MAX_REQUEST_BODY_SIZE``.
+
+        Checks the ``Content-Length`` header and returns HTTP 413
+        before the body is read, saving server resources.
+        """
         content_length = request.headers.get("content-length")
         if content_length is not None:
             try:
@@ -422,6 +447,7 @@ def create_app() -> FastAPI:
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
+        """Serve the PhiGateway favicon as inline SVG."""
         return Response(content=FAVICON_SVG, media_type="image/svg+xml")
 
     @app.get("/health", include_in_schema=False)
@@ -447,13 +473,15 @@ def create_app() -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     async def root():
+        """Serve the landing page with version-substituted HTML."""
         return HTMLResponse(content=LANDING_HTML.replace("VERSION_PLACEHOLDER", __version__))
 
     @app.get("/docs", include_in_schema=False)
     async def api_docs():
+        """Serve the Scalar API documentation UI."""
         return HTMLResponse(content=SCALAR_HTML)
 
     return app
 
 
-app = create_app()
+app = create_app()  # Module-level FastAPI instance imported by uvicorn and tests

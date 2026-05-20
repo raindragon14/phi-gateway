@@ -9,7 +9,13 @@ from phi_gateway.models.api_key import ApiKey
 
 
 class EmbeddingRequest(BaseModel):
-    """Request schema for embedding generation."""
+    """Request schema for embedding generation.
+
+    Attributes:
+        model: Embedding model identifier.
+        input: Single text string or list of texts to embed.
+    """
+
     model: str
     input: str | list[str]
 
@@ -22,7 +28,20 @@ async def create_embeddings(
     body: EmbeddingRequest,
     api_key: ApiKey = Depends(get_api_key),
 ):
-    """Generate embeddings for the given input text(s)."""
+    """Generate embeddings for the given input text(s).
+
+    Args:
+        body: Request with model identifier and input text(s).
+        api_key: Authenticated API key (from dependency injection).
+
+    Returns:
+        OpenAI-compatible embedding response with ``object``,
+        ``data``, ``model``, and ``usage`` keys.
+
+    Raises:
+        HTTPException: 502 if embedding generation fails (e.g.
+            OpenRouter not configured).
+    """
     try:
         if isinstance(body.input, str):
             vectors = [await generate_embedding(body.input, body.model)]

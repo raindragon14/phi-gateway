@@ -1,3 +1,5 @@
+"""Unit tests for the cost calculation logic."""
+
 from phi_gateway.core.cost_tracker import calculate_cost
 
 

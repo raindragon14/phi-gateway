@@ -1,3 +1,9 @@
+"""Agent memory API — persistent conversation storage with pagination and auto-trimming.
+
+Provides CRUD for conversations and messages, cursor-based
+pagination, and context-truncation signalling via headers.
+"""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Response
@@ -30,7 +36,16 @@ async def create_conversation_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create a new conversation."""
+    """Create a new conversation.
+
+    Args:
+        body: Request with session_id and optional title.
+        api_key: Authenticated API key (becomes the conversation owner).
+        db: Async database session.
+
+    Returns:
+        The newly created ``ConversationResponse``.
+    """
     return await create_conversation(body, api_key, db)
 
 
@@ -39,7 +54,16 @@ async def list_conversations_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all conversations for this API key."""
+    """List all conversations for this API key.
+
+    Args:
+        api_key: Authenticated API key.
+        db: Async database session.
+
+    Returns:
+        List of ``ConversationResponse`` ordered by most recently
+        updated first.
+    """
     return await list_conversations(api_key, db)
 
 
@@ -51,7 +75,22 @@ async def get_messages_endpoint(
     limit: int = 50,
     before_id: UUID | None = None,
 ):
-    """Get conversation history."""
+    """Get conversation history with cursor-based pagination.
+
+    Args:
+        conversation_id: UUID of the conversation.
+        api_key: Authenticated API key (must own the conversation).
+        db: Async database session.
+        limit: Maximum messages to return (default 50).
+        before_id: Optional cursor — return messages older than this ID.
+
+    Returns:
+        List of ``MessageResponse`` in chronological order.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     return await get_messages(conversation_id, api_key, db, limit, before_id)
 
 
@@ -63,7 +102,25 @@ async def add_message_endpoint(
     db: AsyncSession = Depends(get_db),
     response: Response = None,  # type: ignore[assignment]
 ):
-    """Add a message to a conversation."""
+    """Add a message to a conversation.
+
+    Sets ``X-Context-Truncated: true`` response header if oldest
+    messages were trimmed to fit the context window.
+
+    Args:
+        conversation_id: UUID of the target conversation.
+        body: Request with role, content, and optional metadata.
+        api_key: Authenticated API key (must own the conversation).
+        db: Async database session.
+        response: FastAPI response object for setting headers.
+
+    Returns:
+        The newly created ``MessageResponse``.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     msg, was_truncated = await add_message(conversation_id, body, api_key, db)
     if was_truncated and response:
         response.headers[TRUNCATION_WARNING] = "true"
@@ -76,6 +133,19 @@ async def delete_conversation_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a conversation and all its messages."""
+    """Delete a conversation and all its messages.
+
+    Args:
+        conversation_id: UUID of the conversation to delete.
+        api_key: Authenticated API key (must own the conversation).
+        db: Async database session.
+
+    Returns:
+        Dict with ``"status"`` and ``"id"`` keys.
+
+    Raises:
+        HTTPException: 404 if the conversation does not exist or is
+            not owned by the caller.
+    """
     await delete_conversation(conversation_id, api_key, db)
     return {"status": "deleted", "id": str(conversation_id)}

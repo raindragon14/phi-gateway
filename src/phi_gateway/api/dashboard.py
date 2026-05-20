@@ -22,6 +22,17 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 # ── Dashboard auth — admin/pro only ───────────────────────────────
 
 async def _require_admin(api_key: ApiKey = Depends(get_api_key)) -> ApiKey:
+    """Enforce admin or pro tier for dashboard-only routes.
+
+    Args:
+        api_key: The authenticated API key from ``get_api_key``.
+
+    Returns:
+        ApiKey: The validated key if authorized.
+
+    Raises:
+        HTTPException(403): If the key tier is not ``"admin"`` or ``"pro"``.
+    """
     if api_key.tier not in ("admin", "pro"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -1,3 +1,5 @@
+"""Integration tests for the /v1/usage analytics endpoint."""
+
 import uuid
 
 import pytest

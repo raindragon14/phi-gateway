@@ -1,3 +1,9 @@
+"""Model Context Protocol (JSON-RPC 2.0) endpoint for agent tool discovery.
+
+Supports ``tools/list``, ``tools/call``, ``resources/list``,
+and ``resources/read`` methods per the MCP specification.
+"""
+
 import logging
 import uuid
 
@@ -31,6 +37,15 @@ async def mcp_endpoint(
       - ``tools/call`` — execute a tool (requires auth)
       - ``resources/list`` — list available KBs
       - ``resources/read`` — search a KB
+
+    Args:
+        body: JSON-RPC 2.0 request with method and params.
+        api_key: Authenticated API key.
+        db: Async database session.
+
+    Returns:
+        JSON-RPC 2.0 response dict with ``"result"`` on success
+        or ``"error"`` on failure.
     """
     try:
         if body.method == "tools/list":

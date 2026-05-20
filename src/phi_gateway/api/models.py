@@ -12,9 +12,14 @@ async def get_models(
 ):
     """List all available models across all configured providers.
 
-    Optional query params:
-    - ``provider``: filter by provider name
-    - ``search``: substring match on model ID
+    Args:
+        provider: Optional filter by provider name.
+        search: Optional substring match on model ID
+            (case-insensitive).
+
+    Returns:
+        List of model info dicts with ``id``, ``provider``,
+        ``pricing``, and ``context_window`` keys.
     """
     models = list_models()
 

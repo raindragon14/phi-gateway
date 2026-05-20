@@ -27,6 +27,14 @@ async def _require_auth_or_bootstrap(
     On a fresh deploy with zero admin keys, this allows unauthenticated
     creation (bootstrapping). Once at least one admin key is present,
     valid admin/pro credentials are required.
+
+    Args:
+        request: The incoming HTTP request.
+        db: Async database session.
+
+    Returns:
+        The authenticated ``ApiKey`` if auth is required, or ``None``
+        during bootstrapping (no admin keys exist yet).
     """
     result = await db.execute(
         select(ApiKey).where(
@@ -51,9 +59,21 @@ async def create_api_key(
 ):
     """Create a new API key.
 
-    **Bootstrapping:** When no admin keys exist yet, this endpoint can be called
-    without authentication (first-deploy scenario). After at least one admin key
-    has been created, an admin or pro API key is required to create new keys.
+    **Bootstrapping:** When no admin keys exist yet, this endpoint can
+    be called without authentication (first-deploy scenario). After at
+    least one admin key has been created, an admin or pro API key is
+    required to create new keys.
+
+    Args:
+        body: Request with key name and tier.
+        db: Async database session.
+        auth: Authenticated API key (``None`` during bootstrapping).
+
+    Returns:
+        ``ApiKeyCreatedResponse`` including the raw key (shown once).
+
+    Raises:
+        HTTPException: 403 if the caller is not admin or pro tier.
     """
     if auth and auth.tier not in ("admin", "pro"):
         raise HTTPException(
@@ -100,7 +120,15 @@ async def list_api_keys(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all API keys for the current user."""
+    """List all active API keys for the current user.
+
+    Args:
+        api_key: Authenticated API key (used to scope results).
+        db: Async database session.
+
+    Returns:
+        List of ``ApiKeyResponse`` (no raw key values exposed).
+    """
     result = await db.execute(
         select(ApiKey).where(
             ApiKey.user_id == api_key.user_id,
@@ -129,7 +157,20 @@ async def revoke_api_key(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Revoke an API key by setting it to inactive."""
+    """Revoke an API key by setting it to inactive.
+
+    Args:
+        key_id: UUID of the key to revoke.
+        api_key: Authenticated API key (must own the target key).
+        db: Async database session.
+
+    Returns:
+        Dict with ``"status"`` and ``"id"`` keys.
+
+    Raises:
+        HTTPException: 404 if the key does not exist, is not owned
+            by the caller, or is already revoked.
+    """
     result = await db.execute(
         select(ApiKey).where(
             ApiKey.id == key_id,

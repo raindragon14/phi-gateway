@@ -1,3 +1,5 @@
+"""Usage analytics — aggregate queries grouped by provider and model."""
+
 import logging
 
 from sqlalchemy import text
@@ -16,7 +18,20 @@ async def get_usage_stats(
 ) -> UsageResponse:
     """Query usage statistics for an API key, grouped by provider and model.
 
-    Uses parameterized SQL to avoid injection via the date string parameters.
+    Uses parameterized SQL to avoid injection via the date string
+    parameters.
+
+    Args:
+        db: Async database session.
+        api_key_id: UUID string of the API key to query.
+        from_date: Optional ISO date lower bound (inclusive), e.g.
+            ``"2026-01-01"``.
+        to_date: Optional ISO date upper bound (inclusive), e.g.
+            ``"2026-12-31"``.
+
+    Returns:
+        A ``UsageResponse`` with totals and per-provider/model
+        breakdowns.
     """
     base_conditions = "api_key_id = :api_key_id"
     # SQLite stores UUIDs without dashes — normalize the key ID

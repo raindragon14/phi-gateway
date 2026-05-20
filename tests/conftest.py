@@ -1,3 +1,9 @@
+"""Shared fixtures for the test suite.
+
+Provides in-memory SQLite databases, test API keys,
+and pre-configured async HTTP clients for integration tests.
+"""
+
 import uuid
 from collections.abc import AsyncGenerator
 
@@ -32,13 +38,29 @@ async def test_db() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest_asyncio.fixture
 async def test_api_key(test_db: AsyncSession) -> tuple[uuid.UUID, str, str]:
-    """Create a test API key and return (key_id, full_key, prefix)."""
+    """Create a free-tier test API key and return (key_id, full_key, prefix)."""
     full_key, prefix, hashed = generate_api_key()
     api_key = ApiKey(
         key_hash=hashed,
         prefix=prefix,
         name="test-key",
         tier="free",
+    )
+    test_db.add(api_key)
+    await test_db.commit()
+    await test_db.refresh(api_key)
+    return api_key.id, full_key, prefix
+
+
+@pytest_asyncio.fixture
+async def admin_api_key(test_db: AsyncSession) -> tuple[uuid.UUID, str, str]:
+    """Create an admin-tier test API key and return (key_id, full_key, prefix)."""
+    full_key, prefix, hashed = generate_api_key()
+    api_key = ApiKey(
+        key_hash=hashed,
+        prefix=prefix,
+        name="test-admin-key",
+        tier="admin",
     )
     test_db.add(api_key)
     await test_db.commit()

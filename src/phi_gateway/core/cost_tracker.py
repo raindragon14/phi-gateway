@@ -6,7 +6,15 @@ logger = logging.getLogger(__name__)
 
 
 def _lookup_model(model: str) -> tuple[float, float] | None:
-    """Look up pricing for a model, trying exact match then suffix match."""
+    """Look up pricing for a model, trying exact match then suffix match.
+
+    Args:
+        model: Full model identifier (e.g. ``"groq/llama-3.3-70b"``).
+
+    Returns:
+        Tuple of ``(input_price_per_1m, output_price_per_1m)`` in USD,
+        or ``None`` if the model is not in the catalog.
+    """
     prices = COST_PER_1M_TOKENS.get(model)
     if prices:
         return prices
@@ -28,8 +36,14 @@ def calculate_cost(
 ) -> int:
     """Calculate the cost of an LLM request in micro-dollars.
 
-    Returns cost as ``int`` in micro-dollars (1 micro-dollar = 0.000001 USD).
-    Returns 0 if the model is unknown (logs a warning).
+    Args:
+        model: Full model identifier string.
+        input_tokens: Number of prompt tokens consumed.
+        output_tokens: Number of completion tokens generated.
+
+    Returns:
+        Cost as an integer in micro-dollars (1 µ$ = 0.000001 USD).
+        Returns 0 if the model is not in the catalog.
     """
     prices = _lookup_model(model)
 

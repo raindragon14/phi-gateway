@@ -16,6 +16,15 @@ class JSONLogFormatter(logging.Formatter):
     """Custom formatter that outputs log records as structured JSON lines."""
 
     def format(self, record: logging.LogRecord) -> str:
+        """Format a log record as a structured JSON line.
+
+        Args:
+            record: The log record to format.
+
+        Returns:
+            A JSON string with timestamp, level, logger, message,
+            and any extra fields.
+        """
         log_entry: dict[str, Any] = {
             "timestamp": self.formatTime(record, datefmt="%Y-%m-%dT%H:%M:%S.%fZ"),
             "level": record.levelname,

@@ -9,7 +9,19 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ModelSpec:
-    """Immutable specification for a single LLM model."""
+    """Immutable specification for a single LLM model.
+
+    Attributes:
+        id: Full identifier (e.g. ``"groq/llama-3.3-70b"`` or
+            ``"gpt-5-nano"``).
+        provider: Provider slug (``"openai"``, ``"anthropic"``,
+            ``"groq"``, ``"openrouter"``).
+        context_window: Maximum context length in tokens.
+        input_price_per_1m: USD cost per 1M input tokens (0 = free).
+        output_price_per_1m: USD cost per 1M output tokens (0 = free).
+        pricing_display: Human-readable price string, e.g.
+            ``"$0.05/$0.40"`` or ``"free"``.
+    """
 
     id: str  # full id (e.g. "groq/llama-3.3-70b" or "gpt-5-nano")
     provider: str  # "openai", "anthropic", "groq", "openrouter"
@@ -43,6 +55,7 @@ MODELS: list[ModelSpec] = [
     ModelSpec("openrouter/deepseek/deepseek-r1", "openrouter", 128_000, 0.55, 2.19, "$0.55/$2.19"),
     ModelSpec("openrouter/poolside/laguna-m.1:free", "openrouter", 128_000, 0.0, 0.0, "free"),
 ]
+"""Canonical list of all known LLM models with pricing metadata."""
 
 
 # ── Derived structures (kept for backward compat with consumers) ────
@@ -50,6 +63,7 @@ MODELS: list[ModelSpec] = [
 COST_PER_1M_TOKENS: dict[str, tuple[float, float]] = {
     m.id: (m.input_price_per_1m, m.output_price_per_1m) for m in MODELS
 }
+"""Mapping of model ID to ``(input_price, output_price)`` per 1M tokens in USD."""
 
 KNOWN_MODELS: list[dict] = [
     {
@@ -60,7 +74,10 @@ KNOWN_MODELS: list[dict] = [
     }
     for m in MODELS
 ]
+"""List of model info dicts for the ``/v1/models`` endpoint."""
 
 _MODEL_TO_PROVIDER: dict[str, str] = {m.id: m.provider for m in MODELS}
+"""Mapping of bare model name to provider slug (for name-only lookups)."""
 
 CONTEXT_WINDOW_BY_ID: dict[str, int] = {m.id: m.context_window for m in MODELS}
+"""Mapping of model ID to context window size in tokens."""

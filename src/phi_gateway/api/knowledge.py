@@ -25,7 +25,16 @@ async def create_kb_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create a new knowledge base."""
+    """Create a new knowledge base.
+
+    Args:
+        body: Request with name and description.
+        api_key: Authenticated API key (becomes the KB owner).
+        db: Async database session.
+
+    Returns:
+        The newly created ``KnowledgeBaseResponse``.
+    """
     return await create_kb(body.name, body.description, api_key, db)
 
 
@@ -35,7 +44,20 @@ async def delete_kb_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a knowledge base and all its documents."""
+    """Delete a knowledge base and all its documents.
+
+    Args:
+        kb_id: UUID of the knowledge base to delete.
+        api_key: Authenticated API key (must own the KB).
+        db: Async database session.
+
+    Returns:
+        Dict with ``"status"`` and ``"id"`` keys.
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     await delete_kb(kb_id, api_key, db)
     return {"status": "deleted", "id": str(kb_id)}
 
@@ -47,7 +69,21 @@ async def ingest_documents_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Ingest documents into a knowledge base (chunk → embed → store)."""
+    """Ingest documents into a knowledge base (chunk → embed → store).
+
+    Args:
+        kb_id: UUID of the target knowledge base.
+        body: Request with list of documents to ingest.
+        api_key: Authenticated API key (must own the KB).
+        db: Async database session.
+
+    Returns:
+        ``IngestDocumentsResponse`` with total chunks created and KB ID.
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     total = await ingest_documents(kb_id, body.documents, api_key, db)
     return IngestDocumentsResponse(total_chunks=total, kb_id=kb_id)
 
@@ -59,6 +95,20 @@ async def search_kb_endpoint(
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
 ):
-    """Semantic search across a knowledge base."""
+    """Semantic search across a knowledge base.
+
+    Args:
+        kb_id: UUID of the knowledge base to search.
+        body: Request with query string and top_k.
+        api_key: Authenticated API key (must own the KB).
+        db: Async database session.
+
+    Returns:
+        ``SearchResponse`` with results ordered by relevance.
+
+    Raises:
+        HTTPException: 404 if the KB does not exist or is not owned
+            by the caller.
+    """
     results = await search_kb(kb_id, body.query, body.top_k, api_key, db)
     return SearchResponse(results=results)

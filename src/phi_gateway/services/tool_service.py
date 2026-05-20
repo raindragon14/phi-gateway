@@ -1,3 +1,5 @@
+"""External tool registration, discovery, validation, and HTTP proxying."""
+
 import logging
 from uuid import UUID
 
@@ -18,7 +20,20 @@ async def create_tool(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> ToolResponse:
-    """Register a new tool definition."""
+    """Register a new tool definition.
+
+    Args:
+        body: Request body with name, description, schema, endpoint,
+            and auth type.
+        api_key: The authenticated API key owning the tool.
+        db: Async database session.
+
+    Returns:
+        The newly created ``ToolResponse``.
+
+    Raises:
+        HTTPException: 409 if a tool with the same name already exists.
+    """
     # Check name uniqueness
     existing = await db.execute(
         select(ToolDefinition).where(ToolDefinition.name == body.name)
@@ -44,7 +59,14 @@ async def create_tool(
 
 
 async def list_tools(db: AsyncSession) -> list[ToolResponse]:
-    """List all active tools."""
+    """List all active tools.
+
+    Args:
+        db: Async database session.
+
+    Returns:
+        List of ``ToolResponse`` ordered by name.
+    """
     result = await db.execute(
         select(ToolDefinition).where(ToolDefinition.is_active.is_(True)).order_by(ToolDefinition.name)
     )
@@ -53,7 +75,18 @@ async def list_tools(db: AsyncSession) -> list[ToolResponse]:
 
 
 async def get_tool_schema(tool_id: UUID, db: AsyncSession) -> dict:
-    """Get the JSON Schema for a specific tool."""
+    """Get the JSON Schema for a specific tool.
+
+    Args:
+        tool_id: UUID of the tool.
+        db: Async database session.
+
+    Returns:
+        The tool's JSON Schema dictionary.
+
+    Raises:
+        HTTPException: 404 if the tool is not found or is inactive.
+    """
     tool = await _get_active_tool(tool_id, db)
     return tool.json_schema
 
@@ -64,7 +97,27 @@ async def call_tool(
     api_key: ApiKey,
     db: AsyncSession,
 ) -> dict:
-    """Execute a tool by proxying the call to its endpoint."""
+    """Execute a tool by proxying the call to its registered endpoint.
+
+    Validates required parameters against the tool's JSON Schema
+    before forwarding the request.
+
+    Args:
+        tool_id: UUID of the tool to invoke.
+        body: Request body with method and params.
+        api_key: The authenticated API key.
+        db: Async database session.
+
+    Returns:
+        The JSON response from the tool's endpoint.
+
+    Raises:
+        HTTPException: 400 if required parameters are missing.
+        HTTPException: 404 if the tool is not found or is inactive.
+        HTTPException: 502 if the tool endpoint returns an error or
+            is unreachable.
+        HTTPException: 504 if the tool endpoint times out (30s).
+    """
     tool = await _get_active_tool(tool_id, db)
 
     # Validate params against schema (basic check)
@@ -99,7 +152,18 @@ async def call_tool(
 
 
 async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
-    """Fetch an active tool by ID or raise 404."""
+    """Fetch an active tool by ID or raise 404.
+
+    Args:
+        tool_id: UUID of the tool.
+        db: Async database session.
+
+    Returns:
+        The ``ToolDefinition`` instance.
+
+    Raises:
+        HTTPException: 404 if the tool is not found or is inactive.
+    """
     result = await db.execute(
         select(ToolDefinition).where(
             ToolDefinition.id == tool_id,
@@ -116,9 +180,18 @@ async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
 
 
 def _validate_params(params: dict, schema: dict) -> None:
-    """Validate params against JSON Schema (basic — just checks required fields).
+    """Validate params against JSON Schema (basic — checks required fields only).
 
-    Phase 2 improvement: use `jsonschema` library for full validation.
+    Args:
+        params: Parameters provided by the caller.
+        schema: JSON Schema dict with a ``"required"`` key.
+
+    Raises:
+        HTTPException: 400 if a required field is missing.
+
+    Note:
+        Phase 2 improvement: use ``jsonschema`` library for full
+        validation.
     """
     required = schema.get("required", [])
     for field in required:

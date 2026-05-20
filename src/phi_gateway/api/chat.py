@@ -31,6 +31,15 @@ async def create_chat_completion(
 
     Supports both streaming (SSE) and non-streaming responses.
     Routes to the appropriate provider based on the model name.
+
+    Args:
+        body: Validated chat completion request body.
+        api_key: Authenticated API key (from dependency injection).
+        db: Async database session (from dependency injection).
+
+    Returns:
+        ``ChatCompletionResponse`` for non-streaming, or a
+        ``StreamingResponse`` with SSE events for streaming.
     """
     if body.stream:
         return await _stream_chat(body, api_key, db)
@@ -48,6 +57,14 @@ async def _stream_chat(
 
     Tracks token usage from SSE events and persists cost/usage
     logging when the stream completes.
+
+    Args:
+        body: Validated chat completion request body.
+        api_key: Authenticated API key.
+        db: Async database session.
+
+    Returns:
+        A ``StreamingResponse`` with ``text/event-stream`` media type.
     """
 
     async def _log_stream_result(
@@ -57,7 +74,15 @@ async def _stream_chat(
         status: str,
         error_message: str | None = None,
     ) -> None:
-        """Write an LLMRequest log entry for the stream."""
+        """Write an LLMRequest log entry for the stream.
+
+        Args:
+            input_tokens: Number of prompt tokens consumed.
+            output_tokens: Number of completion tokens generated.
+            latency_ms: Round-trip latency in milliseconds.
+            status: ``"success"`` or ``"error"``.
+            error_message: Optional error detail for failed streams.
+        """
         cost_micro = calculate_cost(body.model, input_tokens, output_tokens)
         log_entry = LLMRequest(
             id=uuid.uuid4(),
@@ -75,6 +100,7 @@ async def _stream_chat(
         await db.commit()
 
     async def event_generator():
+        """Yield SSE events from the LLM stream and log usage on completion."""
         input_tokens = 0
         output_tokens = 0
         start = time.perf_counter()

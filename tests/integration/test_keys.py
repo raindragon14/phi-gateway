@@ -1,3 +1,5 @@
+"""Integration tests for the /v1/keys API key management endpoints."""
+
 import pytest
 from httpx import AsyncClient
 

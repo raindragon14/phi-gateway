@@ -1,6 +1,7 @@
 """Rate limiting with sliding window — enforced per API key.
 
-Uses an in-memory store (dict) for MVP. Replace with Redis for multi-worker deployments.
+Uses an in-memory store (dict) for MVP. Replace with Redis for
+multi-worker deployments.
 """
 
 import time
@@ -18,7 +19,15 @@ _day_buckets: dict[str, deque[float]] = defaultdict(deque)
 
 
 def _prune(bucket: deque[float] | list[float], cutoff: float) -> deque[float]:
-    """Remove timestamps older than cutoff — O(1) per pop."""
+    """Remove timestamps older than cutoff from a sliding window bucket.
+
+    Args:
+        bucket: Deque or list of unix timestamps.
+        cutoff: Timestamps older than this are removed.
+
+    Returns:
+        The pruned deque.
+    """
     if isinstance(bucket, list):
         bucket = deque(bucket)
     while bucket and bucket[0] < cutoff:
@@ -29,7 +38,15 @@ def _prune(bucket: deque[float] | list[float], cutoff: float) -> deque[float]:
 def enforce_rate_limit(api_key: ApiKey) -> None:
     """Check and enforce rate limits for the given API key.
 
-    Raises HTTPException(429) if limits are exceeded.
+    Uses a sliding window algorithm for both per-minute and per-day
+    limits.
+
+    Args:
+        api_key: The authenticated API key to check.
+
+    Raises:
+        HTTPException: 429 if per-minute or per-day rate limits are
+            exceeded. Includes a ``Retry-After`` header.
     """
     now = time.time()
     key_id = str(api_key.id)
@@ -64,7 +81,16 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
 
 
 def get_rate_limit_headers(api_key: ApiKey) -> dict[str, str]:
-    """Return rate limit headers for a response (informational)."""
+    """Return rate limit headers for a response (informational).
+
+    Args:
+        api_key: The authenticated API key.
+
+    Returns:
+        Dict with ``X-RateLimit-Limit-Min``,
+        ``X-RateLimit-Remaining-Min``, ``X-RateLimit-Limit-Day``,
+        and ``X-RateLimit-Remaining-Day`` header values.
+    """
     key_id = str(api_key.id)
     now = time.time()
 

@@ -1,3 +1,5 @@
+"""Knowledge base and document models for RAG functionality."""
+
 import uuid
 from datetime import datetime
 
@@ -10,6 +12,20 @@ from phi_gateway.models.base import Base
 
 
 class KnowledgeBase(Base):
+    """A named collection of documents for retrieval-augmented generation.
+
+    Belongs to an API key owner. Tracks the total document/chunk count
+    for quick metadata display without counting rows.
+
+    Attributes:
+        id: UUID primary key.
+        name: Display name for this knowledge base.
+        description: Optional free-text description.
+        api_key_id: Foreign key to the owning API key.
+        document_count: Cached count of documents (chunks) in this KB.
+        created_at: Timestamp of creation (server default).
+    """
+
     __tablename__ = "knowledge_bases"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -27,6 +43,23 @@ class KnowledgeBase(Base):
 
 
 class Document(Base):
+    """A single chunk of text content stored in a knowledge base.
+
+    Each document belongs to a ``KnowledgeBase`` and may optionally
+    have an embedding vector (as raw bytes) for vector similarity
+    search. Metadata is stored as a JSON column.
+
+    Attributes:
+        id: UUID primary key.
+        kb_id: Foreign key to the parent knowledge base.
+        title: Document/chunk title.
+        content: Full text content.
+        chunk_index: Position of this chunk within the document.
+        embedding: Optional embedding vector bytes (float32 array).
+        doc_metadata: Arbitrary JSON metadata dictionary.
+        created_at: Timestamp of creation (server default).
+    """
+
     __tablename__ = "documents"
 
     id: Mapped[uuid.UUID] = mapped_column(
