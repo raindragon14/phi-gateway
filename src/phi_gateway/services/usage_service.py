@@ -19,7 +19,8 @@ async def get_usage_stats(
     """Query usage statistics for an API key, grouped by provider and model.
 
     Uses parameterized SQL to avoid injection via the date string
-    parameters.
+    parameters. Conditions are built as a list and joined with AND
+    to prevent accidental string injection.
 
     Args:
         db: Async database session.
@@ -33,17 +34,19 @@ async def get_usage_stats(
         A ``UsageResponse`` with totals and per-provider/model
         breakdowns.
     """
-    base_conditions = "api_key_id = :api_key_id"
     # SQLite stores UUIDs without dashes — normalize the key ID
     db_key_id = api_key_id.replace("-", "")
     params: dict = {"api_key_id": db_key_id}
 
+    # Build conditions as a list (no string concatenation on user input)
+    conditions: list[str] = ["api_key_id = :api_key_id"]
     if from_date:
-        base_conditions += " AND created_at >= :from_date"
+        conditions.append("created_at >= :from_date")
         params["from_date"] = from_date
     if to_date:
-        base_conditions += " AND created_at <= :to_date"
+        conditions.append("created_at <= :to_date")
         params["to_date"] = to_date
+    where_clause = " AND ".join(conditions)
 
     # --- Total aggregation ---
     total_result = await db.execute(
@@ -54,7 +57,7 @@ async def get_usage_stats(
                 COALESCE(SUM(output_tokens), 0) as total_output_tokens,
                 COALESCE(SUM(cost_usd_micro), 0) as total_cost_micro
             FROM llm_requests
-            WHERE {base_conditions}
+            WHERE {where_clause}
         """),
         params,
     )
@@ -68,7 +71,7 @@ async def get_usage_stats(
                 COUNT(*) as requests,
                 COALESCE(SUM(cost_usd_micro), 0) as cost_micro
             FROM llm_requests
-            WHERE {base_conditions}
+            WHERE {where_clause}
             GROUP BY provider
             ORDER BY cost_micro DESC
         """),
@@ -91,7 +94,7 @@ async def get_usage_stats(
                 COUNT(*) as requests,
                 COALESCE(SUM(cost_usd_micro), 0) as cost_micro
             FROM llm_requests
-            WHERE {base_conditions}
+            WHERE {where_clause}
             GROUP BY model
             ORDER BY cost_micro DESC
         """),

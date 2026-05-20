@@ -10,11 +10,11 @@ import math
 import re
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway.core.embedding import generate_embedding, generate_embeddings_batch
+from phi_gateway.core.exceptions import NotFoundError
 from phi_gateway.models.api_key import ApiKey
 from phi_gateway.models.document import Document, KnowledgeBase
 from phi_gateway.schemas.knowledge import (
@@ -140,7 +140,7 @@ async def ingest_documents(
     documents: list[IngestDocumentItem],
     api_key: ApiKey,
     db: AsyncSession,
-) -> int:
+) -> tuple[int, list[str]]:
     """Ingest documents into a knowledge base: chunk, embed, store.
 
     Generates embeddings in a single batch call. Falls back to
@@ -153,10 +153,11 @@ async def ingest_documents(
         db: Async database session.
 
     Returns:
-        Total number of chunks created across all documents.
+        Tuple of ``(total_chunks, warnings)``. ``warnings`` is a
+        list of non-fatal issues (e.g. embeddings unavailable).
 
     Raises:
-        HTTPException: 404 if the KB does not exist or is not owned
+        NotFoundError: If the KB does not exist or is not owned
             by the caller.
     """
     kb = await _get_owned_kb(kb_id, api_key, db)
@@ -174,11 +175,16 @@ async def ingest_documents(
 
     # Generate embeddings in batch
     embeddings: list[list[float]] = []
+    warnings: list[str] = []
     try:
         embeddings = await generate_embeddings_batch(all_chunks)
     except RuntimeError as e:
         logger.warning("Embeddings unavailable, storing without vectors: %s", e)
         embeddings = [[] for _ in all_chunks]
+        warnings.append(
+            "Embeddings unavailable — documents stored without vectors, "
+            "search will use keyword fallback"
+        )
 
     # Store chunks
     for (title, chunk_text, chunk_idx, metadata), embedding in zip(chunk_map, embeddings):
@@ -194,7 +200,7 @@ async def ingest_documents(
 
     kb.document_count = (kb.document_count or 0) + total_chunks
     await db.commit()
-    return total_chunks
+    return total_chunks, warnings
 
 
 async def search_kb(
@@ -314,5 +320,5 @@ async def _get_owned_kb(kb_id: UUID, api_key: ApiKey, db: AsyncSession) -> Knowl
     )
     kb = result.scalar_one_or_none()
     if kb is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Knowledge base not found")
+        raise NotFoundError("Knowledge base", str(kb_id))
     return kb

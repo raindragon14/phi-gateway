@@ -7,8 +7,7 @@ multi-worker deployments.
 import time
 from collections import defaultdict, deque
 
-from fastapi import HTTPException, status
-
+from phi_gateway.core.exceptions import RateLimitExceeded
 from phi_gateway.models.api_key import ApiKey
 
 # ── In-memory stores (replace with Redis in production) ────────────
@@ -45,8 +44,8 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
         api_key: The authenticated API key to check.
 
     Raises:
-        HTTPException: 429 if per-minute or per-day rate limits are
-            exceeded. Includes a ``Retry-After`` header.
+        RateLimitExceeded: If per-minute or per-day rate limits are
+            exceeded.
     """
     now = time.time()
     key_id = str(api_key.id)
@@ -56,12 +55,7 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
     _minute_buckets[key_id] = _prune(_minute_buckets[key_id], minute_cutoff)
 
     if len(_minute_buckets[key_id]) >= api_key.rate_limit_per_min:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Rate limit exceeded: {api_key.rate_limit_per_min} req/min. "
-            f"Upgrade to pro or team tier.",
-            headers={"Retry-After": "60"},
-        )
+        raise RateLimitExceeded(api_key.rate_limit_per_min, "minute", retry_after=60)
 
     _minute_buckets[key_id].append(now)
 
@@ -70,12 +64,7 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
     _day_buckets[key_id] = _prune(_day_buckets[key_id], day_cutoff)
 
     if len(_day_buckets[key_id]) >= api_key.rate_limit_per_day:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Daily rate limit exceeded: {api_key.rate_limit_per_day} req/day. "
-            f"Upgrade to pro or team tier.",
-            headers={"Retry-After": "86400"},
-        )
+        raise RateLimitExceeded(api_key.rate_limit_per_day, "day", retry_after=86400)
 
     _day_buckets[key_id].append(now)
 

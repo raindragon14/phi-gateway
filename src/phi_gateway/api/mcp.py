@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from phi_gateway.core.url_safety import validate_endpoint_url
 from phi_gateway.database import get_db
 from phi_gateway.dependencies import get_api_key
 from phi_gateway.models.api_key import ApiKey
@@ -77,6 +78,15 @@ async def mcp_endpoint(
 
             # For now, execute via the registry's stored endpoint
             # (full auth handling is in the REST endpoint)
+            try:
+                validate_endpoint_url(tool.endpoint)
+            except ValueError:
+                return {
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32603, "message": f"Tool '{tool_name}' endpoint is in a blocked network"},
+                    "id": body.id,
+                }
+
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
                     tool.endpoint,

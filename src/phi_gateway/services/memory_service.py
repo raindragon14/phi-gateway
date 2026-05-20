@@ -7,9 +7,10 @@ window enforcement and truncation signalling.
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from phi_gateway.core.exceptions import NotFoundError
 
 from phi_gateway.models.api_key import ApiKey
 from phi_gateway.models.memory import Conversation, Message
@@ -231,7 +232,7 @@ async def _get_owned_conversation(
     )
     conv = result.scalar_one_or_none()
     if conv is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+        raise NotFoundError("Conversation", str(conversation_id))
     return conv
 
 

@@ -100,7 +100,7 @@ async def add_message_endpoint(
     body: AddMessageRequest,
     api_key: ApiKey = Depends(get_api_key),
     db: AsyncSession = Depends(get_db),
-    response: Response = None,  # type: ignore[assignment]
+    response: Response = Response(),
 ):
     """Add a message to a conversation.
 

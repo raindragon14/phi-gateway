@@ -84,8 +84,8 @@ async def ingest_documents_endpoint(
         HTTPException: 404 if the KB does not exist or is not owned
             by the caller.
     """
-    total = await ingest_documents(kb_id, body.documents, api_key, db)
-    return IngestDocumentsResponse(total_chunks=total, kb_id=kb_id)
+    total, warnings = await ingest_documents(kb_id, body.documents, api_key, db)
+    return IngestDocumentsResponse(total_chunks=total, kb_id=kb_id, warnings=warnings)
 
 
 @router.post("/{kb_id}/search", response_model=SearchResponse)

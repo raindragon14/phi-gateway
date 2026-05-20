@@ -4,9 +4,9 @@ import time
 import uuid
 
 import pytest
-from fastapi import HTTPException
 
 from phi_gateway.core import rate_limiter
+from phi_gateway.core.exceptions import RateLimitExceeded
 from phi_gateway.core.rate_limiter import enforce_rate_limit, get_rate_limit_headers
 
 
@@ -40,17 +40,17 @@ class TestEnforceRateLimit:
         for _ in range(4):
             enforce_rate_limit(api_key)  # should not raise
 
-    def test_at_limit_raises_429(self):
-        """Requests at or above the per-minute limit should raise HTTPException(429)."""
+    def test_at_limit_raises_rate_limit_exceeded(self):
+        """Requests at or above the per-minute limit should raise RateLimitExceeded."""
         api_key = _make_api_key(rate_per_min=3)
         for _ in range(3):
             enforce_rate_limit(api_key)
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(RateLimitExceeded) as exc_info:
             enforce_rate_limit(api_key)
 
-        assert exc_info.value.status_code == 429
-        assert "Rate limit exceeded" in exc_info.value.detail
+        assert exc_info.value.limit == 3
+        assert exc_info.value.window == "minute"
 
     def test_sliding_window_prunes_old_requests(self):
         """Old timestamps outside the window should be pruned, allowing new requests."""
@@ -64,18 +64,18 @@ class TestEnforceRateLimit:
         # Should NOT raise because old entries are pruned
         enforce_rate_limit(api_key)  # should pass
 
-    def test_daily_limit_raises_429(self):
-        """Exceeding the daily limit should also raise HTTPException(429)."""
+    def test_daily_limit_raises_rate_limit_exceeded(self):
+        """Exceeding the daily limit should raise RateLimitExceeded with window='day'."""
         api_key = _make_api_key(rate_per_min=9999, rate_per_day=2)
 
         enforce_rate_limit(api_key)
         enforce_rate_limit(api_key)
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(RateLimitExceeded) as exc_info:
             enforce_rate_limit(api_key)
 
-        assert exc_info.value.status_code == 429
-        assert "Daily rate limit" in exc_info.value.detail
+        assert exc_info.value.limit == 2
+        assert exc_info.value.window == "day"
 
 
 class TestGetRateLimitHeaders:

@@ -69,10 +69,13 @@ class IngestDocumentsResponse(BaseModel):
     Attributes:
         total_chunks: Number of chunks created.
         kb_id: UUID of the knowledge base the documents were added to.
+        warnings: Optional list of non-fatal issues encountered
+            during ingestion (e.g. embeddings unavailable).
     """
 
     total_chunks: int
     kb_id: UUID
+    warnings: list[str] = []
 
 
 class SearchRequest(BaseModel):

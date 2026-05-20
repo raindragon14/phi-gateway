@@ -11,8 +11,10 @@ from contextlib import asynccontextmanager
 
 import bcrypt
 from fastapi import Depends, FastAPI, Request
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
+
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +25,16 @@ from phi_gateway.database import async_session, engine, get_db
 from phi_gateway.log_config import setup_logging
 from phi_gateway.models import Base
 from phi_gateway.models.api_key import ApiKey
+from phi_gateway.schemas.errors import ErrorDetail
+from phi_gateway.core.exceptions import (
+    ConflictError,
+    ExternalToolError,
+    ExternalToolTimeoutError,
+    GatewayError,
+    NotFoundError,
+    RateLimitExceeded,
+    ValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -337,6 +349,18 @@ async def lifespan(app: FastAPI):
             else:
                 logger.debug("Initial admin API key already exists, skipping seed")
 
+    # ── Config validation warnings ──
+    if not settings.ALLOWED_ORIGINS:
+        logger.warning(
+            "ALLOWED_ORIGINS is empty — CORS is disabled. "
+            "Set ALLOWED_ORIGINS in .env to enable cross-origin requests."
+        )
+    if settings.SESSION_SECRET in ("", "change-me-in-production"):
+        logger.warning(
+            "SESSION_SECRET is set to a default value. "
+            "Set a strong random value in .env for production."
+        )
+
     logger.info("Database tables verified/created")
     yield
     await engine.dispose()
@@ -391,14 +415,15 @@ def create_app() -> FastAPI:
         else [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
     )
 
-    # CORS
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # CORS — only register if origins are explicitly configured
+    if allowed_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     # Security headers middleware
     @app.middleware("http")
@@ -480,6 +505,75 @@ def create_app() -> FastAPI:
     async def api_docs():
         """Serve the Scalar API documentation UI."""
         return HTMLResponse(content=SCALAR_HTML)
+
+    # ── Global exception handlers ─────────────────────────────────
+    @app.exception_handler(FastAPIHTTPException)
+    async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
+        """Return all HTTP errors in the standard ``ErrorDetail`` envelope."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=ErrorDetail(
+                detail=exc.detail,
+                id=request_id,
+            ).model_dump(exclude_none=True),
+            headers=exc.headers or None,
+        )
+
+    @app.exception_handler(NotFoundError)
+    async def not_found_handler(request: Request, exc: NotFoundError):
+        """Map ``NotFoundError`` to HTTP 404."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=404,
+            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
+        )
+
+    @app.exception_handler(ConflictError)
+    async def conflict_handler(request: Request, exc: ConflictError):
+        """Map ``ConflictError`` to HTTP 409."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=409,
+            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
+        )
+
+    @app.exception_handler(ValidationError)
+    async def validation_handler(request: Request, exc: ValidationError):
+        """Map ``ValidationError`` to HTTP 400."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=400,
+            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
+        )
+
+    @app.exception_handler(ExternalToolTimeoutError)
+    async def tool_timeout_handler(request: Request, exc: ExternalToolTimeoutError):
+        """Map ``ExternalToolTimeoutError`` to HTTP 504."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=504,
+            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
+        )
+
+    @app.exception_handler(ExternalToolError)
+    async def tool_error_handler(request: Request, exc: ExternalToolError):
+        """Map ``ExternalToolError`` to HTTP 502."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=502,
+            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
+        )
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+        """Map ``RateLimitExceeded`` to HTTP 429 with Retry-After header."""
+        request_id = getattr(request.state, "request_id", None)
+        return JSONResponse(
+            status_code=429,
+            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
+            headers={"Retry-After": str(exc.retry_after)},
+        )
 
     return app
 

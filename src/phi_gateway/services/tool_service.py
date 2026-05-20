@@ -4,10 +4,17 @@ import logging
 from uuid import UUID
 
 import httpx
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from phi_gateway.core.exceptions import (
+    ConflictError,
+    ExternalToolError,
+    ExternalToolTimeoutError,
+    NotFoundError,
+    ValidationError,
+)
+from phi_gateway.core.url_safety import validate_endpoint_url
 from phi_gateway.models.api_key import ApiKey
 from phi_gateway.models.tool import ToolDefinition
 from phi_gateway.schemas.tools import CreateToolRequest, ToolCallRequest, ToolResponse
@@ -32,17 +39,22 @@ async def create_tool(
         The newly created ``ToolResponse``.
 
     Raises:
-        HTTPException: 409 if a tool with the same name already exists.
+        ConflictError: If a tool with the same name already exists.
+        ValidationError: If the endpoint URL is invalid or resolved
+            to a private network.
     """
+    # Validate endpoint URL (SSRF prevention)
+    try:
+        validate_endpoint_url(body.endpoint)
+    except ValueError as e:
+        raise ValidationError(f"Invalid endpoint URL: {e}")
+
     # Check name uniqueness
     existing = await db.execute(
         select(ToolDefinition).where(ToolDefinition.name == body.name)
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Tool with name '{body.name}' already exists",
-        )
+        raise ConflictError("Tool", body.name)
 
     tool = ToolDefinition(
         name=body.name,
@@ -85,7 +97,7 @@ async def get_tool_schema(tool_id: UUID, db: AsyncSession) -> dict:
         The tool's JSON Schema dictionary.
 
     Raises:
-        HTTPException: 404 if the tool is not found or is inactive.
+        NotFoundError: If the tool is not found or is inactive.
     """
     tool = await _get_active_tool(tool_id, db)
     return tool.json_schema
@@ -112,13 +124,21 @@ async def call_tool(
         The JSON response from the tool's endpoint.
 
     Raises:
-        HTTPException: 400 if required parameters are missing.
-        HTTPException: 404 if the tool is not found or is inactive.
-        HTTPException: 502 if the tool endpoint returns an error or
+        NotFoundError: If the tool is not found or is inactive.
+        ValidationError: If required parameters are missing or the
+            endpoint URL is invalid.
+        ExternalToolError: If the tool endpoint returns an error or
             is unreachable.
-        HTTPException: 504 if the tool endpoint times out (30s).
+        ExternalToolTimeoutError: If the tool endpoint times out (30s).
     """
     tool = await _get_active_tool(tool_id, db)
+
+    # Validate endpoint URL (SSRF prevention — also checks tools
+    # registered before this validation existed)
+    try:
+        validate_endpoint_url(tool.endpoint)
+    except ValueError as e:
+        raise ValidationError(f"Tool endpoint '{tool.name}' is invalid: {e}")
 
     # Validate params against schema (basic check)
     if tool.json_schema:
@@ -135,20 +155,11 @@ async def call_tool(
             response.raise_for_status()
             return response.json()
     except httpx.TimeoutException:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail=f"Tool '{tool.name}' timed out after 30s",
-        )
+        raise ExternalToolTimeoutError(tool.name)
     except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Tool '{tool.name}' returned error: {e.response.status_code}",
-        )
+        raise ExternalToolError(tool.name, e.response.status_code, str(e))
     except httpx.RequestError as e:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Could not reach tool '{tool.name}': {e}",
-        )
+        raise ExternalToolError(tool.name, None, f"Could not reach endpoint: {e}")
 
 
 async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
@@ -162,7 +173,7 @@ async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
         The ``ToolDefinition`` instance.
 
     Raises:
-        HTTPException: 404 if the tool is not found or is inactive.
+        NotFoundError: If the tool is not found or is inactive.
     """
     result = await db.execute(
         select(ToolDefinition).where(
@@ -172,10 +183,7 @@ async def _get_active_tool(tool_id: UUID, db: AsyncSession) -> ToolDefinition:
     )
     tool = result.scalar_one_or_none()
     if tool is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tool not found",
-        )
+        raise NotFoundError("Tool", str(tool_id))
     return tool
 
 
@@ -187,7 +195,7 @@ def _validate_params(params: dict, schema: dict) -> None:
         schema: JSON Schema dict with a ``"required"`` key.
 
     Raises:
-        HTTPException: 400 if a required field is missing.
+        ValidationError: If a required field is missing.
 
     Note:
         Phase 2 improvement: use ``jsonschema`` library for full
@@ -196,7 +204,4 @@ def _validate_params(params: dict, schema: dict) -> None:
     required = schema.get("required", [])
     for field in required:
         if field not in params:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Missing required parameter: '{field}'",
-            )
+            raise ValidationError(f"Missing required parameter: '{field}'")

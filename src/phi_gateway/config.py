@@ -23,10 +23,14 @@ class Settings(BaseSettings):
         OPENROUTER_API_KEY: Optional OpenRouter API key.
         APP_HOST: Host interface to bind the server to.
         APP_PORT: Port to listen on.
-        ALLOWED_ORIGINS: Comma-separated CORS origins or ``"*"`` for all.
-        MAX_REQUEST_BODY_SIZE: Maximum request body size in bytes (10 MB default).
-        INITIAL_ADMIN_KEY: Optional bootstrap admin API key for first deploy.
+        ALLOWED_ORIGINS: Comma-separated CORS origins. Empty string
+            disables CORS (fail-safe default).
+        MAX_REQUEST_BODY_SIZE: Maximum request body size in bytes
+            (10 MB default).
+        INITIAL_ADMIN_KEY: Optional bootstrap admin API key for
+            first deploy.
         SESSION_SECRET: Secret key for cookie-based dashboard sessions.
+            Must be set before enabling the dashboard.
     """
 
     model_config = SettingsConfigDict(
@@ -49,13 +53,15 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
 
     # Security
-    ALLOWED_ORIGINS: str = "*"  # comma-separated list or "*" for all
+    # Fail-safe: empty = CORS disabled. Set to "*" or comma-separated origins to enable.
+    ALLOWED_ORIGINS: str = ""
     MAX_REQUEST_BODY_SIZE: int = 10 * 1024 * 1024  # 10 MB default
 
     # Bootstrap admin API key (set on first deploy to seed the first key)
     INITIAL_ADMIN_KEY: str | None = None
 
     # Session secret for cookie-based dashboard auth
+    # WARNING: If empty or "change-me-in-production", a warning is emitted at startup.
     SESSION_SECRET: str = "change-me-in-production"
 
 

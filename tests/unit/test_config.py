@@ -19,10 +19,10 @@ class TestSettingsDefaults:
         s = Settings(_env_file=None)
         assert s.APP_PORT == 8000
 
-    def test_default_allow_origins_is_star(self):
-        """ALLOWED_ORIGINS defaults to '*'."""
+    def test_default_allow_origins_is_empty(self):
+        """ALLOWED_ORIGINS defaults to '' (fail-safe: CORS disabled until opted in)."""
         s = Settings(_env_file=None)
-        assert s.ALLOWED_ORIGINS == "*"
+        assert s.ALLOWED_ORIGINS == ""
 
     def test_default_max_body_size(self):
         """MAX_REQUEST_BODY_SIZE defaults to 10 MB (10 * 1024 * 1024)."""
