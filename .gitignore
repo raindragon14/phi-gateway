@@ -1,18 +1,42 @@
+# Environment
 .env
+.env.local
+.env.production
+
+# Data
 data/
+*.db
+*.db-journal
+*.db-wal
+
+# Python
 __pycache__/
 *.pyc
-.pytest_cache/
+*.py[cod]
 *.egg-info/
-.DS_Store
-.venv/
-docs/
-AGENTS.md
-deploy/
-caddy-snippet.conf
-auto-update.sh
-deploy.sh
-DEPLOY.md
+*.egg
+.pytest_cache/
+.tox/
+
+# Build
 dist/
 build/
+
+# Coverage
 .coverage
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Internal
+AGENTS.md
+.mypy_cache/
+.ruff_cache/
+srv/

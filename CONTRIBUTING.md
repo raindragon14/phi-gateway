@@ -347,22 +347,13 @@ phi-gateway/
 │   └── main.py               # App factory + lifespan
 ├── tests/                    # pytest suite
 ├── alembic/                  # Database migrations
-├── scripts/                  # Utility scripts (backup, etc.)
-├── docs/                     # Architecture Decision Records
-├── DESIGN.md                 # Design system documentation
-├── PRODUCTION.md             # Production readiness checklist
+├── scripts/                  # CI helpers (docstring check)
 ├── CHANGELOG.md              # Release history
 ├── CONTRIBUTING.md           # This file
 ├── Dockerfile                # Production container build
 ├── docker-compose.yml        # Local development setup
 └── pyproject.toml            # Package metadata + tool config
 ```
-
-## Architecture Decisions
-
-Architecture Decision Records (ADRs) are maintained in the [`docs/`](./docs) directory. Major design choices (SQLite over PostgreSQL, MCP protocol, proxy-first architecture) are documented there.
-
-See also: [DESIGN.md](DESIGN.md) for the visual design system.
 
 ## Questions?
 

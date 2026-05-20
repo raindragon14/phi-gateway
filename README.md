@@ -87,7 +87,7 @@ pytest -v
 ruff check src/ tests/
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, testing, and PR process.
+Code style: Google docstrings, ruff format, pytest. See `pyproject.toml`.
 
 ## License
 
