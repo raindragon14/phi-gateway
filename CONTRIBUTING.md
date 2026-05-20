@@ -44,8 +44,7 @@ def create_kb(name: str, db: AsyncSession) -> KnowledgeBaseResponse:
 ```
 
 Enforced by `scripts/check_docstrings.py` in CI. One-liner docstrings OK for
-framework patterns and zero-arg functions. No em dashes in Python source
-(AGENTS.md convention: use colons, parens, or bullets).
+framework patterns and zero-arg functions.
 
 ## CI Pipeline
 
