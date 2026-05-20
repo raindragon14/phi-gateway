@@ -22,7 +22,7 @@ from phi_gateway.schemas.memory import (
 )
 
 # Context window limit — single default value.
-# Per-model limits can be derived from models_catalog.CONTEXT_WINDOW_BY_ID if needed later.
+# Per-model limits can be derived from models_catalog.MODELS if needed later.
 CONTEXT_LIMIT_DEFAULT = 128_000
 
 TRUNCATION_WARNING = "X-Context-Truncated"

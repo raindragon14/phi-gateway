@@ -58,7 +58,7 @@ MODELS: list[ModelSpec] = [
 """Canonical list of all known LLM models with pricing metadata."""
 
 
-# ── Derived structures (kept for backward compat with consumers) ────
+# ── Lookup structures used by cost_tracker, llm_proxy, /v1/models ──
 
 COST_PER_1M_TOKENS: dict[str, tuple[float, float]] = {
     m.id: (m.input_price_per_1m, m.output_price_per_1m) for m in MODELS
@@ -77,7 +77,4 @@ KNOWN_MODELS: list[dict] = [
 """List of model info dicts for the ``/v1/models`` endpoint."""
 
 _MODEL_TO_PROVIDER: dict[str, str] = {m.id: m.provider for m in MODELS}
-"""Mapping of bare model name to provider slug (for name-only lookups)."""
-
-CONTEXT_WINDOW_BY_ID: dict[str, int] = {m.id: m.context_window for m in MODELS}
-"""Mapping of model ID to context window size in tokens."""
+"""Mapping of model ID to provider slug (for name-only lookups)."""

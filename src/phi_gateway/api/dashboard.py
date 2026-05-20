@@ -6,11 +6,11 @@ authentication (browser users after login).
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from phi_gateway.dependencies import get_api_key
+from phi_gateway.dependencies import RequireApiKey
 from phi_gateway.models.api_key import ApiKey
 
 router = APIRouter(tags=["Dashboard"])
@@ -19,26 +19,8 @@ TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "dashboard" / "template
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
-# ── Dashboard auth — admin/pro only ───────────────────────────────
-
-async def _require_admin(api_key: ApiKey = Depends(get_api_key)) -> ApiKey:
-    """Enforce admin or pro tier for dashboard-only routes.
-
-    Args:
-        api_key: The authenticated API key from ``get_api_key``.
-
-    Returns:
-        ApiKey: The validated key if authorized.
-
-    Raises:
-        HTTPException(403): If the key tier is not ``"admin"`` or ``"pro"``.
-    """
-    if api_key.tier not in ("admin", "pro"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Dashboard access requires admin or pro tier API key",
-        )
-    return api_key
+# ── Dashboard dependency — admin/pro tier required ────────────────
+_require_admin = RequireApiKey(required_tiers=("admin", "pro"))
 
 
 # ── Routes ────────────────────────────────────────────────────────
