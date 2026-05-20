@@ -9,6 +9,8 @@ import uuid
 
 import httpx
 from fastapi import APIRouter, Depends
+from jsonschema import ValidationError as JsonSchemaValidationError
+from jsonschema import validate as jsonschema_validate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -86,6 +88,17 @@ async def mcp_endpoint(
                     "error": {"code": -32603, "message": f"Tool '{tool_name}' endpoint is in a blocked network"},
                     "id": body.id,
                 }
+
+            # Validate arguments against the tool's JSON Schema
+            if tool.json_schema:
+                try:
+                    jsonschema_validate(instance=arguments, schema=tool.json_schema)
+                except JsonSchemaValidationError as e:
+                    return {
+                        "jsonrpc": "2.0",
+                        "error": {"code": -32602, "message": f"Invalid arguments: {e.message}"},
+                        "id": body.id,
+                    }
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
