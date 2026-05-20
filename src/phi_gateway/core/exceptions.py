@@ -3,11 +3,26 @@
 Services raise these exceptions instead of ``HTTPException`` to
 decouple business logic from the web framework. The API layer
 catches them and maps to appropriate HTTP status codes.
+
+Each exception carries its own ``status_code`` and optional
+``headers`` so the generic handler in ``main.py`` can map any
+``GatewayError`` to an HTTP response without per-type branching.
 """
 
 
 class GatewayError(Exception):
-    """Base exception for all domain errors."""
+    """Base exception for all domain errors.
+
+    Attributes:
+        status_code: HTTP status code to return.
+    """
+
+    status_code: int = 500
+
+    @property
+    def headers(self) -> dict[str, str] | None:
+        """Override in subclasses to add response headers."""
+        return None
 
 
 class NotFoundError(GatewayError):
@@ -17,6 +32,8 @@ class NotFoundError(GatewayError):
         resource: Human-readable resource type (e.g. ``"Knowledge base"``).
         identifier: Optional resource identifier string.
     """
+
+    status_code = 404
 
     def __init__(self, resource: str, identifier: str | None = None) -> None:
         """Initialize with resource type and optional identifier."""
@@ -36,6 +53,8 @@ class ConflictError(GatewayError):
         identifier: The conflicting identifier.
     """
 
+    status_code = 409
+
     def __init__(self, resource: str, identifier: str) -> None:
         """Initialize with resource type and conflicting identifier."""
         self.resource = resource
@@ -49,6 +68,8 @@ class ValidationError(GatewayError):
     Attributes:
         detail: Human-readable error description.
     """
+
+    status_code = 400
 
     def __init__(self, detail: str) -> None:
         """Initialize with validation error detail."""
@@ -65,16 +86,20 @@ class ExternalToolError(GatewayError):
         message: Human-readable error description.
     """
 
+    status_code = 502
+
     def __init__(self, tool_name: str, status_code: int | None, message: str) -> None:
         """Initialize with tool name, optional status code, and message."""
         self.tool_name = tool_name
-        self.status_code = status_code
+        self._tool_status_code = status_code
         self.message = message
         super().__init__(f"Tool '{tool_name}' error: {message}")
 
 
 class ExternalToolTimeoutError(ExternalToolError):
     """Tool endpoint timed out."""
+
+    status_code = 504
 
     def __init__(self, tool_name: str) -> None:
         """Initialize with tool name (status=504, 30s timeout)."""
@@ -90,9 +115,16 @@ class RateLimitExceededError(GatewayError):
         retry_after: Seconds until the limit resets.
     """
 
+    status_code = 429
+
     def __init__(self, limit: int, window: str, retry_after: int) -> None:
         """Initialize with limit, time window, and retry-after seconds."""
         self.limit = limit
         self.window = window
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded: {limit} req/{window}")
+
+    @property
+    def headers(self) -> dict[str, str] | None:
+        """Return Retry-After header for rate-limited responses."""
+        return {"Retry-After": str(self.retry_after)}

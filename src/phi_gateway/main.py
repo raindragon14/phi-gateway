@@ -19,14 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from phi_gateway import __version__
 from phi_gateway.api.router import api_router
 from phi_gateway.config import settings
-from phi_gateway.core.exceptions import (
-    ConflictError,
-    ExternalToolError,
-    ExternalToolTimeoutError,
-    NotFoundError,
-    RateLimitExceededError,
-    ValidationError,
-)
+from phi_gateway.core.exceptions import GatewayError
 from phi_gateway.dashboard.static_pages import FAVICON_SVG, LANDING_HTML, SCALAR_HTML
 from phi_gateway.database import async_session, engine, get_db
 from phi_gateway.log_config import setup_logging
@@ -242,59 +235,14 @@ def create_app() -> FastAPI:
             headers=exc.headers or None,
         )
 
-    @app.exception_handler(NotFoundError)
-    async def not_found_handler(request: Request, exc: NotFoundError):
-        """Map ``NotFoundError`` to HTTP 404."""
+    @app.exception_handler(GatewayError)
+    async def gateway_error_handler(request: Request, exc: GatewayError):
+        """Map any ``GatewayError`` subclass to its HTTP status code."""
         request_id = getattr(request.state, "request_id", None)
         return JSONResponse(
-            status_code=404,
+            status_code=exc.status_code,
             content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
-        )
-
-    @app.exception_handler(ConflictError)
-    async def conflict_handler(request: Request, exc: ConflictError):
-        """Map ``ConflictError`` to HTTP 409."""
-        request_id = getattr(request.state, "request_id", None)
-        return JSONResponse(
-            status_code=409,
-            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
-        )
-
-    @app.exception_handler(ValidationError)
-    async def validation_handler(request: Request, exc: ValidationError):
-        """Map ``ValidationError`` to HTTP 400."""
-        request_id = getattr(request.state, "request_id", None)
-        return JSONResponse(
-            status_code=400,
-            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
-        )
-
-    @app.exception_handler(ExternalToolTimeoutError)
-    async def tool_timeout_handler(request: Request, exc: ExternalToolTimeoutError):
-        """Map ``ExternalToolTimeoutError`` to HTTP 504."""
-        request_id = getattr(request.state, "request_id", None)
-        return JSONResponse(
-            status_code=504,
-            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
-        )
-
-    @app.exception_handler(ExternalToolError)
-    async def tool_error_handler(request: Request, exc: ExternalToolError):
-        """Map ``ExternalToolError`` to HTTP 502."""
-        request_id = getattr(request.state, "request_id", None)
-        return JSONResponse(
-            status_code=502,
-            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
-        )
-
-    @app.exception_handler(RateLimitExceededError)
-    async def rate_limit_handler(request: Request, exc: RateLimitExceededError):
-        """Map ``RateLimitExceededError`` to HTTP 429 with Retry-After header."""
-        request_id = getattr(request.state, "request_id", None)
-        return JSONResponse(
-            status_code=429,
-            content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
-            headers={"Retry-After": str(exc.retry_after)},
+            headers=exc.headers,
         )
 
     return app
