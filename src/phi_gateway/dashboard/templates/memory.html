@@ -1,3 +1,14 @@
+<!--
+  memory.html — Agent memory browser page.
+
+  Extends: base.html
+  Shows: conversations table (session ID, title, dates),
+         expandable messages panel per conversation.
+  JS:
+    loadConversations() — GET /v1/memory/conversations, renders table.
+    loadMessages(convId) — GET /v1/memory/conversations/{id}/messages?limit=50,
+        renders messages with role badge, timestamp, token count.
+-->
 {% extends "base.html" %}
 {% block title %}Memory{% endblock %}
 {% block content %}

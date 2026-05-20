@@ -1,3 +1,11 @@
+<!--
+  login.html — Dashboard login page (standalone, no base.html).
+
+  Authenticates admin/pro-tier API keys for dashboard access.
+  Stores key in sessionStorage (phi_api_key) and cookie for server-side auth.
+  JS: form submit validates key format (phi-sk-), verifies via GET /dashboard,
+      redirects on success.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>

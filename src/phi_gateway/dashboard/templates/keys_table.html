@@ -1,4 +1,12 @@
-<!-- HTMX fragment: keys table (loaded by /dashboard/keys/table) -->
+<!--
+  keys_table.html — HTMX fragment for the API keys table.
+
+  Loaded by: /dashboard/keys/table (HTMX hx-get)
+  Used by: keys.html (standalone JS version also exists there)
+  Renders: keys table with prefix, name, tier, created, last used columns.
+  Note: This is the HTMX-only variant. The main keys.html has its own
+        fetch-based version that doesn't depend on HTMX.
+-->
 <div id="keys-table">
     <p style="font-size:12px;color:var(--text-muted);" hx-get="/v1/keys" hx-trigger="load" hx-target="#keys-table">
         Loading keys...

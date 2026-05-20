@@ -1,3 +1,11 @@
+<!--
+  usage.html — Token consumption and cost analytics page.
+
+  Extends: base.html
+  Shows: summary stat grid (requests, input/output tokens, cost),
+         by-provider table, by-model table.
+  JS: loadUsage() fetches /v1/usage and renders all three sections.
+-->
 {% extends "base.html" %}
 {% block title %}Usage{% endblock %}
 {% block content %}

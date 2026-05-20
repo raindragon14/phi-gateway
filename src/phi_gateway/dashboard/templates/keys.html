@@ -1,3 +1,13 @@
+<!--
+  keys.html — API key management page.
+
+  Extends: base.html
+  Shows: create key form (name + tier select), keys table with revoke button.
+  JS:
+    createKey(btn) — POST /v1/keys, displays full key once in success box.
+    loadKeys() — GET /v1/keys, renders table with prefix, name, tier, dates.
+    revokeKey(id, btn) — DELETE /v1/keys/{id}, disables button on success.
+-->
 {% extends "base.html" %}
 {% block title %}API Keys{% endblock %}
 {% block content %}

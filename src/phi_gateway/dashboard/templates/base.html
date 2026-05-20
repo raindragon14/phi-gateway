@@ -1,3 +1,18 @@
+<!--
+  base.html — Root layout for all dashboard pages.
+
+  Defines:
+    - CSS design tokens (:root variables for colors, spacing, typography)
+    - Global styles (reset, sidebar, cards, tables, buttons, inputs, badges)
+    - Sidebar navigation (Overview, API Keys, Usage, Docs, Memory)
+    - Responsive breakpoint at 720px
+
+  Blocks:
+    title  — page title (default: "Dashboard")
+    content — main page content
+
+  Child templates: overview.html, keys.html, usage.html, docs.html, memory.html
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +25,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         /* ════════════════════════════════════════════════════════
-           Design Tokens (see DESIGN.md for full spec)
+           Design Tokens
            ════════════════════════════════════════════════════════ */
         :root {
             /* ── Backgrounds ──────────────────────────────────── */
