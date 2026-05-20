@@ -76,7 +76,7 @@ class ExternalToolTimeoutError(ExternalToolError):
         super().__init__(tool_name, 504, "timed out after 30s")
 
 
-class RateLimitExceeded(GatewayError):
+class RateLimitExceededError(GatewayError):
     """Rate limit was exceeded.
 
     Attributes:

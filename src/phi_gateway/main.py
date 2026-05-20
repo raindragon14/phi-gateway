@@ -13,28 +13,26 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
-
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from phi_gateway import __version__
 from phi_gateway.api.router import api_router
 from phi_gateway.config import settings
-from phi_gateway.database import async_session, engine, get_db
-from phi_gateway.dashboard.static_pages import FAVICON_SVG, LANDING_HTML, SCALAR_HTML
-from phi_gateway.log_config import setup_logging
-from phi_gateway.models import Base
-from phi_gateway.models.api_key import ApiKey
-from phi_gateway.schemas.errors import ErrorDetail
 from phi_gateway.core.exceptions import (
     ConflictError,
     ExternalToolError,
     ExternalToolTimeoutError,
-    GatewayError,
     NotFoundError,
-    RateLimitExceeded,
+    RateLimitExceededError,
     ValidationError,
 )
+from phi_gateway.dashboard.static_pages import FAVICON_SVG, LANDING_HTML, SCALAR_HTML
+from phi_gateway.database import async_session, engine, get_db
+from phi_gateway.log_config import setup_logging
+from phi_gateway.models import Base
+from phi_gateway.models.api_key import ApiKey
+from phi_gateway.schemas.errors import ErrorDetail
 
 logger = logging.getLogger(__name__)
 
@@ -295,9 +293,9 @@ def create_app() -> FastAPI:
             content=ErrorDetail(detail=str(exc), id=request_id).model_dump(exclude_none=True),
         )
 
-    @app.exception_handler(RateLimitExceeded)
-    async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-        """Map ``RateLimitExceeded`` to HTTP 429 with Retry-After header."""
+    @app.exception_handler(RateLimitExceededError)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceededError):
+        """Map ``RateLimitExceededError`` to HTTP 429 with Retry-After header."""
         request_id = getattr(request.state, "request_id", None)
         return JSONResponse(
             status_code=429,

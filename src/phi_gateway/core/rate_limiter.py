@@ -7,7 +7,7 @@ multi-worker deployments.
 import time
 from collections import defaultdict, deque
 
-from phi_gateway.core.exceptions import RateLimitExceeded
+from phi_gateway.core.exceptions import RateLimitExceededError
 from phi_gateway.models.api_key import ApiKey
 
 # ── In-memory stores (replace with Redis in production) ────────────
@@ -44,7 +44,7 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
         api_key: The authenticated API key to check.
 
     Raises:
-        RateLimitExceeded: If per-minute or per-day rate limits are
+        RateLimitExceededError: If per-minute or per-day rate limits are
             exceeded.
     """
     now = time.time()
@@ -55,7 +55,7 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
     _minute_buckets[key_id] = _prune(_minute_buckets[key_id], minute_cutoff)
 
     if len(_minute_buckets[key_id]) >= api_key.rate_limit_per_min:
-        raise RateLimitExceeded(api_key.rate_limit_per_min, "minute", retry_after=60)
+        raise RateLimitExceededError(api_key.rate_limit_per_min, "minute", retry_after=60)
 
     _minute_buckets[key_id].append(now)
 
@@ -64,7 +64,7 @@ def enforce_rate_limit(api_key: ApiKey) -> None:
     _day_buckets[key_id] = _prune(_day_buckets[key_id], day_cutoff)
 
     if len(_day_buckets[key_id]) >= api_key.rate_limit_per_day:
-        raise RateLimitExceeded(api_key.rate_limit_per_day, "day", retry_after=86400)
+        raise RateLimitExceededError(api_key.rate_limit_per_day, "day", retry_after=86400)
 
     _day_buckets[key_id].append(now)
 

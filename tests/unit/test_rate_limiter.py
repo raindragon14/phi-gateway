@@ -6,7 +6,7 @@ import uuid
 import pytest
 
 from phi_gateway.core import rate_limiter
-from phi_gateway.core.exceptions import RateLimitExceeded
+from phi_gateway.core.exceptions import RateLimitExceededError
 from phi_gateway.core.rate_limiter import enforce_rate_limit, get_rate_limit_headers
 
 
@@ -41,12 +41,12 @@ class TestEnforceRateLimit:
             enforce_rate_limit(api_key)  # should not raise
 
     def test_at_limit_raises_rate_limit_exceeded(self):
-        """Requests at or above the per-minute limit should raise RateLimitExceeded."""
+        """Requests at or above the per-minute limit should raise RateLimitExceededError."""
         api_key = _make_api_key(rate_per_min=3)
         for _ in range(3):
             enforce_rate_limit(api_key)
 
-        with pytest.raises(RateLimitExceeded) as exc_info:
+        with pytest.raises(RateLimitExceededError) as exc_info:
             enforce_rate_limit(api_key)
 
         assert exc_info.value.limit == 3
@@ -65,13 +65,13 @@ class TestEnforceRateLimit:
         enforce_rate_limit(api_key)  # should pass
 
     def test_daily_limit_raises_rate_limit_exceeded(self):
-        """Exceeding the daily limit should raise RateLimitExceeded with window='day'."""
+        """Exceeding the daily limit should raise RateLimitExceededError with window='day'."""
         api_key = _make_api_key(rate_per_min=9999, rate_per_day=2)
 
         enforce_rate_limit(api_key)
         enforce_rate_limit(api_key)
 
-        with pytest.raises(RateLimitExceeded) as exc_info:
+        with pytest.raises(RateLimitExceededError) as exc_info:
             enforce_rate_limit(api_key)
 
         assert exc_info.value.limit == 2

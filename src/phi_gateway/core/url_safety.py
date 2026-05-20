@@ -8,7 +8,6 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 
-
 # IPv4 private/reserved ranges that should not be reachable from a proxy.
 _BLOCKED_NETWORKS: list = [
     ipaddress.ip_network("127.0.0.0/8"),       # Loopback
