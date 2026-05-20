@@ -67,7 +67,8 @@ def _get_client(provider: str) -> AsyncOpenAI | AsyncAnthropic | AsyncGroq:
     client_cls, env_key, base_url = entry
     api_key = getattr(settings, env_key, None)
     if not api_key:
-        raise RuntimeError(f"Provider '{provider}' is not configured. Set {env_key} in your .env file.")
+        logger.error("Provider '%s' not configured: missing %s", provider, env_key)
+        raise RuntimeError(f"Provider '{provider}' is not available")
 
     if base_url:
         client = client_cls(api_key=api_key, base_url=base_url)

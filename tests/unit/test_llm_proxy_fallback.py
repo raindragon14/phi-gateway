@@ -80,7 +80,7 @@ class TestGetClient:
     def test_get_client_missing_api_key(self, mock_settings):
         """Missing API key should raise RuntimeError."""
         mock_settings.OPENAI_API_KEY = None
-        with pytest.raises(RuntimeError, match="not configured"):
+        with pytest.raises(RuntimeError, match="not available"):
             _get_client("openai")
 
 

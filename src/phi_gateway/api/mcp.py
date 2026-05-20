@@ -11,6 +11,8 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends
+from jsonschema import ValidationError as JsonSchemaValidationError
+from jsonschema import validate as jsonschema_validate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -102,6 +104,13 @@ async def _handle_tools_call(body: JsonRpcRequest, db: AsyncSession) -> dict:
     tool = result.scalar_one_or_none()
     if not tool:
         return _jsonrpc_error(body.id, -32601, f"Tool '{tool_name}' not found")
+
+    # Validate arguments against the tool's JSON Schema
+    if tool.json_schema:
+        try:
+            jsonschema_validate(instance=arguments, schema=tool.json_schema)
+        except JsonSchemaValidationError as e:
+            return _jsonrpc_error(body.id, -32602, f"Invalid arguments: {e.message}")
 
     try:
         validate_endpoint_url(tool.endpoint)
